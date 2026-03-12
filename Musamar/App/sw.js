@@ -1,4 +1,4 @@
-const CACHE_NAME = 'musamar-hub-v3';
+const CACHE_NAME = 'musamar-hub-v7';
 const ASSETS = [
   './',
   './index.html',
