@@ -323,15 +323,7 @@ function requestNotifications() {
 }
 function showNotification(user, body) {
   if(!notifSupported || Notification.permission !== 'granted') return;
-  if('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png', tag: 'musamar-msg', renotify: true });
-    }).catch(() => {
-      try { new Notification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png' }); } catch(e){}
-    });
-  } else {
-    try { new Notification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png' }); } catch(e){}
-  }
+  try { new Notification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png' }); } catch(e){}
 }
 
 // ===== HELPERS =====
@@ -745,23 +737,12 @@ function pickChip(btn) {
 
 function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// ===== SERVICE WORKER =====
+// ===== CLEANUP: remove all service workers and caches =====
 if('serviceWorker' in navigator) {
-  const SW_VERSION = 8;
-  const swKey = 'sw-version';
-  const current = parseInt(localStorage.getItem(swKey) || '0');
-  if(current < SW_VERSION) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      return Promise.all(regs.map(r => r.unregister()));
-    }).then(() => caches.keys()).then(keys => {
-      return Promise.all(keys.map(k => caches.delete(k)));
-    }).then(() => {
-      localStorage.setItem(swKey, String(SW_VERSION));
-      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
-    }).catch(()=>{});
-  } else {
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => reg.update()).catch(()=>{});
-  }
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 }
 
 // ===== INIT =====
