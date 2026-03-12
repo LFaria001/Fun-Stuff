@@ -45,7 +45,7 @@ body { display: flex; flex-direction: column; }
 .nav-btn.active .icon { opacity: 1; }
 
 /* ===== MAIN ===== */
-.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom)); }
+.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom)); display: flex; flex-direction: column; }
 
 /* ===== BOTTOM NAV (Mobile) ===== */
 .bottom-nav { display: block; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 0 0; padding-bottom: var(--safe-bottom); }
@@ -107,7 +107,7 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* ===== CHAT ===== */
-.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 180px); }
+.chat-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .chat-messages { flex: 1; overflow-y: auto; padding-bottom: 12px; }
 .chat-date { text-align: center; font-size: 10px; color: var(--faint); padding: 12px 0 6px; letter-spacing: 1px; }
 .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; margin: 3px 0; }
@@ -151,14 +151,33 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
   .bottom-nav { display: none; }
   .main { padding: 32px 36px; padding-bottom: calc(32px + var(--safe-bottom)); }
   .section-header h1 { font-size: 32px; }
-  .chat-wrap { height: calc(100vh - 96px); }
+  .chat-wrap { flex: 1; min-height: 0; }
   .fin-card .fin-value { font-size: 26px; }
   .req-row, .req-header { grid-template-columns: 1.5fr 1fr 0.8fr 2fr; }
   .req-row span:nth-child(4), .req-header span:nth-child(4) { grid-column: auto; }
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
+<!-- IDENTITY SCREEN -->
+<div id="identity-screen" style="position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;display:none">
+  <h1 style="font-family:var(--font-display);font-size:36px;color:var(--gold);letter-spacing:6px;margin-bottom:8px">MUSAMAR</h1>
+  <p style="font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:48px">Business Hub</p>
+  <p style="font-size:14px;color:var(--text);margin-bottom:24px">Quem és tu?</p>
+  <div style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:280px">
+    <button onclick="pickIdentity('farifari')" style="padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--gold);font-family:var(--font-display);font-size:20px;font-weight:500;cursor:pointer;letter-spacing:2px;transition:all 0.2s">farifari</button>
+    <button onclick="pickIdentity('Mariah Crispy')" style="padding:16px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--gold);font-family:var(--font-display);font-size:20px;font-weight:500;cursor:pointer;letter-spacing:2px;transition:all 0.2s">Mariah Crispy</button>
+  </div>
+</div>
+
+<!-- NOTIF BANNER -->
+<div id="notif-banner" onclick="enableNotifications()" style="display:none;background:linear-gradient(135deg,var(--gold-dark),var(--gold));padding:12px 16px;padding-top:calc(12px + var(--safe-top));align-items:center;justify-content:space-between;gap:10px;z-index:60;cursor:pointer">
+  <span style="font-size:12px;color:var(--bg);font-weight:600">Ativar notificações</span>
+  <span style="font-size:11px;color:var(--bg);opacity:0.8;white-space:nowrap">Toca aqui</span>
+</div>
 
 <!-- HEADER (mobile) -->
 <div class="header">
@@ -217,10 +236,98 @@ const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:
 let state = JSON.parse(JSON.stringify(DEFAULT));
 let activeTab = 'inspiration';
 
-// ===== PERSISTENCE =====
-function load() { try { const d = localStorage.getItem('musamar-hub'); if(d) state = JSON.parse(d); } catch(e){} }
-function save() { try { localStorage.setItem('musamar-hub', JSON.stringify(state)); } catch(e){} }
-load();
+// ===== FIREBASE =====
+firebase.initializeApp({
+  apiKey: "AIzaSyBkIkvjdQ1Mzorquq6PlDCXuosIJDzwEWU",
+  authDomain: "musamar-hub.firebaseapp.com",
+  projectId: "musamar-hub",
+  storageBucket: "musamar-hub.firebasestorage.app",
+  messagingSenderId: "429342019448",
+  appId: "1:429342019448:web:3342971f2f08093420028d"
+});
+const db = firebase.firestore();
+const stateRef = db.collection('hub').doc('state');
+
+// Load from localStorage first (instant display)
+function loadLocal() { try { const d = localStorage.getItem('musamar-hub'); if(d) { const p = JSON.parse(d); Object.assign(state, p); } } catch(e){} }
+function saveLocal() { try { localStorage.setItem('musamar-hub', JSON.stringify(state)); } catch(e){} }
+loadLocal();
+
+// Save to Firestore
+function save() {
+  saveLocal();
+  stateRef.set({
+    inspiration: state.inspiration,
+    recipes: state.recipes,
+    finances: state.finances,
+    brandAssets: state.brandAssets || [],
+    chat: state.chat,
+    objectives: state.objectives,
+    weekLabel: state.weekLabel,
+    lastEditor: chatUser,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.warn('Firestore save error:', e));
+}
+
+// Real-time sync
+let initialLoad = true;
+stateRef.onSnapshot(snap => {
+  if(snap.metadata.hasPendingWrites) return;
+  if(!snap.exists) { save(); return; }
+  const data = snap.data();
+  const prevChatLen = state.chat ? state.chat.length : 0;
+  state.inspiration = data.inspiration || [];
+  state.recipes = data.recipes || [];
+  state.finances = data.finances || [];
+  state.brandAssets = data.brandAssets || [];
+  state.chat = data.chat || [];
+  state.objectives = data.objectives || DEFAULT.objectives;
+  state.weekLabel = data.weekLabel || '';
+  saveLocal();
+  render();
+  if(!initialLoad && data.chat && data.chat.length > prevChatLen && data.lastEditor !== chatUser) {
+    const lastMsg = data.chat[data.chat.length - 1];
+    showNotification(lastMsg.user, lastMsg.text);
+  }
+  initialLoad = false;
+}, err => console.warn('Firestore listen error:', err));
+
+// ===== NOTIFICATIONS =====
+const notifSupported = ('Notification' in window);
+function updateNotifBanner() {
+  const b = document.getElementById('notif-banner');
+  if(!b) return;
+  if(!notifSupported || Notification.permission === 'granted' || Notification.permission === 'denied') {
+    b.style.display = 'none';
+  } else {
+    b.style.display = 'flex';
+  }
+}
+function enableNotifications() {
+  if(!notifSupported) return;
+  Notification.requestPermission().then(p => {
+    updateNotifBanner();
+    if(p === 'granted') {
+      // Send a test notification to confirm it works
+      showNotification('Musamar Hub', 'Notificações ativadas!');
+    }
+  });
+}
+function requestNotifications() {
+  updateNotifBanner();
+}
+function showNotification(user, body) {
+  if(!notifSupported || Notification.permission !== 'granted') return;
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png', tag: 'musamar-msg', renotify: true });
+    }).catch(() => {
+      try { new Notification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png' }); } catch(e){}
+    });
+  } else {
+    try { new Notification('Musamar Hub — ' + user, { body, icon: 'icons/icon-192.png' }); } catch(e){}
+  }
+}
 
 // ===== HELPERS =====
 const $=s=>document.querySelector(s);
@@ -243,7 +350,7 @@ function renderNav() {
   bn.innerHTML = TABS.map(t=>`<button class="bnav-btn ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')"><span class="bnav-icon">${t.icon}</span>${t.label}</button>`).join('');
 }
 
-function switchTab(id) { activeTab=id; renderNav(); render(); }
+function switchTab(id) { activeTab=id; renderNav(); render(); requestNotifications(); }
 
 function render() {
   const m=$('#main');
@@ -477,7 +584,21 @@ function openLogoGuide() {
 }
 
 // ===== 5. CHAT =====
-let chatUser = 'farifari';
+let chatUser = localStorage.getItem('musamar-identity') || '';
+
+function pickIdentity(name) {
+  localStorage.setItem('musamar-identity', name);
+  chatUser = name;
+  document.getElementById('identity-screen').style.display = 'none';
+  requestNotifications();
+}
+
+// Show identity screen if not set
+if(!chatUser) {
+  document.getElementById('identity-screen').style.display = 'flex';
+} else {
+  document.getElementById('identity-screen').style.display = 'none';
+}
 
 function renderChat(el) {
   const msgs=state.chat;
@@ -503,10 +624,7 @@ function renderChat(el) {
         `).join('')}
       </div>
       <div class="chat-input-bar">
-        <select class="input" style="width:120px" onchange="chatUser=this.value">
-          <option ${chatUser==='farifari'?'selected':''}>farifari</option>
-          <option ${chatUser==='Mariah Crispy'?'selected':''}>Mariah Crispy</option>
-        </select>
+        <span style="font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap;letter-spacing:0.5px">${esc(chatUser)}</span>
         <input class="input" id="chat-input" placeholder="Escreve uma mensagem..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
         <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
       </div>
@@ -607,12 +725,28 @@ function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.tex
 
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  const SW_VERSION = 7;
+  const swKey = 'sw-version';
+  const current = parseInt(localStorage.getItem(swKey) || '0');
+  if(current < SW_VERSION) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      return Promise.all(regs.map(r => r.unregister()));
+    }).then(() => caches.keys()).then(keys => {
+      return Promise.all(keys.map(k => caches.delete(k)));
+    }).then(() => {
+      localStorage.setItem(swKey, String(SW_VERSION));
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+    }).catch(()=>{});
+  } else {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => reg.update()).catch(()=>{});
+  }
 }
 
 // ===== INIT =====
 renderNav();
 render();
+// Show notification banner if permission not yet granted
+if(chatUser) updateNotifBanner();
 </script>
 </body>
 </html>
