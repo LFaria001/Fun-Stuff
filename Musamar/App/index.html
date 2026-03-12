@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='6';
+var APP_V='7';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -948,6 +948,43 @@ if('serviceWorker' in navigator) {
   });
   caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 }
+
+// ===== SUNDAY REMINDER =====
+function sundayReminder() {
+  const d = new Date();
+  if(d.getDay() !== 0) return; // not Sunday
+  const key = 'musamar-sun-' + d.toISOString().slice(0,10);
+  const last = localStorage.getItem('musamar-sun-last');
+  const hour = d.getHours();
+  // Notify at 10h, 15h, 19h if not already sent for that slot
+  const slots = [10, 15, 19];
+  const slot = slots.filter(s => hour >= s).pop();
+  if(!slot) return;
+  const slotKey = key + '-' + slot;
+  if(localStorage.getItem(slotKey)) return;
+  localStorage.setItem(slotKey, '1');
+  // Check if there are pending goals
+  const total = state.objectives.member1.goals.length + state.objectives.member2.goals.length;
+  const done = state.objectives.member1.goals.filter(g=>g.done).length + state.objectives.member2.goals.filter(g=>g.done).length;
+  if(total === 0) return;
+  const pending = total - done;
+  const msg = pending > 0
+    ? 'Ainda tens ' + pending + ' objetivo(s) por concluir! Faz o balanço da semana.'
+    : 'Todos os objetivos concluídos! Não te esqueças de fazer a reflexão semanal.';
+  showNotification('Musamar Hub', msg);
+  // Also show in-app banner
+  showSundayBanner(msg);
+}
+function showSundayBanner(msg) {
+  if(document.getElementById('sunday-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'sunday-banner';
+  b.style.cssText = 'background:linear-gradient(135deg,var(--gold-dark),var(--gold));padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;z-index:60';
+  b.innerHTML = '<span style="font-size:12px;color:var(--bg);font-weight:600">📋 ' + msg + '</span><button onclick="this.parentElement.remove();switchTab(\'objectives\')" style="background:rgba(0,0,0,0.2);border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap">Ver Objetivos</button>';
+  document.body.insertBefore(b, document.querySelector('.header'));
+}
+sundayReminder();
+setInterval(sundayReminder, 1800000); // check every 30min
 
 // ===== INIT =====
 renderNav();
