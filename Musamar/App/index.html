@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='7';
+var APP_V='8';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -893,7 +893,13 @@ function openGoalModal(member) {
 function addGoal(member) {
   const t=$('#f-goal-text').value.trim(); if(!t) return;
   const assignee=$('#modal-content').querySelector('.chip.active')?.dataset.val||'';
-  state.objectives[member].goals.push({ id:uid(), text:t, done:false, assignee });
+  if(!assignee) {
+    // "Ambos" — add to both members
+    state.objectives.member1.goals.push({ id:uid(), text:t, done:false, assignee:'' });
+    state.objectives.member2.goals.push({ id:uid(), text:t, done:false, assignee:'' });
+  } else {
+    state.objectives[member].goals.push({ id:uid(), text:t, done:false, assignee });
+  }
   save(); closeModal(); render();
 }
 function toggleGoal(member,id) {
