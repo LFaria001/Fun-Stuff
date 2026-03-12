@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='8';
+var APP_V='9';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -234,6 +234,7 @@ const TABS = [
   { id:'brand', label:'Brand', icon:'◉' },
   { id:'chat', label:'Chat', icon:'◆' },
   { id:'objectives', label:'Objetivos', icon:'◇' },
+  { id:'calendar', label:'Calendário', icon:'▣' },
 ];
 
 const LOGO_REQS = [
@@ -251,7 +252,7 @@ const LOGO_REQS = [
 
 const CATS = ['Produto','Packaging','Marketing','Receita','Outro'];
 
-const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'', weekEnd:'', accountability:[] };
+const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'', weekEnd:'', accountability:[], calendar:[] };
 
 let state = JSON.parse(JSON.stringify(DEFAULT));
 let activeTab = 'inspiration';
@@ -286,6 +287,7 @@ function save() {
     weekLabel: state.weekLabel,
     weekEnd: state.weekEnd || '',
     accountability: state.accountability || [],
+    calendar: state.calendar || [],
     lastEditor: chatUser,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).catch(e => console.warn('Firestore save error:', e));
@@ -307,6 +309,7 @@ stateRef.onSnapshot(snap => {
   state.weekLabel = data.weekLabel || '';
   state.weekEnd = data.weekEnd || '';
   state.accountability = data.accountability || [];
+  state.calendar = data.calendar || [];
   saveLocal();
   render();
   if(!initialLoad && data.chat && data.chat.length > prevChatLen && data.lastEditor !== chatUser) {
@@ -377,6 +380,7 @@ function render() {
     case 'brand': renderBrand(m); break;
     case 'chat': renderChat(m); break;
     case 'objectives': renderObjectives(m); break;
+    case 'calendar': renderCalendar(m); break;
   }
 }
 
@@ -939,6 +943,146 @@ function saveAccountability() {
   save(); closeModal(); render();
 }
 
+// ===== 7. CALENDÁRIO =====
+let calViewDate = new Date();
+const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DAYS_PT = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const NOTIFY_OPTS = [
+  {val:'none',label:'Sem notificação'},
+  {val:'0',label:'Na hora do evento'},
+  {val:'15',label:'15 min antes'},
+  {val:'60',label:'1 hora antes'},
+  {val:'1440',label:'1 dia antes'},
+  {val:'4320',label:'3 dias antes'}
+];
+
+function renderCalendar(el) {
+  const y=calViewDate.getFullYear(), m=calViewDate.getMonth();
+  const first=new Date(y,m,1);
+  const startDay=(first.getDay()+6)%7; // Mon=0
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const today=new Date(); const todayStr=today.toISOString().slice(0,10);
+  const events=state.calendar||[];
+
+  // Build calendar grid
+  let cells='';
+  for(let i=0;i<startDay;i++) cells+='<div style="aspect-ratio:1"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isToday=ds===todayStr;
+    const dayEvents=events.filter(e=>e.date===ds);
+    const dots=dayEvents.length?'<div style="display:flex;gap:2px;justify-content:center;margin-top:2px">'+dayEvents.slice(0,3).map(()=>'<span style="width:4px;height:4px;border-radius:50%;background:var(--gold)"></span>').join('')+'</div>':'';
+    cells+=`<div onclick="showDayEvents('${ds}')" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;border:${isToday?'1.5px solid var(--gold)':'1px solid transparent'};background:${isToday?'rgba(212,169,106,0.1)':'transparent'}">
+      <span style="font-size:13px;color:${isToday?'var(--gold)':'var(--text)'};font-weight:${isToday?'600':'400'}">${d}</span>
+      ${dots}
+    </div>`;
+  }
+
+  // Upcoming events
+  const upcoming=events.filter(e=>e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date)||((a.time||'').localeCompare(b.time||'')));
+
+  el.innerHTML=`
+    <div class="section-header">
+      <div><h1>Calendário</h1><div class="sub">Eventos e ocasiões</div></div>
+      <button class="btn btn-primary" onclick="openEventModal()">+ Novo Evento</button>
+    </div>
+    <div class="card" style="margin-bottom:20px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <button class="btn btn-ghost" onclick="calNav(-1)" style="padding:6px 12px">◀</button>
+        <span style="font-family:var(--font-display);font-size:18px;color:var(--gold);font-weight:500">${MONTHS_PT[m]} ${y}</span>
+        <button class="btn btn-ghost" onclick="calNav(1)" style="padding:6px 12px">▶</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;margin-bottom:4px">
+        ${DAYS_PT.map(d=>'<span style="font-size:10px;color:var(--dim);font-weight:600;letter-spacing:0.5px">'+d+'</span>').join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+        ${cells}
+      </div>
+    </div>
+    ${upcoming.length?`<div class="card" style="padding:18px">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Próximos Eventos</div>
+      ${upcoming.slice(0,10).map(e=>renderEventRow(e)).join('')}
+    </div>`:'<div class="empty"><div class="icon">◇</div><p>Sem eventos futuros. Adiciona o primeiro!</p></div>'}`;
+}
+
+function renderEventRow(e) {
+  const dateObj=new Date(e.date+'T00:00:00');
+  const dayNum=dateObj.getDate();
+  const mon=MONTHS_PT[dateObj.getMonth()].slice(0,3);
+  const notifLabel=NOTIFY_OPTS.find(o=>o.val===e.notify);
+  return '<div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)">'
+    +'<div style="min-width:44px;text-align:center"><div style="font-size:18px;font-weight:600;color:var(--gold);font-family:var(--font-display)">'+dayNum+'</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">'+mon+'</div></div>'
+    +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--text)">'+esc(e.title)+'</div>'
+    +(e.time?'<span style="font-size:11px;color:var(--dim)">'+esc(e.time)+'</span>':'')
+    +(e.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(e.notes)+'</div>':'')
+    +(notifLabel&&e.notify!=='none'?'<div style="font-size:9px;color:var(--gold);margin-top:2px">🔔 '+notifLabel.label+'</div>':'')
+    +'</div>'
+    +'<button class="del-btn" onclick="delEvent(\''+e.id+'\')">✕</button>'
+    +'</div>';
+}
+
+function calNav(dir) {
+  calViewDate=new Date(calViewDate.getFullYear(),calViewDate.getMonth()+dir,1);
+  render();
+}
+
+function showDayEvents(ds) {
+  const events=(state.calendar||[]).filter(e=>e.date===ds);
+  const dateObj=new Date(ds+'T00:00:00');
+  const label=dateObj.getDate()+' '+MONTHS_PT[dateObj.getMonth()]+' '+dateObj.getFullYear();
+  if(!events.length){
+    openModal(label, '<p style="font-size:13px;color:var(--muted);margin-bottom:16px">Sem eventos neste dia.</p><button class="btn btn-primary btn-full" onclick="closeModal();openEventModal(\''+ds+'\')">+ Adicionar Evento</button>');
+    return;
+  }
+  openModal(label, events.map(e=>renderEventRow(e)).join('')+'<button class="btn btn-primary btn-full" style="margin-top:14px" onclick="closeModal();openEventModal(\''+ds+'\')">+ Adicionar Evento</button>');
+}
+
+function openEventModal(prefillDate) {
+  const dateVal=prefillDate||new Date().toISOString().slice(0,10);
+  openModal('Novo Evento', `
+    <div class="form-group"><label class="label">Título</label><input class="input" id="f-ev-title" placeholder="Ex: Entrega encomenda, feira, reunião..."></div>
+    <div class="form-group"><label class="label">Data</label><input class="input" id="f-ev-date" type="date" value="${dateVal}"></div>
+    <div class="form-group"><label class="label">Hora (opcional)</label><input class="input" id="f-ev-time" type="time"></div>
+    <div class="form-group"><label class="label">Notificação</label><div class="chip-group">${NOTIFY_OPTS.map((o,i)=>`<button class="chip ${i===0?'active':''}" onclick="pickChip(this)" data-val="${o.val}">${o.label}</button>`).join('')}</div></div>
+    <div class="form-group"><label class="label">Notas (opcional)</label><textarea class="input" id="f-ev-notes" placeholder="Detalhes adicionais..."></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addEvent()">Guardar Evento</button>
+  `);
+  setTimeout(()=>$('#f-ev-title')?.focus(),100);
+}
+
+function addEvent() {
+  const title=$('#f-ev-title').value.trim(); if(!title) return;
+  const date=$('#f-ev-date').value; if(!date) return;
+  const time=$('#f-ev-time').value||'';
+  const notify=$('#modal-content').querySelector('.chip.active')?.dataset.val||'none';
+  const notes=$('#f-ev-notes').value.trim();
+  if(!state.calendar) state.calendar=[];
+  state.calendar.push({ id:uid(), title, date, time, notify, notes, notified:'' });
+  save(); closeModal(); render();
+}
+
+function delEvent(id) { state.calendar=state.calendar.filter(e=>e.id!==id); save(); render(); }
+
+// Event notification checker
+function checkEventNotifications() {
+  if(!state.calendar||!state.calendar.length) return;
+  const nowMs=Date.now();
+  state.calendar.forEach(function(ev){
+    if(ev.notify==='none') return;
+    const eventTime=new Date(ev.date+'T'+(ev.time||'09:00')+':00').getTime();
+    const minsBefore=parseInt(ev.notify)||0;
+    const triggerTime=eventTime - minsBefore*60000;
+    const notifKey='ev-'+ev.id+'-'+ev.notify;
+    if(nowMs>=triggerTime && nowMs<eventTime+3600000 && ev.notified!==notifKey){
+      ev.notified=notifKey;
+      var msg=minsBefore===0?'Agora: '+ev.title:(ev.title+' — '+(NOTIFY_OPTS.find(function(o){return o.val===ev.notify})||{}).label);
+      showNotification('Calendário', msg);
+      save();
+    }
+  });
+}
+setInterval(checkEventNotifications, 60000);
+
 // ===== UTILITIES =====
 function pickChip(btn) {
   btn.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
@@ -991,6 +1135,7 @@ function showSundayBanner(msg) {
 }
 sundayReminder();
 setInterval(sundayReminder, 1800000); // check every 30min
+checkEventNotifications();
 
 // ===== INIT =====
 renderNav();
