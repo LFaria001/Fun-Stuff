@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meat Cuts Guide</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Merriweather:wght@300;400;700&display=swap');
+
+    :root {
+      --butcher-bg: #1b0f0f;
+      --butcher-bg-soft: #251414;
+      --butcher-surface: #2d1a1a;
+      --butcher-surface-strong: #3a2121;
+      --butcher-border: #4b2b2b;
+      --butcher-text: #f4e9da;
+      --butcher-muted: #cbb7a1;
+      --butcher-accent: #b4442a;
+      --butcher-gold: #d9b56a;
+    }
+
+    body {
+      font-family: "Merriweather", serif;
+      background:
+        radial-gradient(1200px 500px at 10% -10%, rgba(180, 68, 42, 0.25), transparent 60%),
+        radial-gradient(900px 400px at 90% -20%, rgba(217, 181, 106, 0.2), transparent 55%),
+        var(--butcher-bg);
+      color: var(--butcher-text);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 6px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1, h2, h3, h4, h5, button {
+      font-family: "Oswald", sans-serif;
+      letter-spacing: 0.02em;
+    }
+
+    .bg-slate-900,
+    .bg-slate-800,
+    .bg-slate-700,
+    .bg-slate-600 {
+      background-color: var(--butcher-surface);
+    }
+
+    .bg-gradient-to-br,
+    .bg-gradient-to-r {
+      background-image: none;
+    }
+
+    .border-slate-700,
+    .border-slate-600 {
+      border-color: var(--butcher-border);
+    }
+
+    .text-slate-200,
+    .text-slate-300,
+    .text-slate-400,
+    .text-slate-500 {
+      color: var(--butcher-muted);
+    }
+
+    .text-white {
+      color: var(--butcher-text);
+    }
+
+    .text-yellow-400 {
+      color: var(--butcher-gold);
+      text-shadow: 0 0 12px rgba(217, 181, 106, 0.2);
+    }
+
+    .shadow-xl,
+    .shadow-lg {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+  </style>
+</head>
+
+<body class="butcher-bg">
+  <div id="app"></div>
+
+  <script>
+    class MeatCutsApp {
+      constructor() {
+        this.selectedAnimal = 'beef';
+
+        this.meatData = {
+          beef: {
+            name: 'Beef',
+            color: 'from-red-600 to-red-800',
+            cuts: {
+              chuck: {
+                name: 'Chuck Roast',
+                region: 'Shoulder',
+                description: 'Affordable, flavorful cut with good marbling. Perfect for slow cooking and braising.',
+                methods: ['Braising', 'Slow Cooking', 'Stewing'],
+                price: 'Budget-Friendly',
+                difficulty: 'Easy',
+                flavor: 70,
+                tenderness: 40,
+                protein: 26,
+                fat: 15,
+                calories: 250,
+                seasonings: ['Thyme', 'Bay Leaf', 'Garlic', 'Rosemary'],
+                seasonal: 'Year-round'
+              },
+              rib: {
+                name: 'Ribeye',
+                region: 'Rib',
+                description: 'Well-marbled, tender cut with rich flavor. Excellent for grilling and pan-searing.',
+                methods: ['Grilling', 'Pan-searing', 'Broiling'],
+                price: 'Premium',
+                difficulty: 'Easy',
+                flavor: 95,
+                tenderness: 90,
+                protein: 25,
+                fat: 22,
+                calories: 320,
+                seasonings: ['Salt', 'Black Pepper', 'Garlic Powder', 'Thyme'],
+                seasonal: 'Summer'
+              },
+              loin: {
+                name: 'NY Strip & Filet',
+                region: 'Loin',
+                description: 'Premium cuts with bold flavor and exceptional tenderness. Ideal for special occasions.',
+                methods: ['Grilling', 'Pan-searing', 'Broiling'],
+                price: 'Premium',
+                difficulty: 'Easy',
+                flavor: 90,
+                tenderness: 95,
+                protein: 26,
+                fat: 16,
+                calories: 280,
+                seasonings: ['Salt', 'Black Pepper', 'Rosemary', 'Thyme'],
+                seasonal: 'Year-round'
+              },
+              round: {
+                name: 'Round Steak',
+                region: 'Hind Leg',
+                description: 'Lean cut from the hind leg. Good for roasting and slow cooking.',
+                methods: ['Roasting', 'Braising', 'Slow Cooking'],
+                price: 'Budget-Friendly',
+                difficulty: 'Medium',
+                flavor: 60,
+                tenderness: 50,
+                protein: 28,
+                fat: 8,
+                calories: 210,
+                seasonings: ['Cumin', 'Paprika', 'Garlic', 'Onion'],
+                seasonal: 'Year-round'
+              },
+              brisket: {
+                name: 'Brisket',
+                region: 'Chest',
+                description: 'Tough but flavorful that becomes tender with slow cooking. Iconic for BBQ.',
+                methods: ['Smoking', 'Braising', 'Slow Cooking'],
+                price: 'Mid-Range',
+                difficulty: 'Expert',
+                flavor: 100,
+                tenderness: 35,
+                protein: 27,
+                fat: 18,
+                calories: 310,
+                seasonings: ['Smoke', 'Cumin', 'Chili Powder', 'Garlic'],
+                seasonal: 'Summer'
+              }
+            }
+          },
+
+          pork: {
+            name: 'Pork',
+            color: 'from-pink-600 to-red-700',
+            cuts: {
+              shoulder: {
+                name: 'Pork Shoulder',
+                region: 'Shoulder',
+                description: 'Flavorful and well-marbled. Ideal for pulled pork and slow cooking.',
+                methods: ['Slow Cooking', 'Smoking', 'Roasting'],
+                price: 'Budget-Friendly',
+                difficulty: 'Easy',
+                flavor: 85,
+                tenderness: 60,
+                protein: 25,
+                fat: 20,
+                calories: 300,
+                seasonings: ['Cumin', 'Chili Powder', 'Garlic', 'Paprika'],
+                seasonal: 'Year-round'
+              },
+              loin: {
+                name: 'Pork Loin & Chops',
+                region: 'Loin',
+                description: 'Tender, mild flavor. Quick-cooking and versatile.',
+                methods: ['Pan-searing', 'Grilling', 'Roasting'],
+                price: 'Mid-Range',
+                difficulty: 'Easy',
+                flavor: 70,
+                tenderness: 85,
+                protein: 28,
+                fat: 10,
+                calories: 240,
+                seasonings: ['Sage', 'Thyme', 'Garlic', 'Apple'],
+                seasonal: 'Fall/Winter'
+              },
+              belly: {
+                name: 'Pork Belly',
+                region: 'Underside',
+                description: 'Rich, fatty cut used for bacon and braised dishes.',
+                methods: ['Braising', 'Roasting', 'Curing'],
+                price: 'Mid-Range',
+                difficulty: 'Medium',
+                flavor: 95,
+                tenderness: 75,
+                protein: 20,
+                fat: 32,
+                calories: 420,
+                seasonings: ['Soy Sauce', 'Ginger', 'Five Spice', 'Garlic'],
+                seasonal: 'Winter'
+              },
+              ham: {
+                name: 'Pork Ham/Leg',
+                region: 'Hind Leg',
+                description: 'Large roasting cut. Great for serving groups.',
+                methods: ['Roasting', 'Braising', 'Baking'],
+                price: 'Mid-Range',
+                difficulty: 'Medium',
+                flavor: 75,
+                tenderness: 70,
+                protein: 26,
+                fat: 15,
+                calories: 280,
+                seasonings: ['Honey', 'Mustard', 'Cloves', 'Brown Sugar'],
+                seasonal: 'Holidays'
+              }
+            }
+          },
+
+          lamb: {
+            name: 'Lamb',
+            color: 'from-orange-700 to-red-800',
+            cuts: {
+              shoulder: {
+                name: 'Lamb Shoulder',
+                region: 'Shoulder',
+                description: 'Flavorful, affordable cut suitable for braising and stewing.',
+                methods: ['Braising', 'Stewing', 'Roasting'],
+                price: 'Mid-Range',
+                difficulty: 'Medium',
+                flavor: 85,
+                tenderness: 60,
+                protein: 25,
+                fat: 16,
+                calories: 280,
+                seasonings: ['Oregano', 'Mint', 'Garlic', 'Lemon'],
+                seasonal: 'Spring/Fall'
+              },
+              rack: {
+                name: 'Lamb Rack & Chops',
+                region: 'Rib/Loin',
+                description: 'Tender, with distinctive rich flavor. Premium choice.',
+                methods: ['Grilling', 'Pan-searing', 'Roasting'],
+                price: 'Premium',
+                difficulty: 'Easy',
+                flavor: 90,
+                tenderness: 92,
+                protein: 26,
+                fat: 18,
+                calories: 300,
+                seasonings: ['Rosemary', 'Thyme', 'Garlic', 'Mint'],
+                seasonal: 'Spring/Summer'
+              },
+              leg: {
+                name: 'Lamb Leg',
+                region: 'Hind Leg',
+                description: 'Large roasting cut with good marbling.',
+                methods: ['Roasting', 'Grilling', 'Braising'],
+                price: 'Premium',
+                difficulty: 'Medium',
+                flavor: 88,
+                tenderness: 75,
+                protein: 27,
+                fat: 14,
+                calories: 270,
+                seasonings: ['Rosemary', 'Garlic', 'Cumin', 'Lemon'],
+                seasonal: 'Easter/Spring'
+              },
+              shank: {
+                name: 'Lamb Shank',
+                region: 'Lower Leg',
+                description: 'Tough but incredibly flavorful. Perfect for slow-cooked dishes.',
+                methods: ['Braising', 'Slow Cooking', 'Stewing'],
+                price: 'Budget-Friendly',
+                difficulty: 'Medium',
+                flavor: 95,
+                tenderness: 40,
+                protein: 28,
+                fat: 12,
+                calories: 260,
+                seasonings: ['Bay Leaf', 'Thyme', 'Garlic', 'Wine'],
+                seasonal: 'Winter'
+              }
+            }
+          },
+
+          chicken: {
+            name: 'Chicken',
+            color: 'from-yellow-600 to-orange-700',
+            cuts: {
+              breast: {
+                name: 'Chicken Breast',
+                region: 'Chest',
+                description: 'Lean, mild flavor. Very versatile and cooks quickly.',
+                methods: ['Grilling', 'Pan-searing', 'Baking'],
+                price: 'Budget-Friendly',
+                difficulty: 'Easy',
+                flavor: 60,
+                tenderness: 75,
+                protein: 31,
+                fat: 3,
+                calories: 165,
+                seasonings: ['Lemon', 'Garlic', 'Herbs de Provence', 'Black Pepper'],
+                seasonal: 'Year-round'
+              },
+              thigh: {
+                name: 'Chicken Thigh',
+                region: 'Upper Leg',
+                description: 'More flavorful than breast. Stays moist when cooked.',
+                methods: ['Roasting', 'Grilling', 'Pan-searing'],
+                price: 'Budget-Friendly',
+                difficulty: 'Easy',
+                flavor: 80,
+                tenderness: 85,
+                protein: 26,
+                fat: 10,
+                calories: 210,
+                seasonings: ['Paprika', 'Cumin', 'Garlic', 'Lime'],
+                seasonal: 'Year-round'
+              },
+              wings: {
+                name: 'Chicken Wings',
+                region: 'Wings',
+                description: 'Flavorful, fun to eat. Perfect for appetizers.',
+                methods: ['Frying', 'Grilling', 'Baking'],
+                price: 'Budget-Friendly',
+                difficulty: 'Easy',
+                flavor: 75,
+                tenderness: 70,
+                protein: 26,
+                fat: 11,
+                calories: 220,
+                seasonings: ['Hot Sauce', 'Garlic', 'Soy Sauce', 'Ginger'],
+                seasonal: 'Year-round'
+              },
+              legs: {
+                name: 'Chicken Drumstick',
+                region: 'Lower Leg',
+                description: 'Dark meat with rich flavor. Great for roasting.',
+                methods: ['Roasting', 'Frying', 'Grilling'],
+                price: 'Budget-Friendly',
+                difficulty: 'Easy',
+                flavor: 78,
+                tenderness: 80,
+                protein: 28,
+                fat: 8,
+                calories: 200,
+                seasonings: ['Paprika', 'Cayenne', 'Garlic', 'Onion Powder'],
+                seasonal: 'Year-round'
+              }
+            }
+          }
+        };
+
+        this.selectedCut = Object.keys(this.meatData[this.selectedAnimal].cuts)[0];
+        this.init();
+      }
+
+      init() {
+        this.render();
+      }
+
+      selectAnimal(animal) {
+        this.selectedAnimal = animal;
+        this.selectedCut = Object.keys(this.meatData[animal].cuts)[0];
+        this.render();
+      }
+
+      selectCut(cut) {
+        this.selectedCut = cut;
+        this.render();
+        requestAnimationFrame(() => {
+          const details = document.getElementById('cut-details');
+          if (!details) return;
+          requestAnimationFrame(() => {
+            this.slowScrollTo(details);
+          });
+        });
+      }
+
+      slowScrollTo(element) {
+        const startY = window.scrollY;
+        const rect = element.getBoundingClientRect();
+        const targetY = rect.top + window.scrollY - (window.innerHeight - rect.height) / 2;
+        const distance = targetY - startY;
+        const duration = 1400;
+        const startTime = performance.now();
+
+        const easeInOutCubic = t => (t < 0.5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+        const step = now => {
+          const elapsed = now - startTime;
+          const t = Math.min(elapsed / duration, 1);
+          const eased = easeInOutCubic(t);
+          window.scrollTo(0, startY + distance * eased);
+          if (t < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+      }
+
+      toStars(score) {
+        const rating = Math.max(1, Math.round(score / 20));
+        return '&#9733;'.repeat(rating) + '&#9734;'.repeat(5 - rating);
+      }
+
+      render() {
+        const currentMeat = this.meatData[this.selectedAnimal];
+        const currentCutData = this.selectedCut ? currentMeat.cuts[this.selectedCut] : null;
+
+        const html = `
+          <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-800 to-slate-900 border-b border-slate-700 shadow-xl">
+              <div class="max-w-7xl mx-auto px-6 py-12">
+                <h1 class="text-6xl font-bold text-white mb-3">Meat Cuts Guide</h1>
+                <p class="text-slate-300 text-lg">Guide with cooking tips and nutrition highlights</p>
+              </div>
+            </div>
+
+            <!-- Meat Type Selector -->
+            <div class="max-w-7xl mx-auto px-6 py-8">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+                ${Object.entries(this.meatData).map(([key, data]) => `
+                  <button type="button" onclick="app.selectAnimal('${key}')"
+                    aria-pressed="${this.selectedAnimal === key}"
+                    class="py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-slate-300 ${
+                      this.selectedAnimal === key
+                        ? `bg-gradient-to-r ${data.color} text-white shadow-lg scale-105`
+                        : 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                    }">
+                    ${data.name}
+                  </button>
+                `).join('')}
+              </div>
+
+              <!-- Main Content -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <!-- Cuts Selection -->
+                <div class="bg-slate-700 border border-slate-600 rounded-xl shadow-xl p-6">
+                  <h2 class="text-2xl font-bold mb-6 bg-gradient-to-r ${currentMeat.color} bg-clip-text text-transparent">
+                    ${currentMeat.name} Cuts
+                  </h2>
+
+                  <p class="text-slate-400 text-sm mb-4">Pick a cut to see details and nutrition highlights.</p>
+
+                  <div class="grid grid-cols-1 gap-3">
+                    ${Object.entries(currentMeat.cuts).map(([key, cut]) => `
+                      <button type="button" onclick="app.selectCut('${key}')"
+                        aria-pressed="${this.selectedCut === key}"
+                        class="p-4 rounded-lg text-left font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-slate-300 ${
+                          this.selectedCut === key
+                            ? `bg-gradient-to-r ${currentMeat.color} text-white shadow-lg`
+                            : 'bg-slate-600 text-slate-200 hover:bg-slate-500'
+                        }">
+                        <div class="font-semibold">${cut.name}</div>
+                        <div class="text-xs opacity-75 mt-1">${cut.region}</div>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Details Panel -->
+                <div id="cut-details" class="lg:sticky lg:top-6" aria-live="polite" aria-atomic="true">
+                  ${currentCutData ? `
+                    <div class="space-y-4">
+                      <!-- Main Info -->
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-xl p-6 shadow-xl">
+                        <h3 class="text-3xl font-bold mb-2 bg-gradient-to-r ${currentMeat.color} bg-clip-text text-transparent">
+                          ${currentCutData.name}
+                        </h3>
+                        <p class="text-slate-400 text-sm mb-4">From: ${currentCutData.region}</p>
+                        <p class="text-slate-200 leading-relaxed">${currentCutData.description}</p>
+                      </div>
+
+                      <!-- Price & Difficulty -->
+                      <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-700 border border-slate-600 rounded-xl p-4 shadow-lg">
+                          <p class="text-slate-400 text-sm mb-2">Price Range</p>
+                          <p class="text-white font-bold text-lg">${currentCutData.price}</p>
+                        </div>
+                        <div class="bg-slate-700 border border-slate-600 rounded-xl p-4 shadow-lg">
+                          <p class="text-slate-400 text-sm mb-2">Difficulty</p>
+                          <p class="text-white font-bold text-lg">${currentCutData.difficulty}</p>
+                        </div>
+                      </div>
+
+                      <!-- Flavor & Tenderness -->
+                      <div class="bg-slate-700 border border-slate-600 rounded-xl p-4 shadow-lg">
+                        <p class="text-slate-400 text-sm mb-3">Flavor Profile</p>
+
+                        <div class="mb-3">
+                          <div class="flex justify-between mb-1">
+                            <span class="text-slate-300 text-sm">Flavor Intensity</span>
+                            <span class="text-yellow-400 text-2xl tracking-widest leading-none">${this.toStars(currentCutData.flavor)}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div class="flex justify-between mb-1">
+                            <span class="text-slate-300 text-sm">Tenderness</span>
+                            <span class="text-yellow-400 text-2xl tracking-widest leading-none">${this.toStars(currentCutData.tenderness)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Nutrition -->
+                      <div class="bg-slate-700 border border-slate-600 rounded-xl p-4 shadow-lg">
+                        <p class="text-slate-400 text-sm mb-3">Nutrition (per 100g)</p>
+                        <div class="grid grid-cols-3 gap-3">
+                          <div class="text-center">
+                            <p class="text-slate-300 text-sm">Protein</p>
+                            <p class="text-white font-bold text-lg">${currentCutData.protein}g</p>
+                          </div>
+                          <div class="text-center">
+                            <p class="text-slate-300 text-sm">Fat</p>
+                            <p class="text-white font-bold text-lg">${currentCutData.fat}g</p>
+                          </div>
+                          <div class="text-center">
+                            <p class="text-slate-300 text-sm">Calories</p>
+                            <p class="text-white font-bold text-lg">${currentCutData.calories}</p>
+                          </div>
+                        </div>
+                        <p class="text-slate-500 text-xs mt-3">Nutrition estimates last updated 2024.</p>
+                        <p class="text-slate-500 text-xs mt-2">For general guidance; values vary by cut and preparation.</p>
+                      </div>
+
+                      <!-- Cooking Methods -->
+                      <div class="bg-slate-700 border border-slate-600 rounded-xl p-4 shadow-lg">
+                        <p class="text-slate-400 text-sm mb-3">Best Cooking Methods</p>
+                        <div class="flex flex-wrap gap-2">
+                          ${currentCutData.methods.map(method => `
+                            <span class="bg-gradient-to-r ${currentMeat.color} text-white px-3 py-1 rounded-full text-sm font-medium">
+                              ${method}
+                            </span>
+                          `).join('')}
+                        </div>
+                      </div>
+
+                      <!-- Seasonings -->
+                      <div class="bg-slate-700 border border-slate-600 rounded-xl p-4 shadow-lg">
+                        <p class="text-slate-400 text-sm mb-3">Recommended Seasonings</p>
+                        <div class="flex flex-wrap gap-2">
+                          ${currentCutData.seasonings.map(seasoning => `
+                            <span class="bg-slate-600 text-slate-200 px-3 py-1 rounded-full text-sm">
+                              ${seasoning}
+                            </span>
+                          `).join('')}
+                        </div>
+                      </div>
+
+                    </div>
+                  ` : `
+                    <div class="bg-slate-700 border border-slate-600 rounded-xl p-12 shadow-xl flex items-center justify-center min-h-96">
+                      <div class="text-center">
+                        <p class="text-slate-300 text-lg mb-2">Select a cut to view details</p>
+                        <p class="text-slate-400 text-sm">Click on any cut to explore nutrition, recipes & more</p>
+                      </div>
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('app').innerHTML = html;
+      }
+    }
+
+    const app = new MeatCutsApp();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki Meat - Your Culinary Knowledge Base</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Master the art of meat with comprehensive guides on cuts, cooking methods, recipes, and culinary techniques. From ribeye to brisket - explore everything about meat.">
+    <meta name="keywords" content="meat cuts, cooking methods, recipes, grilling, smoking, beef, pork, lamb, chicken, culinary guide">
+    <meta name="author" content="Wiki Meat">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wikimeat.com/">
+    <meta property="og:title" content="Wiki Meat - Master the Art of Meat">
+    <meta property="og:description" content="Your comprehensive guide to meat cuts, cooking methods, recipes, and culinary techniques. Expert knowledge for every skill level.">
+    <meta property="og:image" content="https://wikimeat.com/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://wikimeat.com/">
+    <meta property="twitter:title" content="Wiki Meat - Master the Art of Meat">
+    <meta property="twitter:description" content="Your comprehensive guide to meat cuts, cooking methods, recipes, and culinary techniques.">
+    <meta property="twitter:image" content="https://wikimeat.com/og-image.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+    <!-- Preload -->
+    <link rel="preconnect" href="https://flagcdn.com">
+    <link rel="dns-prefetch" href="https://flagcdn.com">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Navigation */
+        nav {
+            background: linear-gradient(135deg, #8b4513 0%, #5c2e0f 100%);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav .logo span {
+            font-size: 2rem;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            color: #ffb366;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff;
+            padding: 100px 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139,69,19,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffb366 0%, #ff9999 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: #ccc;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff9999 0%, #ffb366 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255,153,153,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 2px solid #ffb366;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,179,102,0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 2rem;
+            background: #f8f8f8;
+        }
+
+        .features .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #1a1a1a;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #8b4513;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Stats Section */
+        .stats {
+            background: linear-gradient(135deg, #8b4513 0%, #5c2e0f 100%);
+            color: #fff;
+            padding: 60px 2rem;
+        }
+
+        .stats .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item h4 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #ffb366;
+        }
+
+        .stat-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Call to Action */
+        .cta-section {
+            padding: 80px 2rem;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff;
+            text-align: center;
+        }
+
+        .cta-section .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #ccc;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            color: #999;
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid #333;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: #ffb366;
+            text-decoration: none;
+            transition: color 0.3s;
+            margin: 0 0.5rem;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .footer-links span {
+            color: #555;
+            margin: 0 0.5rem;
+        }
+
+        /* Contact Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            padding: 2.5rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid #ffb366;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+        }
+
+        .modal-close:hover {
+            color: #ffb366;
+        }
+
+        .modal h2 {
+            color: #ffb366;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .contact-info {
+            color: #ccc;
+            line-height: 2;
+        }
+
+        .contact-info p {
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contact-info a {
+            color: #ffb366;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-info a:hover {
+            color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Language Switcher */
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        @media (max-width: 900px) {
+            .language-switcher {
+                top: 70px;
+            }
+        }
+
+        .language-btn {
+            background: rgba(139, 69, 19, 0.95);
+            color: #fff;
+            border: 2px solid #ffb366;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 179, 102, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,179,102,0.4);
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: rgba(26, 26, 26, 0.98);
+            border: 2px solid #ffb366;
+            border-radius: 10px;
+            padding: 10px;
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .language-dropdown.active {
+            display: block;
+        }
+
+        .language-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .language-option:hover {
+            background: rgba(255, 179, 102, 0.2);
+        }
+
+        .language-option.selected {
+            background: rgba(255, 179, 102, 0.3);
+            font-weight: 600;
+        }
+
+        .lang-flag {
+            width: 24px;
+            height: 18px;
+            object-fit: cover;
+            border-radius: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .language-btn .lang-flag {
+            width: 28px;
+            height: 21px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+
+            .language-switcher {
+                top: 10px;
+                right: 10px;
+            }
+
+            .language-btn {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+
+            .language-dropdown {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        <button class="language-btn" onclick="toggleLanguageDropdown()">
+            <span id="current-flag"><img src="https://flagcdn.com/w40/gb.png" class="lang-flag" alt="English flag"></span>
+            <span id="current-lang">English</span>
+            <span>▼</span>
+        </button>
+        <div class="language-dropdown" id="language-dropdown">
+            <!-- Languages will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">
+                <span>🥩</span> Wiki Meat
+            </a>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#contact" onclick="openContactModal(event)">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 id="hero-title">Master the Art of Meat</h1>
+            <p id="hero-subtitle">Your comprehensive guide to cuts, cooking methods, recipes, and culinary techniques. Explore everything you need to know about meat.</p>
+            <div class="cta-buttons">
+                <a href="meat-cuts.html" class="btn btn-primary" id="explore-btn">Contribute a Cut</a>
+                <button class="btn btn-secondary" onclick="openEarlyAccessModal()" id="get-started-btn">Get Early Access</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title" id="features-title">Why Choose Wiki Meat?</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3 id="feature1-title">Comprehensive Guides</h3>
+                    <p id="feature1-text">Detailed information on every cut, from ribeye to brisket. Learn preparation, cooking times, and optimal temperatures.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👨‍🍳</div>
+                    <h3 id="feature2-title">Expert Recipes</h3>
+                    <p id="feature2-text">Curated recipes from professional chefs. Step-by-step instructions for perfecting your culinary skills.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <h3 id="feature3-title">Cooking Methods</h3>
+                    <p id="feature3-text">Master grilling, smoking, roasting, pan-searing, and more. Techniques for every skill level.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🥘</div>
+                    <h3 id="feature4-title">Pairing & Sides</h3>
+                    <p id="feature4-text">Perfect wine pairings, sauce recipes, and side dish suggestions for every occasion.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3 id="feature5-title">Global Cuisines</h3>
+                    <p id="feature5-text">Explore meat preparation from around the world. Traditional recipes and modern twists.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3 id="feature6-title">Pro Tips</h3>
+                    <p id="feature6-text">Insider knowledge, storage advice, and tricks to elevate your meat preparation game.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stat-item">
+                <h4 id="stat1-num">500+</h4>
+                <p id="stat1-text">Recipes & Guides</p>
+            </div>
+            <div class="stat-item">
+                <h4 id="stat2-num">50+</h4>
+                <p id="stat2-text">Meat Cuts Covered</p>
+            </div>
+            <div class="stat-item">
+                <h4 id="stat3-num">100k+</h4>
+                <p id="stat3-text">Active Community</p>
+            </div>
+            <div class="stat-item">
+                <h4 id="stat4-num">24/7</h4>
+                <p id="stat4-text">Always Available</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2 id="cta-title">Ready to Become a Meat Master?</h2>
+            <p id="cta-subtitle">Join thousands of cooking enthusiasts who've transformed their skills with Wiki Meat</p>
+            <a href="meat-cuts.html" class="btn btn-primary" id="join-btn">Get Started Now</a>
+        </div>
+    </section>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeContactModal()">&times;</button>
+            <h2>Get in Touch</h2>
+            <div class="contact-info">
+                <p>📧 Email: <a href="mailto:contact@wikimeat.com">contact@wikimeat.com</a></p>
+                <p>🐦 Twitter: <a href="https://twitter.com/wikimeat" target="_blank">@wikimeat</a></p>
+                <p>💬 Discord: <a href="https://discord.gg/wikimeat" target="_blank">Join our community</a></p>
+                <p>📍 Location: Available worldwide</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Early Access Modal -->
+    <div id="earlyAccessModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeEarlyAccessModal()">&times;</button>
+            <h2>Get Early Access</h2>
+            <p style="color: #ccc; margin-bottom: 2rem;">Join our waitlist and be the first to access new features!</p>
+            <form id="earlyAccessForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="email" placeholder="Your email address" required
+                       style="padding: 12px; border-radius: 5px; border: 2px solid #ffb366; background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Join Waitlist</button>
+            </form>
+            <p id="earlyAccessMessage" style="color: #4CAF50; margin-top: 1rem; display: none;">Thanks! We'll be in touch soon.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p id="footer-text">&copy; 2026 Wiki Meat. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <span>|</span>
+                <a href="terms.html">Terms of Service</a>
+                <span>|</span>
+                <a href="#contact" onclick="openContactModal(event)">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Translation data for 30+ languages
+        const translations = {
+            en: {
+                name: 'English',
+                flag: 'gb',
+                hero_title: 'Master the Art of Meat',
+                hero_subtitle: 'Your comprehensive guide to cuts, cooking methods, recipes, and culinary techniques. Explore everything you need to know about meat.',
+                explore_btn: 'Explore Now',
+                get_started_btn: 'Get Started',
+                features_title: 'Why Choose Wiki Meat?',
+                feature1_title: 'Comprehensive Guides',
+                feature1_text: 'Detailed information on every cut, from ribeye to brisket. Learn preparation, cooking times, and optimal temperatures.',
+                feature2_title: 'Expert Recipes',
+                feature2_text: 'Curated recipes from professional chefs. Step-by-step instructions for perfecting your culinary skills.',
+                feature3_title: 'Cooking Methods',
+                feature3_text: 'Master grilling, smoking, roasting, pan-searing, and more. Techniques for every skill level.',
+                feature4_title: 'Pairing & Sides',
+                feature4_text: 'Perfect wine pairings, sauce recipes, and side dish suggestions for every occasion.',
+                feature5_title: 'Global Cuisines',
+                feature5_text: 'Explore meat preparation from around the world. Traditional recipes and modern twists.',
+                feature6_title: 'Pro Tips',
+                feature6_text: 'Insider knowledge, storage advice, and tricks to elevate your meat preparation game.',
+                stat1_num: '500+',
+                stat1_text: 'Recipes & Guides',
+                stat2_num: '50+',
+                stat2_text: 'Meat Cuts Covered',
+                stat3_num: '100k+',
+                stat3_text: 'Active Community',
+                stat4_num: '24/7',
+                stat4_text: 'Always Available',
+                cta_title: 'Ready to Become a Meat Master?',
+                cta_subtitle: 'Join thousands of cooking enthusiasts who\'ve transformed their skills with Wiki Meat',
+                join_btn: 'Join Now',
+                footer_text: '© 2026 Wiki Meat. All rights reserved. | Your ultimate culinary knowledge base'
+            },
+            es: {
+                name: 'Español',
+                flag: 'es',
+                hero_title: 'Domina el Arte de la Carne',
+                hero_subtitle: 'Tu guía completa sobre cortes, métodos de cocción, recetas y técnicas culinarias. Explora todo lo que necesitas saber sobre la carne.',
+                explore_btn: 'Explorar Ahora',
+                get_started_btn: 'Comenzar',
+                features_title: '¿Por Qué Elegir Wiki Meat?',
+                feature1_title: 'Guías Completas',
+                feature1_text: 'Información detallada sobre cada corte, desde ribeye hasta brisket. Aprende preparación, tiempos de cocción y temperaturas óptimas.',
+                feature2_title: 'Recetas Expertas',
+                feature2_text: 'Recetas seleccionadas de chefs profesionales. Instrucciones paso a paso para perfeccionar tus habilidades culinarias.',
+                feature3_title: 'Métodos de Cocción',
+                feature3_text: 'Domina la parrilla, ahumado, asado, sellado y más. Técnicas para todos los niveles.',
+                feature4_title: 'Maridajes y Guarniciones',
+                feature4_text: 'Maridajes perfectos de vino, recetas de salsas y sugerencias de guarniciones para cada ocasión.',
+                feature5_title: 'Cocinas Globales',
+                feature5_text: 'Explora la preparación de carne de todo el mundo. Recetas tradicionales y giros modernos.',
+                feature6_title: 'Consejos Pro',
+                feature6_text: 'Conocimientos internos, consejos de almacenamiento y trucos para elevar tu juego de preparación de carne.',
+                stat1_num: '500+',
+                stat1_text: 'Recetas y Guías',
+                stat2_num: '50+',
+                stat2_text: 'Cortes de Carne',
+                stat3_num: '100k+',
+                stat3_text: 'Comunidad Activa',
+                stat4_num: '24/7',
+                stat4_text: 'Siempre Disponible',
+                cta_title: '¿Listo para Convertirte en un Maestro de la Carne?',
+                cta_subtitle: 'Únete a miles de entusiastas de la cocina que han transformado sus habilidades con Wiki Meat',
+                join_btn: 'Únete Ahora',
+                footer_text: '© 2026 Wiki Meat. Todos los derechos reservados. | Tu base de conocimiento culinario definitiva'
+            },
+            fr: {
+                name: 'Français',
+                flag: 'fr',
+                hero_title: 'Maîtrisez l\'Art de la Viande',
+                hero_subtitle: 'Votre guide complet sur les découpes, méthodes de cuisson, recettes et techniques culinaires. Explorez tout ce que vous devez savoir sur la viande.',
+                explore_btn: 'Explorer Maintenant',
+                get_started_btn: 'Commencer',
+                features_title: 'Pourquoi Choisir Wiki Meat?',
+                feature1_title: 'Guides Complets',
+                feature1_text: 'Informations détaillées sur chaque coupe, du ribeye au brisket. Apprenez la préparation, les temps de cuisson et les températures optimales.',
+                feature2_title: 'Recettes d\'Expert',
+                feature2_text: 'Recettes sélectionnées par des chefs professionnels. Instructions étape par étape pour perfectionner vos compétences culinaires.',
+                feature3_title: 'Méthodes de Cuisson',
+                feature3_text: 'Maîtrisez le grill, le fumage, le rôtissage, la poêle et plus. Des techniques pour tous les niveaux.',
+                feature4_title: 'Accords & Accompagnements',
+                feature4_text: 'Accords parfaits avec le vin, recettes de sauces et suggestions d\'accompagnements pour chaque occasion.',
+                feature5_title: 'Cuisines du Monde',
+                feature5_text: 'Explorez la préparation de viande du monde entier. Recettes traditionnelles et touches modernes.',
+                feature6_title: 'Conseils Pro',
+                feature6_text: 'Connaissances d\'initiés, conseils de conservation et astuces pour améliorer votre jeu de préparation de viande.',
+                stat1_num: '500+',
+                stat1_text: 'Recettes et Guides',
+                stat2_num: '50+',
+                stat2_text: 'Coupes de Viande',
+                stat3_num: '100k+',
+                stat3_text: 'Communauté Active',
+                stat4_num: '24/7',
+                stat4_text: 'Toujours Disponible',
+                cta_title: 'Prêt à Devenir un Maître de la Viande?',
+                cta_subtitle: 'Rejoignez des milliers de passionnés de cuisine qui ont transformé leurs compétences avec Wiki Meat',
+                join_btn: 'Rejoindre Maintenant',
+                footer_text: '© 2026 Wiki Meat. Tous droits réservés. | Votre base de connaissances culinaires ultime'
+            },
+            de: {
+                name: 'Deutsch',
+                flag: 'de',
+                hero_title: 'Meistern Sie die Kunst des Fleisches',
+                hero_subtitle: 'Ihr umfassender Leitfaden zu Schnitten, Kochmethoden, Rezepten und kulinarischen Techniken. Entdecken Sie alles, was Sie über Fleisch wissen müssen.',
+                explore_btn: 'Jetzt Erkunden',
+                get_started_btn: 'Loslegen',
+                features_title: 'Warum Wiki Meat Wählen?',
+                feature1_title: 'Umfassende Anleitungen',
+                feature1_text: 'Detaillierte Informationen zu jedem Schnitt, vom Ribeye bis zum Brisket. Lernen Sie Zubereitung, Garzeiten und optimale Temperaturen.',
+                feature2_title: 'Expertenrezepte',
+                feature2_text: 'Kuratierte Rezepte von professionellen Köchen. Schritt-für-Schritt-Anleitungen zur Perfektionierung Ihrer kulinarischen Fähigkeiten.',
+                feature3_title: 'Kochmethoden',
+                feature3_text: 'Meistern Sie Grillen, Räuchern, Braten, Anbraten und mehr. Techniken für jedes Können.',
+                feature4_title: 'Paarungen & Beilagen',
+                feature4_text: 'Perfekte Weinpaarungen, Saucenrezepte und Beilagenvorschläge für jeden Anlass.',
+                feature5_title: 'Weltküchen',
+                feature5_text: 'Entdecken Sie Fleischzubereitung aus der ganzen Welt. Traditionelle Rezepte und moderne Wendungen.',
+                feature6_title: 'Profi-Tipps',
+                feature6_text: 'Insider-Wissen, Lagerungsratschläge und Tricks, um Ihr Fleischzubereitungsspiel zu verbessern.',
+                stat1_num: '500+',
+                stat1_text: 'Rezepte & Anleitungen',
+                stat2_num: '50+',
+                stat2_text: 'Fleischstücke',
+                stat3_num: '100k+',
+                stat3_text: 'Aktive Community',
+                stat4_num: '24/7',
+                stat4_text: 'Immer Verfügbar',
+                cta_title: 'Bereit, ein Fleischmeister zu Werden?',
+                cta_subtitle: 'Schließen Sie sich Tausenden von Kochbegeisterten an, die ihre Fähigkeiten mit Wiki Meat transformiert haben',
+                join_btn: 'Jetzt Beitreten',
+                footer_text: '© 2026 Wiki Meat. Alle Rechte vorbehalten. | Ihre ultimative kulinarische Wissensdatenbank'
+            },
+            it: {
+                name: 'Italiano',
+                flag: 'it',
+                hero_title: 'Padroneggia l\'Arte della Carne',
+                hero_subtitle: 'La tua guida completa ai tagli, metodi di cottura, ricette e tecniche culinarie. Esplora tutto ciò che devi sapere sulla carne.',
+                explore_btn: 'Esplora Ora',
+                get_started_btn: 'Inizia',
+                features_title: 'Perché Scegliere Wiki Meat?',
+                feature1_title: 'Guide Complete',
+                feature1_text: 'Informazioni dettagliate su ogni taglio, dalla costata al petto. Impara preparazione, tempi di cottura e temperature ottimali.',
+                feature2_title: 'Ricette Esperte',
+                feature2_text: 'Ricette curate da chef professionisti. Istruzioni passo passo per perfezionare le tue abilità culinarie.',
+                feature3_title: 'Metodi di Cottura',
+                feature3_text: 'Padroneggia la griglia, affumicatura, arrosto, rosolatura e altro. Tecniche per ogni livello.',
+                feature4_title: 'Abbinamenti e Contorni',
+                feature4_text: 'Abbinamenti perfetti di vino, ricette di salse e suggerimenti di contorni per ogni occasione.',
+                feature5_title: 'Cucine Globali',
+                feature5_text: 'Esplora la preparazione della carne da tutto il mondo. Ricette tradizionali e tocchi moderni.',
+                feature6_title: 'Consigli Pro',
+                feature6_text: 'Conoscenze insider, consigli di conservazione e trucchi per elevare il tuo gioco di preparazione della carne.',
+                stat1_num: '500+',
+                stat1_text: 'Ricette e Guide',
+                stat2_num: '50+',
+                stat2_text: 'Tagli di Carne',
+                stat3_num: '100k+',
+                stat3_text: 'Comunità Attiva',
+                stat4_num: '24/7',
+                stat4_text: 'Sempre Disponibile',
+                cta_title: 'Pronto a Diventare un Maestro della Carne?',
+                cta_subtitle: 'Unisciti a migliaia di appassionati di cucina che hanno trasformato le loro abilità con Wiki Meat',
+                join_btn: 'Unisciti Ora',
+                footer_text: '© 2026 Wiki Meat. Tutti i diritti riservati. | La tua base di conoscenze culinarie definitiva'
+            },
+            pt: {
+                name: 'Português',
+                flag: 'pt',
+                hero_title: 'Domine a Arte da Carne',
+                hero_subtitle: 'Seu guia completo sobre cortes, métodos de cozimento, receitas e técnicas culinárias. Explore tudo o que você precisa saber sobre carne.',
+                explore_btn: 'Explorar Agora',
+                get_started_btn: 'Começar',
+                features_title: 'Por Que Escolher Wiki Meat?',
+                feature1_title: 'Guias Completos',
+                feature1_text: 'Informações detalhadas sobre cada corte, de ribeye a brisket. Aprenda preparação, tempos de cozimento e temperaturas ideais.',
+                feature2_title: 'Receitas Especializadas',
+                feature2_text: 'Receitas selecionadas de chefs profissionais. Instruções passo a passo para aperfeiçoar suas habilidades culinárias.',
+                feature3_title: 'Métodos de Cozimento',
+                feature3_text: 'Domine grelhar, defumar, assar, selar e muito mais. Técnicas para todos os níveis.',
+                feature4_title: 'Harmonizações e Acompanhamentos',
+                feature4_text: 'Harmonizações perfeitas de vinho, receitas de molhos e sugestões de acompanhamentos para cada ocasião.',
+                feature5_title: 'Cozinhas Globais',
+                feature5_text: 'Explore preparação de carne de todo o mundo. Receitas tradicionais e toques modernos.',
+                feature6_title: 'Dicas Profissionais',
+                feature6_text: 'Conhecimento interno, conselhos de armazenamento e truques para elevar seu jogo de preparação de carne.',
+                stat1_num: '500+',
+                stat1_text: 'Receitas e Guias',
+                stat2_num: '50+',
+                stat2_text: 'Cortes de Carne',
+                stat3_num: '100k+',
+                stat3_text: 'Comunidade Ativa',
+                stat4_num: '24/7',
+                stat4_text: 'Sempre Disponível',
+                cta_title: 'Pronto para se Tornar um Mestre da Carne?',
+                cta_subtitle: 'Junte-se a milhares de entusiastas da culinária que transformaram suas habilidades com Wiki Meat',
+                join_btn: 'Junte-se Agora',
+                footer_text: '© 2026 Wiki Meat. Todos os direitos reservados. | Sua base de conhecimento culinário definitiva'
+            },
+            ru: {
+                name: 'Русский',
+                flag: 'ru',
+                hero_title: 'Овладейте Искусством Мяса',
+                hero_subtitle: 'Ваш полный справочник по отрубам, методам приготовления, рецептам и кулинарным техникам. Изучите все, что нужно знать о мясе.',
+                explore_btn: 'Исследовать Сейчас',
+                get_started_btn: 'Начать',
+                features_title: 'Почему Выбрать Wiki Meat?',
+                feature1_title: 'Полные Руководства',
+                feature1_text: 'Подробная информация о каждом отрубе, от рибай до грудинки. Изучите приготовление, время готовки и оптимальные температуры.',
+                feature2_title: 'Экспертные Рецепты',
+                feature2_text: 'Отобранные рецепты от профессиональных поваров. Пошаговые инструкции для совершенствования ваших кулинарных навыков.',
+                feature3_title: 'Методы Приготовления',
+                feature3_text: 'Овладейте грилем, копчением, запеканием, обжаркой и многим другим. Техники для любого уровня.',
+                feature4_title: 'Сочетания и Гарниры',
+                feature4_text: 'Идеальные винные сочетания, рецепты соусов и предложения гарниров для любого случая.',
+                feature5_title: 'Мировые Кухни',
+                feature5_text: 'Исследуйте приготовление мяса со всего мира. Традиционные рецепты и современные интерпретации.',
+                feature6_title: 'Профессиональные Советы',
+                feature6_text: 'Инсайдерские знания, советы по хранению и хитрости для улучшения вашего мастерства приготовления мяса.',
+                stat1_num: '500+',
+                stat1_text: 'Рецептов и Руководств',
+                stat2_num: '50+',
+                stat2_text: 'Отрубов Мяса',
+                stat3_num: '100k+',
+                stat3_text: 'Активное Сообщество',
+                stat4_num: '24/7',
+                stat4_text: 'Всегда Доступно',
+                cta_title: 'Готовы Стать Мастером Мяса?',
+                cta_subtitle: 'Присоединяйтесь к тысячам энтузиастов кулинарии, которые преобразили свои навыки с Wiki Meat',
+                join_btn: 'Присоединиться Сейчас',
+                footer_text: '© 2026 Wiki Meat. Все права защищены. | Ваша главная кулинарная база знаний'
+            },
+            zh: {
+                name: '中文',
+                flag: 'cn',
+                hero_title: '掌握肉类艺术',
+                hero_subtitle: '您的全面指南：切割、烹饪方法、食谱和烹饪技术。探索您需要了解的关于肉类的一切。',
+                explore_btn: '立即探索',
+                get_started_btn: '开始',
+                features_title: '为什么选择 Wiki Meat？',
+                feature1_title: '全面指南',
+                feature1_text: '关于每种切割的详细信息，从肋眼到牛胸肉。学习准备、烹饪时间和最佳温度。',
+                feature2_title: '专家食谱',
+                feature2_text: '由专业厨师精选的食谱。完善您的烹饪技能的分步说明。',
+                feature3_title: '烹饪方法',
+                feature3_text: '掌握烧烤、熏制、烘烤、煎封等。适合各个技能水平的技术。',
+                feature4_title: '搭配和配菜',
+                feature4_text: '完美的葡萄酒搭配、酱汁食谱和适合各种场合的配菜建议。',
+                feature5_title: '全球美食',
+                feature5_text: '探索来自世界各地的肉类准备。传统食谱和现代变化。',
+                feature6_title: '专业提示',
+                feature6_text: '内部知识、储存建议和提升您肉类准备水平的技巧。',
+                stat1_num: '500+',
+                stat1_text: '食谱和指南',
+                stat2_num: '50+',
+                stat2_text: '肉类切割',
+                stat3_num: '10万+',
+                stat3_text: '活跃社区',
+                stat4_num: '24/7',
+                stat4_text: '全天候可用',
+                cta_title: '准备成为肉类大师了吗？',
+                cta_subtitle: '加入成千上万用 Wiki Meat 改变了他们技能的烹饪爱好者',
+                join_btn: '立即加入',
+                footer_text: '© 2026 Wiki Meat。保留所有权利。| 您的终极烹饪知识库'
+            },
+            ja: {
+                name: '日本語',
+                flag: 'jp',
+                hero_title: '肉の芸術をマスターする',
+                hero_subtitle: 'カット、調理方法、レシピ、料理技術の総合ガイド。肉について知っておくべきすべてを探索します。',
+                explore_btn: '今すぐ探索',
+                get_started_btn: '始める',
+                features_title: 'なぜWiki Meatを選ぶのか？',
+                feature1_title: '包括的なガイド',
+                feature1_text: 'リブアイからブリスケットまで、すべてのカットに関する詳細情報。準備、調理時間、最適温度を学びます。',
+                feature2_title: 'エキスパートレシピ',
+                feature2_text: 'プロのシェフによる厳選レシピ。料理スキルを完璧にするためのステップバイステップの指示。',
+                feature3_title: '調理方法',
+                feature3_text: 'グリル、スモーク、ロースト、パンシアリングなどをマスター。あらゆるスキルレベルのテクニック。',
+                feature4_title: 'ペアリングとサイド',
+                feature4_text: '完璧なワインペアリング、ソースレシピ、あらゆる機会のためのサイドディッシュの提案。',
+                feature5_title: 'グローバル料理',
+                feature5_text: '世界中からの肉の準備を探索します。伝統的なレシピと現代的なひねり。',
+                feature6_title: 'プロのヒント',
+                feature6_text: 'インサイダー知識、保存アドバイス、肉の準備ゲームを向上させるためのトリック。',
+                stat1_num: '500+',
+                stat1_text: 'レシピとガイド',
+                stat2_num: '50+',
+                stat2_text: '肉のカット',
+                stat3_num: '10万+',
+                stat3_text: 'アクティブコミュニティ',
+                stat4_num: '24/7',
+                stat4_text: '常に利用可能',
+                cta_title: '肉マスターになる準備はできていますか？',
+                cta_subtitle: 'Wiki Meatでスキルを変えた何千もの料理愛好家に参加しましょう',
+                join_btn: '今すぐ参加',
+                footer_text: '© 2026 Wiki Meat。全著作権所有。| あなたの究極の料理知識ベース'
+            },
+            ar: {
+                name: 'العربية',
+                flag: 'sa',
+                hero_title: 'أتقن فن اللحوم',
+                hero_subtitle: 'دليلك الشامل للقطع وطرق الطهي والوصفات والتقنيات الطهوية. استكشف كل ما تحتاج لمعرفته عن اللحوم.',
+                explore_btn: 'استكشف الآن',
+                get_started_btn: 'ابدأ',
+                features_title: 'لماذا تختار ويكي ميت؟',
+                feature1_title: 'أدلة شاملة',
+                feature1_text: 'معلومات مفصلة عن كل قطعة، من الريب آي إلى البريسكيت. تعلم التحضير وأوقات الطهي ودرجات الحرارة المثلى.',
+                feature2_title: 'وصفات الخبراء',
+                feature2_text: 'وصفات منتقاة من طهاة محترفين. تعليمات خطوة بخطوة لإتقان مهاراتك في الطهي.',
+                feature3_title: 'طرق الطهي',
+                feature3_text: 'أتقن الشواء والتدخين والتحميص والقلي السريع والمزيد. تقنيات لكل مستوى مهارة.',
+                feature4_title: 'التوافقات والأطباق الجانبية',
+                feature4_text: 'توافقات نبيذ مثالية ووصفات صلصات واقتراحات أطباق جانبية لكل مناسبة.',
+                feature5_title: 'المطابخ العالمية',
+                feature5_text: 'استكشف إعداد اللحوم من جميع أنحاء العالم. وصفات تقليدية ولمسات حديثة.',
+                feature6_title: 'نصائح احترافية',
+                feature6_text: 'معرفة داخلية ونصائح تخزين وحيل لرفع مستوى لعبة إعداد اللحوم الخاصة بك.',
+                stat1_num: '+500',
+                stat1_text: 'وصفات وأدلة',
+                stat2_num: '+50',
+                stat2_text: 'قطعة لحم',
+                stat3_num: '+100 ألف',
+                stat3_text: 'مجتمع نشط',
+                stat4_num: '24/7',
+                stat4_text: 'متاح دائماً',
+                cta_title: 'هل أنت مستعد لتصبح سيد اللحوم؟',
+                cta_subtitle: 'انضم إلى آلاف عشاق الطبخ الذين حولوا مهاراتهم مع ويكي ميت',
+                join_btn: 'انضم الآن',
+                footer_text: '© 2026 ويكي ميت. جميع الحقوق محفوظة. | قاعدة معرفتك الطهوية النهائية'
+            },
+            ko: {
+                name: '한국어',
+                flag: 'kr',
+                hero_title: '고기의 예술을 마스터하세요',
+                hero_subtitle: '절단, 요리 방법, 레시피 및 요리 기술에 대한 포괄적인 가이드. 고기에 대해 알아야 할 모든 것을 탐색하십시오.',
+                explore_btn: '지금 탐색',
+                get_started_btn: '시작하기',
+                features_title: '왜 Wiki Meat를 선택해야 할까요?',
+                feature1_title: '포괄적인 가이드',
+                feature1_text: '립아이부터 브리스킷까지 모든 절단에 대한 자세한 정보. 준비, 조리 시간 및 최적 온도를 배우십시오.',
+                feature2_title: '전문가 레시피',
+                feature2_text: '전문 셰프가 선별한 레시피. 요리 기술을 완성하기 위한 단계별 지침.',
+                feature3_title: '요리 방법',
+                feature3_text: '그릴링, 훈제, 로스팅, 팬시어링 등을 마스터하십시오. 모든 기술 수준을 위한 기술.',
+                feature4_title: '페어링 및 사이드',
+                feature4_text: '완벽한 와인 페어링, 소스 레시피 및 모든 경우를 위한 사이드 디쉬 제안.',
+                feature5_title: '세계 요리',
+                feature5_text: '전 세계의 고기 준비를 탐색하십시오. 전통적인 레시피와 현대적인 변형.',
+                feature6_title: '프로 팁',
+                feature6_text: '내부자 지식, 보관 조언 및 고기 준비 게임을 향상시키는 트릭.',
+                stat1_num: '500+',
+                stat1_text: '레시피 및 가이드',
+                stat2_num: '50+',
+                stat2_text: '고기 절단',
+                stat3_num: '10만+',
+                stat3_text: '활성 커뮤니티',
+                stat4_num: '24/7',
+                stat4_text: '항상 사용 가능',
+                cta_title: '고기 마스터가 될 준비가 되셨습니까?',
+                cta_subtitle: 'Wiki Meat로 기술을 변화시킨 수천 명의 요리 애호가에 합류하십시오',
+                join_btn: '지금 가입',
+                footer_text: '© 2026 Wiki Meat. 모든 권리 보유. | 귀하의 궁극적인 요리 지식 기반'
+            },
+            hi: {
+                name: 'हिन्दी',
+                flag: 'in',
+                hero_title: 'मांस की कला में महारत हासिल करें',
+                hero_subtitle: 'कट्स, खाना पकाने के तरीके, रेसिपी और पाक तकनीकों के लिए आपकी व्यापक गाइड। मांस के बारे में जानने के लिए आवश्यक सब कुछ खोजें।',
+                explore_btn: 'अभी एक्सप्लोर करें',
+                get_started_btn: 'शुरू करें',
+                features_title: 'Wiki Meat क्यों चुनें?',
+                feature1_title: 'व्यापक गाइड',
+                feature1_text: 'रिबआई से लेकर ब्रिस्केट तक हर कट के बारे में विस्तृत जानकारी। तैयारी, खाना पकाने का समय और इष्टतम तापमान सीखें।',
+                feature2_title: 'विशेषज्ञ रेसिपी',
+                feature2_text: 'पेशेवर शेफ द्वारा चुनी गई रेसिपी। अपने पाक कौशल को परिपूर्ण करने के लिए चरण-दर-चरण निर्देश।',
+                feature3_title: 'खाना पकाने के तरीके',
+                feature3_text: 'ग्रिलिंग, स्मोकिंग, रोस्टिंग, पैन-सियरिंग और अधिक में महारत हासिल करें। हर कौशल स्तर के लिए तकनीकें।',
+                feature4_title: 'जोड़ी और साइड्स',
+                feature4_text: 'परफेक्ट वाइन पेयरिंग, सॉस रेसिपी और हर अवसर के लिए साइड डिश सुझाव।',
+                feature5_title: 'वैश्विक व्यंजन',
+                feature5_text: 'दुनिया भर से मांस की तैयारी का अन्वेषण करें। पारंपरिक रेसिपी और आधुनिक ट्विस्ट।',
+                feature6_title: 'प्रो टिप्स',
+                feature6_text: 'अंदरूनी ज्ञान, भंडारण सलाह और अपने मांस तैयारी खेल को बढ़ाने के लिए ट्रिक्स।',
+                stat1_num: '500+',
+                stat1_text: 'रेसिपी और गाइड',
+                stat2_num: '50+',
+                stat2_text: 'मांस कट',
+                stat3_num: '1 लाख+',
+                stat3_text: 'सक्रिय समुदाय',
+                stat4_num: '24/7',
+                stat4_text: 'हमेशा उपलब्ध',
+                cta_title: 'मांस मास्टर बनने के लिए तैयार हैं?',
+                cta_subtitle: 'हजारों खाना पकाने के शौकीनों से जुड़ें जिन्होंने Wiki Meat के साथ अपने कौशल को बदल दिया है',
+                join_btn: 'अभी शामिल हों',
+                footer_text: '© 2026 Wiki Meat। सर्वाधिकार सुरक्षित। | आपका अंतिम पाक ज्ञान आधार'
+            },
+            nl: {
+                name: 'Nederlands',
+                flag: 'nl',
+                hero_title: 'Beheers de Kunst van Vlees',
+                hero_subtitle: 'Uw uitgebreide gids voor sneden, kookmethoden, recepten en culinaire technieken. Ontdek alles wat u moet weten over vlees.',
+                explore_btn: 'Verken Nu',
+                get_started_btn: 'Beginnen',
+                features_title: 'Waarom Kiezen voor Wiki Meat?',
+                feature1_title: 'Uitgebreide Gidsen',
+                feature1_text: 'Gedetailleerde informatie over elke snede, van ribeye tot brisket. Leer bereiding, kooktijden en optimale temperaturen.',
+                feature2_title: 'Expert Recepten',
+                feature2_text: 'Geselecteerde recepten van professionele chefs. Stapsgewijze instructies om uw culinaire vaardigheden te perfectioneren.',
+                feature3_title: 'Kookmethoden',
+                feature3_text: 'Beheers grillen, roken, braden, aanbraden en meer. Technieken voor elk vaardigheidsniveau.',
+                feature4_title: 'Combinaties & Bijgerechten',
+                feature4_text: 'Perfecte wijncombinaties, sausrecepten en suggesties voor bijgerechten voor elke gelegenheid.',
+                feature5_title: 'Wereldkeukens',
+                feature5_text: 'Verken vleesbereidingen van over de hele wereld. Traditionele recepten en moderne wendingen.',
+                feature6_title: 'Pro Tips',
+                feature6_text: 'Insider kennis, bewaaradvies en trucs om uw vleesbereidingsspel te verbeteren.',
+                stat1_num: '500+',
+                stat1_text: 'Recepten & Gidsen',
+                stat2_num: '50+',
+                stat2_text: 'Vleessneden',
+                stat3_num: '100k+',
+                stat3_text: 'Actieve Gemeenschap',
+                stat4_num: '24/7',
+                stat4_text: 'Altijd Beschikbaar',
+                cta_title: 'Klaar om een Vleesmeester te Worden?',
+                cta_subtitle: 'Sluit u aan bij duizenden kookliefhebbers die hun vaardigheden hebben getransformeerd met Wiki Meat',
+                join_btn: 'Word Nu Lid',
+                footer_text: '© 2026 Wiki Meat. Alle rechten voorbehouden. | Uw ultieme culinaire kennisbasis'
+            },
+            sv: {
+                name: 'Svenska',
+                flag: 'se',
+                hero_title: 'Bemästra Köttets Konst',
+                hero_subtitle: 'Din omfattande guide till styckningsdelar, tillagningsmetoder, recept och kulinariska tekniker. Utforska allt du behöver veta om kött.',
+                explore_btn: 'Utforska Nu',
+                get_started_btn: 'Kom Igång',
+                features_title: 'Varför Välja Wiki Meat?',
+                feature1_title: 'Omfattande Guider',
+                feature1_text: 'Detaljerad information om varje styckningsdel, från entrecôte till bringa. Lär dig tillagning, tillagningstider och optimala temperaturer.',
+                feature2_title: 'Expertrecept',
+                feature2_text: 'Utvalda recept från professionella kockar. Steg-för-steg instruktioner för att perfektera dina kulinariska färdigheter.',
+                feature3_title: 'Tillagningsmetoder',
+                feature3_text: 'Bemästra grillning, rökning, ugnssteekning, stekning och mer. Tekniker för alla färdighetsnivåer.',
+                feature4_title: 'Kombinationer & Tillbehör',
+                feature4_text: 'Perfekta vinkombinationer, såsrecept och förslag på tillbehör för varje tillfälle.',
+                feature5_title: 'Globala Kök',
+                feature5_text: 'Utforska kötttillagning från hela världen. Traditionella recept och moderna varianter.',
+                feature6_title: 'Proffs Tips',
+                feature6_text: 'Insiderkunskap, lagringsråd och tricks för att höja din kötttillagning.',
+                stat1_num: '500+',
+                stat1_text: 'Recept & Guider',
+                stat2_num: '50+',
+                stat2_text: 'Köttdelar',
+                stat3_num: '100k+',
+                stat3_text: 'Aktiv Gemenskap',
+                stat4_num: '24/7',
+                stat4_text: 'Alltid Tillgänglig',
+                cta_title: 'Redo att Bli en Köttmästare?',
+                cta_subtitle: 'Gå med tusentals matentusiaster som har transformerat sina färdigheter med Wiki Meat',
+                join_btn: 'Gå Med Nu',
+                footer_text: '© 2026 Wiki Meat. Alla rättigheter förbehållna. | Din ultimata kulinariska kunskapsbas'
+            },
+            pl: {
+                name: 'Polski',
+                flag: 'pl',
+                hero_title: 'Opanuj Sztukę Mięsa',
+                hero_subtitle: 'Twój kompleksowy przewodnik po kawałkach, metodach gotowania, przepisach i technikach kulinarnych. Poznaj wszystko, co musisz wiedzieć o mięsie.',
+                explore_btn: 'Eksploruj Teraz',
+                get_started_btn: 'Zacznij',
+                features_title: 'Dlaczego Wybrać Wiki Meat?',
+                feature1_title: 'Kompleksowe Przewodniki',
+                feature1_text: 'Szczegółowe informacje o każdym kawałku, od antrykotu do mostek. Naucz się przygotowania, czasu gotowania i optymalnych temperatur.',
+                feature2_title: 'Eksperckie Przepisy',
+                feature2_text: 'Wyselekcjonowane przepisy od profesjonalnych szefów kuchni. Instrukcje krok po kroku do doskonalenia swoich umiejętności kulinarnych.',
+                feature3_title: 'Metody Gotowania',
+                feature3_text: 'Opanuj grillowanie, wędzenie, pieczenie, przypalanie i więcej. Techniki dla każdego poziomu umiejętności.',
+                feature4_title: 'Zestawienia i Dodatki',
+                feature4_text: 'Idealne zestawienia z winem, przepisy na sosy i sugestie dodatków na każdą okazję.',
+                feature5_title: 'Globalne Kuchnie',
+                feature5_text: 'Poznaj przygotowanie mięsa z całego świata. Tradycyjne przepisy i nowoczesne wariacje.',
+                feature6_title: 'Profesjonalne Wskazówki',
+                feature6_text: 'Wiedza insiderska, porady dotyczące przechowywania i triki, aby podnieść swoją grę w przygotowaniu mięsa.',
+                stat1_num: '500+',
+                stat1_text: 'Przepisów i Przewodników',
+                stat2_num: '50+',
+                stat2_text: 'Kawałków Mięsa',
+                stat3_num: '100k+',
+                stat3_text: 'Aktywna Społeczność',
+                stat4_num: '24/7',
+                stat4_text: 'Zawsze Dostępne',
+                cta_title: 'Gotowy Zostać Mistrzem Mięsa?',
+                cta_subtitle: 'Dołącz do tysięcy entuzjastów gotowania, którzy przekształcili swoje umiejętności z Wiki Meat',
+                join_btn: 'Dołącz Teraz',
+                footer_text: '© 2026 Wiki Meat. Wszelkie prawa zastrzeżone. | Twoja najlepsza kulinarna baza wiedzy'
+            },
+            tr: {
+                name: 'Türkçe',
+                flag: 'tr',
+                hero_title: 'Et Sanatında Ustalaşın',
+                hero_subtitle: 'Kesimler, pişirme yöntemleri, tarifler ve mutfak teknikleri için kapsamlı rehberiniz. Et hakkında bilmeniz gereken her şeyi keşfedin.',
+                explore_btn: 'Şimdi Keşfet',
+                get_started_btn: 'Başlayın',
+                features_title: 'Neden Wiki Meat Seçmelisiniz?',
+                feature1_title: 'Kapsamlı Rehberler',
+                feature1_text: 'Her kesim hakkında ayrıntılı bilgi, antrikottan döş ete kadar. Hazırlık, pişirme süreleri ve optimal sıcaklıkları öğrenin.',
+                feature2_title: 'Uzman Tarifleri',
+                feature2_text: 'Profesyonel şeflerden seçilmiş tarifler. Mutfak becerilerinizi mükemmelleştirmek için adım adım talimatlar.',
+                feature3_title: 'Pişirme Yöntemleri',
+                feature3_text: 'Izgara, tütsüleme, fırınlama, kavurma ve daha fazlasında ustalaşın. Her beceri seviyesi için teknikler.',
+                feature4_title: 'Eşleştirmeler ve Garnitürler',
+                feature4_text: 'Mükemmel şarap eşleştirmeleri, sos tarifleri ve her durum için garnitür önerileri.',
+                feature5_title: 'Küresel Mutfaklar',
+                feature5_text: 'Dünyanın her yerinden et hazırlamayı keşfedin. Geleneksel tarifler ve modern dokunuşlar.',
+                feature6_title: 'Profesyonel İpuçları',
+                feature6_text: 'İçeriden bilgi, saklama tavsiyeleri ve et hazırlama oyununuzu yükseltmek için püf noktaları.',
+                stat1_num: '500+',
+                stat1_text: 'Tarif ve Rehber',
+                stat2_num: '50+',
+                stat2_text: 'Et Kesimi',
+                stat3_num: '100k+',
+                stat3_text: 'Aktif Topluluk',
+                stat4_num: '24/7',
+                stat4_text: 'Her Zaman Kullanılabilir',
+                cta_title: 'Et Ustası Olmaya Hazır mısınız?',
+                cta_subtitle: 'Wiki Meat ile becerilerini dönüştüren binlerce yemek tutkununa katılın',
+                join_btn: 'Şimdi Katılın',
+                footer_text: '© 2026 Wiki Meat. Tüm hakları saklıdır. | Nihai mutfak bilgi tabanınız'
+            },
+            vi: {
+                name: 'Tiếng Việt',
+                flag: 'vn',
+                hero_title: 'Làm Chủ Nghệ Thuật Thịt',
+                hero_subtitle: 'Hướng dẫn toàn diện của bạn về các loại cắt, phương pháp nấu, công thức và kỹ thuật ẩm thực. Khám phá mọi thứ bạn cần biết về thịt.',
+                explore_btn: 'Khám Phá Ngay',
+                get_started_btn: 'Bắt Đầu',
+                features_title: 'Tại Sao Chọn Wiki Meat?',
+                feature1_title: 'Hướng Dẫn Toàn Diện',
+                feature1_text: 'Thông tin chi tiết về mọi loại cắt, từ thăn ngoại đến ức bò. Học cách chuẩn bị, thời gian nấu và nhiệt độ tối ưu.',
+                feature2_title: 'Công Thức Chuyên Gia',
+                feature2_text: 'Công thức được tuyển chọn từ các đầu bếp chuyên nghiệp. Hướng dẫn từng bước để hoàn thiện kỹ năng ẩm thực của bạn.',
+                feature3_title: 'Phương Pháp Nấu',
+                feature3_text: 'Làm chủ nướng, hun khói, nướng lò, áp chảo và hơn thế nữa. Kỹ thuật cho mọi cấp độ kỹ năng.',
+                feature4_title: 'Kết Hợp & Món Phụ',
+                feature4_text: 'Kết hợp rượu vang hoàn hảo, công thức sốt và gợi ý món phụ cho mọi dịp.',
+                feature5_title: 'Ẩm Thực Toàn Cầu',
+                feature5_text: 'Khám phá cách chế biến thịt từ khắp nơi trên thế giới. Công thức truyền thống và biến tấu hiện đại.',
+                feature6_title: 'Mẹo Chuyên Nghiệp',
+                feature6_text: 'Kiến thức nội bộ, lời khuyên bảo quản và các mẹo để nâng cao trình độ chế biến thịt của bạn.',
+                stat1_num: '500+',
+                stat1_text: 'Công Thức & Hướng Dẫn',
+                stat2_num: '50+',
+                stat2_text: 'Loại Cắt Thịt',
+                stat3_num: '100k+',
+                stat3_text: 'Cộng Đồng Hoạt Động',
+                stat4_num: '24/7',
+                stat4_text: 'Luôn Sẵn Sàng',
+                cta_title: 'Sẵn Sàng Trở Thành Bậc Thầy Thịt?',
+                cta_subtitle: 'Tham gia cùng hàng nghìn người đam mê nấu ăn đã thay đổi kỹ năng của họ với Wiki Meat',
+                join_btn: 'Tham Gia Ngay',
+                footer_text: '© 2026 Wiki Meat. Đã đăng ký bản quyền. | Cơ sở tri thức ẩm thực tối ưu của bạn'
+            },
+            th: {
+                name: 'ไทย',
+                flag: 'th',
+                hero_title: 'เชี่ยวชาญศิลปะแห่งเนื้อสัตว์',
+                hero_subtitle: 'คู่มือครอบคลุมของคุณเกี่ยวกับการตัด วิธีการทำอาหาร สูตรอาหาร และเทคนิคการทำอาหาร สำรวจทุกสิ่งที่คุณต้องรู้เกี่ยวกับเนื้อสัตว์',
+                explore_btn: 'สำรวจตอนนี้',
+                get_started_btn: 'เริ่มต้น',
+                features_title: 'ทำไมต้องเลือก Wiki Meat?',
+                feature1_title: 'คู่มือครอบคลุม',
+                feature1_text: 'ข้อมูลโดยละเอียดเกี่ยวกับทุกการตัด ตั้งแต่ริบอายไปจนถึงบริสเก็ต เรียนรู้การเตรียม เวลาในการทำอาหาร และอุณหภูมิที่เหมาะสม',
+                feature2_title: 'สูตรจากผู้เชี่ยวชาญ',
+                feature2_text: 'สูตรที่คัดสรรมาจากเชฟมืออาชีพ คำแนะนำทีละขั้นตอนเพื่อทำให้ทักษะการทำอาหารของคุณสมบูรณ์แบบ',
+                feature3_title: 'วิธีการทำอาหาร',
+                feature3_text: 'เชี่ยวชาญการย่าง รมควัน อบ ผัด และอื่นๆ เทคนิคสำหรับทุกระดับทักษะ',
+                feature4_title: 'การจับคู่และเครื่องเคียง',
+                feature4_text: 'การจับคู่ไวน์ที่สมบูรณ์แบบ สูตรซอส และคำแนะนำเครื่องเคียงสำหรับทุกโอกาส',
+                feature5_title: 'อาหารทั่วโลก',
+                feature5_text: 'สำรวจการเตรียมเนื้อสัตว์จากทั่วโลก สูตรแบบดั้งเดิมและแนวใหม่สมัยใหม่',
+                feature6_title: 'เคล็ดลับมืออาชีพ',
+                feature6_text: 'ความรู้จากวงใน คำแนะนำการเก็บรักษา และเทคนิคเพื่อยกระดับการเตรียมเนื้อสัตว์ของคุณ',
+                stat1_num: '500+',
+                stat1_text: 'สูตรและคู่มือ',
+                stat2_num: '50+',
+                stat2_text: 'การตัดเนื้อสัตว์',
+                stat3_num: '100k+',
+                stat3_text: 'ชุมชนที่ใช้งานอยู่',
+                stat4_num: '24/7',
+                stat4_text: 'พร้อมให้บริการเสมอ',
+                cta_title: 'พร้อมที่จะเป็นปรมาจารย์เนื้อสัตว์แล้วหรือยัง?',
+                cta_subtitle: 'เข้าร่วมกับผู้ที่ชื่นชอบการทำอาหารหลายพันคนที่ได้เปลี่ยนทักษะของพวกเขาด้วย Wiki Meat',
+                join_btn: 'เข้าร่วมตอนนี้',
+                footer_text: '© 2026 Wiki Meat. สงวนลิขสิทธิ์. | ฐานความรู้ด้านอาหารที่ดีที่สุดของคุณ'
+            },
+            id: {
+                name: 'Bahasa Indonesia',
+                flag: 'id',
+                hero_title: 'Kuasai Seni Daging',
+                hero_subtitle: 'Panduan lengkap Anda untuk potongan, metode memasak, resep, dan teknik kuliner. Jelajahi semua yang perlu Anda ketahui tentang daging.',
+                explore_btn: 'Jelajahi Sekarang',
+                get_started_btn: 'Mulai',
+                features_title: 'Mengapa Memilih Wiki Meat?',
+                feature1_title: 'Panduan Lengkap',
+                feature1_text: 'Informasi terperinci tentang setiap potongan, dari ribeye hingga brisket. Pelajari persiapan, waktu memasak, dan suhu optimal.',
+                feature2_title: 'Resep Ahli',
+                feature2_text: 'Resep yang dikurasi dari koki profesional. Instruksi langkah demi langkah untuk menyempurnakan keterampilan kuliner Anda.',
+                feature3_title: 'Metode Memasak',
+                feature3_text: 'Kuasai memanggang, mengasap, memanggang oven, menumis, dan banyak lagi. Teknik untuk setiap tingkat keterampilan.',
+                feature4_title: 'Pasangan & Lauk',
+                feature4_text: 'Pasangan anggur yang sempurna, resep saus, dan saran lauk untuk setiap kesempatan.',
+                feature5_title: 'Masakan Global',
+                feature5_text: 'Jelajahi persiapan daging dari seluruh dunia. Resep tradisional dan sentuhan modern.',
+                feature6_title: 'Tips Pro',
+                feature6_text: 'Pengetahuan orang dalam, saran penyimpanan, dan trik untuk meningkatkan permainan persiapan daging Anda.',
+                stat1_num: '500+',
+                stat1_text: 'Resep & Panduan',
+                stat2_num: '50+',
+                stat2_text: 'Potongan Daging',
+                stat3_num: '100k+',
+                stat3_text: 'Komunitas Aktif',
+                stat4_num: '24/7',
+                stat4_text: 'Selalu Tersedia',
+                cta_title: 'Siap Menjadi Master Daging?',
+                cta_subtitle: 'Bergabunglah dengan ribuan penggemar memasak yang telah mengubah keterampilan mereka dengan Wiki Meat',
+                join_btn: 'Gabung Sekarang',
+                footer_text: '© 2026 Wiki Meat. Hak cipta dilindungi. | Basis pengetahuan kuliner utama Anda'
+            },
+            el: {
+                name: 'Ελληνικά',
+                flag: 'gr',
+                hero_title: 'Κατακτήστε την Τέχνη του Κρέατος',
+                hero_subtitle: 'Ο ολοκληρωμένος οδηγός σας για κομμάτια, μεθόδους μαγειρέματος, συνταγές και μαγειρικές τεχνικές. Εξερευνήστε όλα όσα πρέπει να γνωρίζετε για το κρέας.',
+                explore_btn: 'Εξερευνήστε Τώρα',
+                get_started_btn: 'Ξεκινήστε',
+                features_title: 'Γιατί να Επιλέξετε το Wiki Meat;',
+                feature1_title: 'Ολοκληρωμένοι Οδηγοί',
+                feature1_text: 'Λεπτομερείς πληροφορίες για κάθε κομμάτι, από το ριμπάι έως το μπρίσκετ. Μάθετε προετοιμασία, χρόνους μαγειρέματος και βέλτιστες θερμοκρασίες.',
+                feature2_title: 'Συνταγές Ειδικών',
+                feature2_text: 'Επιμελημένες συνταγές από επαγγελματίες σεφ. Οδηγίες βήμα προς βήμα για να τελειοποιήσετε τις μαγειρικές σας δεξιότητες.',
+                feature3_title: 'Μέθοδοι Μαγειρέματος',
+                feature3_text: 'Κατακτήστε το ψήσιμο στη σχάρα, το κάπνισμα, το ψήσιμο, το τηγάνισμα και πολλά άλλα. Τεχνικές για κάθε επίπεδο δεξιοτήτων.',
+                feature4_title: 'Συνδυασμοί & Συνοδευτικά',
+                feature4_text: 'Τέλειοι συνδυασμοί κρασιού, συνταγές σάλτσας και προτάσεις συνοδευτικών για κάθε περίσταση.',
+                feature5_title: 'Παγκόσμιες Κουζίνες',
+                feature5_text: 'Εξερευνήστε την προετοιμασία κρέατος από όλο τον κόσμο. Παραδοσιακές συνταγές και σύγχρονες παραλλαγές.',
+                feature6_title: 'Επαγγελματικές Συμβουλές',
+                feature6_text: 'Εσωτερικές γνώσεις, συμβουλές αποθήκευσης και κόλπα για να ανεβάσετε το παιχνίδι προετοιμασίας κρέατος.',
+                stat1_num: '500+',
+                stat1_text: 'Συνταγές & Οδηγοί',
+                stat2_num: '50+',
+                stat2_text: 'Κομμάτια Κρέατος',
+                stat3_num: '100k+',
+                stat3_text: 'Ενεργή Κοινότητα',
+                stat4_num: '24/7',
+                stat4_text: 'Πάντα Διαθέσιμο',
+                cta_title: 'Έτοιμοι να Γίνετε Μάστορας Κρέατος;',
+                cta_subtitle: 'Γίνετε μέλος χιλιάδων λάτρεων του μαγειρέματος που έχουν μεταμορφώσει τις δεξιότητές τους με το Wiki Meat',
+                join_btn: 'Εγγραφείτε Τώρα',
+                footer_text: '© 2026 Wiki Meat. Όλα τα δικαιώματα διατηρούνται. | Η απόλυτη μαγειρική βάση γνώσεων σας'
+            },
+            uk: {
+                name: 'Українська',
+                flag: 'ua',
+                hero_title: 'Опануйте Мистецтво М\'яса',
+                hero_subtitle: 'Ваш повний довідник з відрубів, методів приготування, рецептів та кулінарних технік. Дізнайтеся все, що потрібно знати про м\'ясо.',
+                explore_btn: 'Досліджуйте Зараз',
+                get_started_btn: 'Розпочати',
+                features_title: 'Чому Обрати Wiki Meat?',
+                feature1_title: 'Повні Посібники',
+                feature1_text: 'Детальна інформація про кожен відруб, від рібая до грудинки. Вивчіть приготування, час готування та оптимальні температури.',
+                feature2_title: 'Експертні Рецепти',
+                feature2_text: 'Відібрані рецепти від професійних кухарів. Покрокові інструкції для вдосконалення ваших кулінарних навичок.',
+                feature3_title: 'Методи Приготування',
+                feature3_text: 'Опануйте гриль, копчення, запікання, обсмажування та багато іншого. Техніки для будь-якого рівня майстерності.',
+                feature4_title: 'Поєднання та Гарніри',
+                feature4_text: 'Ідеальні поєднання з вином, рецепти соусів та пропозиції гарнірів для будь-якого випадку.',
+                feature5_title: 'Світові Кухні',
+                feature5_text: 'Досліджуйте приготування м\'яса з усього світу. Традиційні рецепти та сучасні інтерпретації.',
+                feature6_title: 'Професійні Поради',
+                feature6_text: 'Інсайдерські знання, поради щодо зберігання та хитрощі для покращення вашої майстерності приготування м\'яса.',
+                stat1_num: '500+',
+                stat1_text: 'Рецептів та Посібників',
+                stat2_num: '50+',
+                stat2_text: 'Відрубів М\'яса',
+                stat3_num: '100k+',
+                stat3_text: 'Активна Спільнота',
+                stat4_num: '24/7',
+                stat4_text: 'Завжди Доступно',
+                cta_title: 'Готові Стати Майстром М\'яса?',
+                cta_subtitle: 'Приєднуйтесь до тисяч ентузіастів кулінарії, які трансформували свої навички з Wiki Meat',
+                join_btn: 'Приєднатися Зараз',
+                footer_text: '© 2026 Wiki Meat. Всі права захищені. | Ваша головна кулінарна база знань'
+            },
+            cs: {
+                name: 'Čeština',
+                flag: 'cz',
+                hero_title: 'Ovládněte Umění Masa',
+                hero_subtitle: 'Váš komplexní průvodce kousky, metodami vaření, recepty a kulinářskými technikami. Prozkoumejte vše, co potřebujete vědět o mase.',
+                explore_btn: 'Prozkoumat Nyní',
+                get_started_btn: 'Začít',
+                features_title: 'Proč Vybrat Wiki Meat?',
+                feature1_title: 'Komplexní Průvodce',
+                feature1_text: 'Podrobné informace o každém kousku, od rybího oka po hrudí. Naučte se přípravu, doby vaření a optimální teploty.',
+                feature2_title: 'Expertní Recepty',
+                feature2_text: 'Vybrané recepty od profesionálních šéfkuchařů. Podrobné instrukce pro zdokonalení vašich kulinářských dovedností.',
+                feature3_title: 'Metody Vaření',
+                feature3_text: 'Ovládněte grilování, uzení, pečení, opékání a další. Techniky pro každou úroveň dovedností.',
+                feature4_title: 'Párovánía Přílohy',
+                feature4_text: 'Perfektní párování s vínem, recepty na omáčky a návrhy příloh pro každou příležitost.',
+                feature5_title: 'Globální Kuchyně',
+                feature5_text: 'Prozkoumejte přípravu masa z celého světa. Tradiční recepty a moderní variace.',
+                feature6_title: 'Profesionální Tipy',
+                feature6_text: 'Insider znalosti, rady pro skladování a triky pro vylepšení vaší přípravy masa.',
+                stat1_num: '500+',
+                stat1_text: 'Receptů a Průvodců',
+                stat2_num: '50+',
+                stat2_text: 'Kousků Masa',
+                stat3_num: '100k+',
+                stat3_text: 'Aktivní Komunita',
+                stat4_num: '24/7',
+                stat4_text: 'Vždy K Dispozici',
+                cta_title: 'Jste Připraveni Stát se Mistrem Masa?',
+                cta_subtitle: 'Připojte se k tisícům nadšenců do vaření, kteří transformovali své dovednosti s Wiki Meat',
+                join_btn: 'Připojit se Nyní',
+                footer_text: '© 2026 Wiki Meat. Všechna práva vyhrazena. | Vaše ultimátní kulinářská znalostní báze'
+            },
+            no: {
+                name: 'Norsk',
+                flag: 'no',
+                hero_title: 'Mestre Kjøttets Kunst',
+                hero_subtitle: 'Din omfattende guide til stykninger, tilberedningsmetoder, oppskrifter og kulinariske teknikker. Utforsk alt du trenger å vite om kjøtt.',
+                explore_btn: 'Utforsk Nå',
+                get_started_btn: 'Kom I Gang',
+                features_title: 'Hvorfor Velge Wiki Meat?',
+                feature1_title: 'Omfattende Guider',
+                feature1_text: 'Detaljert informasjon om hver stykningsdel, fra entrecôte til bryst. Lær tilberedning, tilberedningstider og optimale temperaturer.',
+                feature2_title: 'Ekspertoppskrifter',
+                feature2_text: 'Kuraterte oppskrifter fra profesjonelle kokker. Trinn-for-trinn instruksjoner for å perfeksjonere dine kulinariske ferdigheter.',
+                feature3_title: 'Tilberedningsmetoder',
+                feature3_text: 'Mestre grilling, røyking, steeking, steking og mer. Teknikker for alle ferdighetsnivåer.',
+                feature4_title: 'Kombinasjoner & Tilbehør',
+                feature4_text: 'Perfekte vinkombinasjoner, sausoppskrifter og forslag til tilbehør for enhver anledning.',
+                feature5_title: 'Globale Kjøkken',
+                feature5_text: 'Utforsk kjøtttilberedning fra hele verden. Tradisjonelle oppskrifter og moderne varianter.',
+                feature6_title: 'Proffe Tips',
+                feature6_text: 'Innsidekunnskap, lagringsråd og triks for å heve ditt kjøtttilberedningsspill.',
+                stat1_num: '500+',
+                stat1_text: 'Oppskrifter & Guider',
+                stat2_num: '50+',
+                stat2_text: 'Kjøttstykninger',
+                stat3_num: '100k+',
+                stat3_text: 'Aktivt Fellesskap',
+                stat4_num: '24/7',
+                stat4_text: 'Alltid Tilgjengelig',
+                cta_title: 'Klar til å Bli en Kjøttmester?',
+                cta_subtitle: 'Bli med tusenvis av matentusiaster som har transformert ferdighetene sine med Wiki Meat',
+                join_btn: 'Bli Med Nå',
+                footer_text: '© 2026 Wiki Meat. Alle rettigheter forbeholdt. | Din ultimate kulinariske kunnskapsbase'
+            },
+            da: {
+                name: 'Dansk',
+                flag: 'dk',
+                hero_title: 'Mestre Kødets Kunst',
+                hero_subtitle: 'Din omfattende guide til udskæringer, tilberedningsmetoder, opskrifter og kulinariske teknikker. Udforsk alt, du skal vide om kød.',
+                explore_btn: 'Udforsk Nu',
+                get_started_btn: 'Kom I Gang',
+                features_title: 'Hvorfor Vælge Wiki Meat?',
+                feature1_title: 'Omfattende Guider',
+                feature1_text: 'Detaljeret information om hver udskæring, fra ribeye til bryst. Lær forberedelse, tilberedningstider og optimale temperaturer.',
+                feature2_title: 'Ekspertopskrifter',
+                feature2_text: 'Kuraterede opskrifter fra professionelle kokke. Trin-for-trin instruktioner til at perfektionere dine kulinariske færdigheder.',
+                feature3_title: 'Tilberedningsmetoder',
+                feature3_text: 'Mestre grillning, røgning, stegning, sautering og mere. Teknikker til alle færdighedsniveauer.',
+                feature4_title: 'Parrings & Tilbehør',
+                feature4_text: 'Perfekte vinparringer, sauceopskrifter og forslag til tilbehør til enhver lejlighed.',
+                feature5_title: 'Globale Køkkener',
+                feature5_text: 'Udforsk kødtilberedning fra hele verden. Traditionelle opskrifter og moderne variationer.',
+                feature6_title: 'Professionelle Tips',
+                feature6_text: 'Insiderviden, opbevaringsråd og tricks til at løfte dit kødtilberedningsspil.',
+                stat1_num: '500+',
+                stat1_text: 'Opskrifter & Guider',
+                stat2_num: '50+',
+                stat2_text: 'Kødudskæringer',
+                stat3_num: '100k+',
+                stat3_text: 'Aktivt Fællesskab',
+                stat4_num: '24/7',
+                stat4_text: 'Altid Tilgængelig',
+                cta_title: 'Klar til at Blive en Kødmester?',
+                cta_subtitle: 'Tilslut dig tusindvis af madentusiaster, der har transformeret deres færdigheder med Wiki Meat',
+                join_btn: 'Tilmeld Dig Nu',
+                footer_text: '© 2026 Wiki Meat. Alle rettigheder forbeholdt. | Din ultimative kulinariske videnbase'
+            },
+            fi: {
+                name: 'Suomi',
+                flag: 'fi',
+                hero_title: 'Hallitse Lihan Taide',
+                hero_subtitle: 'Kattava oppaasi leikkauksiin, valmistusmenetelmiin, resepteihin ja kulinaarisiin tekniikoihin. Tutustu kaikkeen, mitä sinun tarvitsee tietää lihasta.',
+                explore_btn: 'Tutustu Nyt',
+                get_started_btn: 'Aloita',
+                features_title: 'Miksi Valita Wiki Meat?',
+                feature1_title: 'Kattavat Oppaat',
+                feature1_text: 'Yksityiskohtaista tietoa jokaisesta leikkauksesta, ribeystä rintalihoihin. Opi valmistelu, valmistusajat ja optimaaliset lämpötilat.',
+                feature2_title: 'Asiantuntijareseptit',
+                feature2_text: 'Ammattikokkeien kuratoituja reseptejä. Vaiheittaiset ohjeet kulinaaristen taitojesi hiomiseen.',
+                feature3_title: 'Valmistusmenetelmät',
+                feature3_text: 'Hallitse grillaus, savustus, paistaminen, paistoaminen ja paljon muuta. Tekniikoita kaikille taitotasoille.',
+                feature4_title: 'Yhdistelmät & Lisukkeet',
+                feature4_text: 'Täydelliset viiniyhdistelmät, kastikereseptit ja lisukkeiden ehdotukset jokaiseen tilanteeseen.',
+                feature5_title: 'Maailman Keittiöt',
+                feature5_text: 'Tutustu lihan valmistukseen ympäri maailmaa. Perinteiset reseptit ja modernit käännökset.',
+                feature6_title: 'Ammattilaisvinkit',
+                feature6_text: 'Sisäpiirin tietoa, säilytysneuvoja ja vinkkejä lihan valmistuspelin nostamiseen.',
+                stat1_num: '500+',
+                stat1_text: 'Reseptiä & Opasta',
+                stat2_num: '50+',
+                stat2_text: 'Lihaleikkausta',
+                stat3_num: '100k+',
+                stat3_text: 'Aktiivinen Yhteisö',
+                stat4_num: '24/7',
+                stat4_text: 'Aina Saatavilla',
+                cta_title: 'Valmis Tulemaan Lihamestariksi?',
+                cta_subtitle: 'Liity tuhansiin ruoanlainnon harrastajiin, jotka ovat muuttaneet taitojaan Wiki Meatin avulla',
+                join_btn: 'Liity Nyt',
+                footer_text: '© 2026 Wiki Meat. Kaikki oikeudet pidätetään. | Lopullinen kulinaarinen tietopankkisi'
+            },
+            he: {
+                name: 'עברית',
+                flag: 'il',
+                hero_title: 'שלוט באמנות הבשר',
+                hero_subtitle: 'המדריך המקיף שלך לחתכים, שיטות בישול, מתכונים וטכניקות קולינריות. גלה כל מה שאתה צריך לדעת על בשר.',
+                explore_btn: 'חקור עכשיו',
+                get_started_btn: 'התחל',
+                features_title: 'למה לבחור ב-Wiki Meat?',
+                feature1_title: 'מדריכים מקיפים',
+                feature1_text: 'מידע מפורט על כל חתך, מריב-איי ועד בריסקט. למד הכנה, זמני בישול וטמפרטורות אופטימליות.',
+                feature2_title: 'מתכונים מומחים',
+                feature2_text: 'מתכונים נבחרים משפים מקצועיים. הוראות שלב אחר שלב לשיפור כישורי הבישול שלך.',
+                feature3_title: 'שיטות בישול',
+                feature3_text: 'שלוט בגריל, עישון, צלייה, טיגון ועוד. טכניקות לכל רמת מיומנות.',
+                feature4_title: 'שילובים ותוספות',
+                feature4_text: 'שילובי יין מושלמים, מתכוני רטבים והצעות תוספות לכל אירוע.',
+                feature5_title: 'מטבחים עולמיים',
+                feature5_text: 'חקור הכנת בשר מכל רחבי העולם. מתכונים מסורתיים וטוויסטים מודרניים.',
+                feature6_title: 'טיפים מקצועיים',
+                feature6_text: 'ידע פנימי, עצות אחסון וטריקים להעלאת משחק הכנת הבשר שלך.',
+                stat1_num: '500+',
+                stat1_text: 'מתכונים ומדריכים',
+                stat2_num: '50+',
+                stat2_text: 'חתכי בשר',
+                stat3_num: '100k+',
+                stat3_text: 'קהילה פעילה',
+                stat4_num: '24/7',
+                stat4_text: 'תמיד זמין',
+                cta_title: 'מוכן להפוך לאמן בשר?',
+                cta_subtitle: 'הצטרף לאלפי חובבי בישול ששינו את כישוריהם עם Wiki Meat',
+                join_btn: 'הצטרף עכשיו',
+                footer_text: '© 2026 Wiki Meat. כל הזכויות שמורות. | בסיס הידע הקולינרי האולטימטיבי שלך'
+            },
+            ro: {
+                name: 'Română',
+                flag: 'ro',
+                hero_title: 'Stăpânește Arta Cărnii',
+                hero_subtitle: 'Ghidul tău complet pentru tăieturi, metode de gătit, rețete și tehnici culinare. Explorează tot ce trebuie să știi despre carne.',
+                explore_btn: 'Explorează Acum',
+                get_started_btn: 'Începe',
+                features_title: 'De Ce Să Alegi Wiki Meat?',
+                feature1_title: 'Ghiduri Complete',
+                feature1_text: 'Informații detaliate despre fiecare tăietură, de la ribeye la piept. Învață pregătirea, timpii de gătit și temperaturile optime.',
+                feature2_title: 'Rețete Expert',
+                feature2_text: 'Rețete curate de la bucătari profesioniști. Instrucțiuni pas cu pas pentru perfecționarea abilităților tale culinare.',
+                feature3_title: 'Metode de Gătit',
+                feature3_text: 'Stăpânește grătarul, afumarea, coacerea, prăjirea și multe altele. Tehnici pentru fiecare nivel de abilitate.',
+                feature4_title: 'Perechi și Garnituri',
+                feature4_text: 'Perechi perfecte de vin, rețete de sosuri și sugestii de garnituri pentru fiecare ocazie.',
+                feature5_title: 'Bucătării Globale',
+                feature5_text: 'Explorează prepararea cărnii din întreaga lume. Rețete tradiționale și variante moderne.',
+                feature6_title: 'Sfaturi Pro',
+                feature6_text: 'Cunoștințe din interior, sfaturi de depozitare și trucuri pentru a-ți îmbunătăți jocul de preparare a cărnii.',
+                stat1_num: '500+',
+                stat1_text: 'Rețete și Ghiduri',
+                stat2_num: '50+',
+                stat2_text: 'Tăieturi de Carne',
+                stat3_num: '100k+',
+                stat3_text: 'Comunitate Activă',
+                stat4_num: '24/7',
+                stat4_text: 'Mereu Disponibil',
+                cta_title: 'Gata să Devii un Maestru al Cărnii?',
+                cta_subtitle: 'Alătură-te miilor de pasionați de gătit care și-au transformat abilitățile cu Wiki Meat',
+                join_btn: 'Alătură-te Acum',
+                footer_text: '© 2026 Wiki Meat. Toate drepturile rezervate. | Baza ta de cunoștințe culinare supremă'
+            }
+        };
+
+        let currentLang = 'en';
+
+        // Load language preference from localStorage
+        function loadLanguagePreference() {
+            const saved = localStorage.getItem('wikimeat_language');
+            if (saved && translations[saved]) {
+                currentLang = saved;
+                updateLanguage(currentLang);
+            }
+        }
+
+        // Save language preference to localStorage
+        function saveLanguagePreference(lang) {
+            localStorage.setItem('wikimeat_language', lang);
+        }
+
+        // Populate language dropdown
+        function populateLanguageDropdown() {
+            const dropdown = document.getElementById('language-dropdown');
+            const sortedLangs = Object.entries(translations).sort((a, b) =>
+                a[1].name.localeCompare(b[1].name)
+            );
+
+            dropdown.innerHTML = sortedLangs.map(([code, lang]) => `
+                <div class="language-option ${code === currentLang ? 'selected' : ''}"
+                     onclick="changeLanguage('${code}')">
+                    <img src="https://flagcdn.com/w40/${lang.flag}.png"
+                         class="lang-flag"
+                         alt="${lang.name} flag"
+                         onerror="this.style.display='none';">
+                    <span>${lang.name}</span>
+                </div>
+            `).join('');
+        }
+
+        // Toggle dropdown visibility
+        function toggleLanguageDropdown() {
+            const dropdown = document.getElementById('language-dropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const switcher = document.querySelector('.language-switcher');
+            const dropdown = document.getElementById('language-dropdown');
+            if (switcher && !switcher.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Change language
+        function changeLanguage(langCode) {
+            currentLang = langCode;
+            saveLanguagePreference(langCode);
+            updateLanguage(langCode);
+            populateLanguageDropdown();
+            toggleLanguageDropdown();
+        }
+
+        // Update all text content based on selected language
+        function updateLanguage(langCode) {
+            const t = translations[langCode];
+
+            // Update language button
+            const flagElement = document.getElementById('current-flag');
+            flagElement.innerHTML = `<img src="https://flagcdn.com/w40/${t.flag}.png"
+                                          class="lang-flag"
+                                          alt="${t.name} flag"
+                                          style="width: 28px; height: 21px;"
+                                          onerror="this.src='https://flagcdn.com/w40/gb.png';">`;
+            document.getElementById('current-lang').textContent = t.name;
+
+            // Update all translatable elements
+            const elements = {
+                'hero-title': t.hero_title,
+                'hero-subtitle': t.hero_subtitle,
+                'explore-btn': t.explore_btn,
+                'get-started-btn': t.get_started_btn,
+                'features-title': t.features_title,
+                'feature1-title': t.feature1_title,
+                'feature1-text': t.feature1_text,
+                'feature2-title': t.feature2_title,
+                'feature2-text': t.feature2_text,
+                'feature3-title': t.feature3_title,
+                'feature3-text': t.feature3_text,
+                'feature4-title': t.feature4_title,
+                'feature4-text': t.feature4_text,
+                'feature5-title': t.feature5_title,
+                'feature5-text': t.feature5_text,
+                'feature6-title': t.feature6_title,
+                'feature6-text': t.feature6_text,
+                'stat1-num': t.stat1_num,
+                'stat1-text': t.stat1_text,
+                'stat2-num': t.stat2_num,
+                'stat2-text': t.stat2_text,
+                'stat3-num': t.stat3_num,
+                'stat3-text': t.stat3_text,
+                'stat4-num': t.stat4_num,
+                'stat4-text': t.stat4_text,
+                'cta-title': t.cta_title,
+                'cta-subtitle': t.cta_subtitle,
+                'join-btn': t.join_btn,
+                'footer-text': t.footer_text
+            };
+
+            for (const [id, text] of Object.entries(elements)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = text;
+                }
+            }
+        }
+
+        function scrollTo(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Contact Modal Functions
+        function openContactModal(event) {
+            if (event) event.preventDefault();
+            document.getElementById('contactModal').classList.add('active');
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('active');
+        }
+
+        // Early Access Modal Functions
+        function openEarlyAccessModal() {
+            document.getElementById('earlyAccessModal').classList.add('active');
+        }
+
+        function closeEarlyAccessModal() {
+            document.getElementById('earlyAccessModal').classList.remove('active');
+        }
+
+        // Handle early access form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('earlyAccessForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = this.querySelector('input[type="email"]').value;
+                    console.log('Early access signup:', email);
+                    document.getElementById('earlyAccessMessage').style.display = 'block';
+                    this.style.display = 'none';
+                    setTimeout(() => {
+                        closeEarlyAccessModal();
+                        this.style.display = 'flex';
+                        this.reset();
+                        document.getElementById('earlyAccessMessage').style.display = 'none';
+                    }, 2000);
+                });
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const contactModal = document.getElementById('contactModal');
+            const earlyAccessModal = document.getElementById('earlyAccessModal');
+            if (event.target === contactModal) {
+                closeContactModal();
+            }
+            if (event.target === earlyAccessModal) {
+                closeEarlyAccessModal();
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            populateLanguageDropdown();
+            loadLanguagePreference();
+        });
+    </script>
+</body>
+</html>

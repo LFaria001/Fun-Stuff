@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Padel Score</title>
+
+    <style>
+      :root {
+        --gap: 16px;
+        --pad: 16px;
+        --radius: 14px;
+        --border: 1px solid #e3e3e3;
+      }
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: system-ui, Arial, sans-serif;
+        background: #fff;
+      }
+
+      .app {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap);
+      }
+
+      h1 {
+        margin: 0;
+        text-align: center;
+        font-weight: 900;
+        font-size: clamp(32px, 4vw, 56px);
+        line-height: 1.1;
+      }
+
+      .topbar {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .topbar button {
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 800;
+        border: var(--border);
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .status {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 800;
+        opacity: 0.85;
+        min-height: 18px;
+      }
+
+      /* ======================
+         PC VERSION (default)
+         ====================== */
+      .scoreboard {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--gap);
+      }
+
+      .team {
+        border: var(--border);
+        border-radius: var(--radius);
+        background: #f7f7f7;
+        padding: var(--pad);
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap);
+      }
+
+      .name-row input {
+        width: 100%;
+        padding: 10px 12px;
+        border: var(--border);
+        border-radius: 12px;
+        background: #fff;
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--gap);
+      }
+
+      .stat {
+        border: var(--border);
+        border-radius: 12px;
+        background: #fff;
+        padding: 12px;
+        text-align: center;
+      }
+
+      .label {
+        font-size: 12px;
+        font-weight: 900;
+        opacity: 0.65;
+      }
+      .value {
+        margin-top: 6px;
+        font-weight: 900;
+        font-size: 40px;
+        line-height: 1;
+      }
+
+      .points .value { font-size: 64px; }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--gap);
+      }
+
+      .controls button {
+        width: 100%;
+        border: var(--border);
+        border-radius: 14px;
+        background: #fff;
+        cursor: pointer;
+        font-weight: 1000;
+        font-size: 28px;
+        padding: 16px 0;
+      }
+
+      .controls button:active { transform: translateY(1px); }
+      .controls button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+      /* ======================
+         PHONE VERSION
+         (single column, bigger tap targets)
+         ====================== */
+      @media (max-width: 780px) {
+        :root { --gap: 12px; --pad: 14px; }
+        .app { padding: 16px; }
+        .scoreboard { grid-template-columns: 1fr; }
+        h1 { font-size: clamp(26px, 8vw, 44px); }
+        .value { font-size: 34px; }
+        .points .value { font-size: 56px; }
+        .controls button { font-size: 30px; padding: 18px 0; }
+        /* Prevent iOS/Android tap-zoom behaviors on controls */
+
+        .controls button, .topbar button
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+      /* ======================
+         WATCH VERSION
+         (compact, tries to avoid scroll)
+         Triggered by very small screen/height
+         ====================== */
+      @media (max-width: 420px) and (max-height: 520px) {
+        :root { --gap: 8px; --pad: 10px; }
+        body { overflow: hidden; } /* try to prevent scrolling */
+        .app {
+          padding: max(8px, env(safe-area-inset-top))
+                   max(8px, env(safe-area-inset-right))
+                   max(8px, env(safe-area-inset-bottom))
+                   max(8px, env(safe-area-inset-left));
+          height: 100vh;
+          max-width: 520px;
+        }
+
+        h1 { font-size: clamp(18px, 7vw, 26px); }
+        .topbar button { padding: 7px 9px; font-size: 12px; }
+        .status { font-size: 12px; min-height: 14px; }
+
+        /* compress each team card */
+        .team { gap: 8px; }
+
+        /* Put SETS/GAMES/PTS in one row to reduce height */
+        .stats { grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
+
+        .stat { padding: 8px; }
+        .label { font-size: 11px; }
+        .value { font-size: clamp(18px, 7vw, 26px); margin-top: 4px; }
+        .points .value { font-size: clamp(22px, 10vw, 34px); }
+
+        .name-row input { padding: 7px 9px; font-size: 13px; }
+
+        .controls { gap: 8px; }
+        .controls button {
+          padding: 10px 0;
+          font-size: clamp(18px, 9vw, 28px);
+          border-radius: 14px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <h1>Padel Score</h1>
+
+      <div class="topbar">
+        <button type="button" onclick="undo()">Undo</button>
+        <button type="button" onclick="resetMatch()">Reset</button>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <div class="scoreboard">
+        <!-- Team A -->
+        <div class="team">
+          <div class="name-row">
+            <input id="nameA" value="Team A" aria-label="Team A name" />
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="label">SETS</div>
+              <div class="value" id="setsA">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">GAMES</div>
+              <div class="value" id="gamesA">0</div>
+            </div>
+            <div class="stat points">
+              <div class="label" id="pointsLabelA">PTS</div>
+              <div class="value" id="pointsA">0</div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button type="button" onclick="minusPoint('A')">−</button>
+            <button type="button" onclick="plusPoint('A')">+</button>
+          </div>
+        </div>
+
+        <!-- Team B -->
+        <div class="team">
+          <div class="name-row">
+            <input id="nameB" value="Team B" aria-label="Team B name" />
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="label">SETS</div>
+              <div class="value" id="setsB">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">GAMES</div>
+              <div class="value" id="gamesB">0</div>
+            </div>
+            <div class="stat points">
+              <div class="label" id="pointsLabelB">PTS</div>
+              <div class="value" id="pointsB">0</div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button type="button" onclick="minusPoint('B')">−</button>
+            <button type="button" onclick="plusPoint('B')">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Best of 3 sets (first to 2). Golden point at 40–40.
+      // Tie-break at 6–6: first to 7, win by 2.
+
+      const state = {
+        points: { A: 0, B: 0 },     // 0..3 => 0,15,30,40
+        games:  { A: 0, B: 0 },
+        sets:   { A: 0, B: 0 },
+        tiebreak: { active: false, A: 0, B: 0 },
+        matchOver: false,
+        history: []
+      };
+
+      const pointText = ["0", "15", "30", "40"];
+
+      function snapshot() {
+        // Store only needed fields (prevents slowdown)
+        state.history.push({
+          points: { ...state.points },
+          games: { ...state.games },
+          sets: { ...state.sets },
+          tiebreak: { ...state.tiebreak },
+          matchOver: state.matchOver
+        });
+        if (state.history.length > 300) state.history.shift();
+      }
+
+      function restore(prev) {
+        state.points = { ...prev.points };
+        state.games = { ...prev.games };
+        state.sets = { ...prev.sets };
+        state.tiebreak = { ...prev.tiebreak };
+        state.matchOver = prev.matchOver;
+      }
+
+      function plusPoint(team) {
+        if (state.matchOver) return;
+        snapshot();
+
+        if (state.tiebreak.active) {
+          state.tiebreak[team] += 1;
+          const a = state.tiebreak.A, b = state.tiebreak.B;
+          if ((a >= 7 || b >= 7) && Math.abs(a - b) >= 2) winSet(a > b ? "A" : "B");
+          render();
+          return;
+        }
+
+        const other = team === "A" ? "B" : "A";
+        const pW = state.points[team];
+        const pL = state.points[other];
+
+        // Golden point:
+        // - 40 and opponent < 40 => game
+        // - 40–40 => next point wins game
+        if (pW === 3 && pL < 3) winGame(team);
+        else if (pW === 3 && pL === 3) winGame(team);
+        else state.points[team] = Math.min(3, pW + 1);
+
+        render();
+      }
+
+      function minusPoint(team) {
+        if (state.matchOver) return;
+
+        if (state.tiebreak.active) {
+          if (state.tiebreak[team] > 0) state.tiebreak[team] -= 1;
+          render();
+          return;
+        }
+
+        if (state.points[team] > 0) state.points[team] -= 1;
+        render();
+      }
+
+      function winGame(team) {
+        state.games[team] += 1;
+        state.points.A = 0;
+        state.points.B = 0;
+
+        // Tie-break at 6–6
+        if (state.games.A === 6 && state.games.B === 6) {
+          state.tiebreak = { active: true, A: 0, B: 0 };
+        } else {
+          checkSetWin();
+        }
+      }
+
+      function checkSetWin() {
+        const a = state.games.A, b = state.games.B;
+        if ((a >= 6 || b >= 6) && Math.abs(a - b) >= 2) winSet(a > b ? "A" : "B");
+      }
+
+      function winSet(winner) {
+        state.sets[winner] += 1;
+
+        // Reset for next set
+        state.games = { A: 0, B: 0 };
+        state.points = { A: 0, B: 0 };
+        state.tiebreak = { active: false, A: 0, B: 0 };
+
+        if (state.sets[winner] >= 2) state.matchOver = true;
+      }
+
+      function undo() {
+        if (state.history.length === 0) return;
+        restore(state.history.pop());
+        render();
+      }
+
+      function resetMatch() {
+        state.points = { A: 0, B: 0 };
+        state.games  = { A: 0, B: 0 };
+        state.sets   = { A: 0, B: 0 };
+        state.tiebreak = { active: false, A: 0, B: 0 };
+        state.matchOver = false;
+        state.history = [];
+        render();
+      }
+
+      function render() {
+        document.getElementById("setsA").textContent = state.sets.A;
+        document.getElementById("setsB").textContent = state.sets.B;
+        document.getElementById("gamesA").textContent = state.games.A;
+        document.getElementById("gamesB").textContent = state.games.B;
+
+        const inTB = state.tiebreak.active;
+        document.getElementById("pointsLabelA").textContent = inTB ? "TB" : "PTS";
+        document.getElementById("pointsLabelB").textContent = inTB ? "TB" : "PTS";
+        document.getElementById("pointsA").textContent = inTB ? state.tiebreak.A : pointText[state.points.A];
+        document.getElementById("pointsB").textContent = inTB ? state.tiebreak.B : pointText[state.points.B];
+
+        const nameA = document.getElementById("nameA").value.trim() || "Team A";
+        const nameB = document.getElementById("nameB").value.trim() || "Team B";
+
+        let status = "";
+        if (state.matchOver) status = `Match over: ${(state.sets.A > state.sets.B) ? nameA : nameB} wins.`;
+        else if (inTB) status = `Tie-break: first to 7, win by 2.`;
+        else if (state.points.A === 3 && state.points.B === 3) status = `40–40: Golden Point next.`;
+        else status = `Golden Point rule on.`;
+        document.getElementById("status").textContent = status;
+
+        document.querySelectorAll(".controls button").forEach(b => b.disabled = state.matchOver);
+      }
+
+      document.getElementById("nameA").addEventListener("input", render);
+      document.getElementById("nameB").addEventListener("input", render);
+
+      render();
+    </script>
+  </body>
+</html>

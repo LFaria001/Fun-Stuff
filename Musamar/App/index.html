@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1410">
+<title>Musamar Hub</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #1a1410; --bg2: #151010; --card: #1e1814; --border: #2a2218;
+  --gold: #d4a96a; --gold-dark: #b8893a; --text: #e8ddd0; --muted: #8a7a66;
+  --dim: #6a5d4e; --faint: #4a3f32; --green: #6abf7b; --red: #bf6a6a;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overflow: hidden; -webkit-tap-highlight-color: transparent; }
+body { display: flex; flex-direction: column; }
+
+/* ===== HEADER (Mobile) ===== */
+.header { display: none; background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); align-items: center; justify-content: space-between; z-index: 50; }
+.header-logo { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--gold); letter-spacing: 4px; }
+
+/* ===== LAYOUT ===== */
+.app { display: flex; flex: 1; overflow: hidden; }
+
+/* ===== SIDEBAR ===== */
+.sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 0; }
+.sidebar-brand { padding: 0 24px; margin-bottom: 40px; }
+.sidebar-brand h1 { font-family: var(--font-display); font-size: 26px; font-weight: 600; color: var(--gold); letter-spacing: 6px; margin-bottom: 2px; }
+.sidebar-brand span { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+.sidebar nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sidebar .version { padding: 0 24px; font-size: 10px; color: var(--faint); letter-spacing: 1px; }
+.nav-btn { display: flex; align-items: center; gap: 12px; padding: 12px 24px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font-body); letter-spacing: 0.5px; text-align: left; transition: all 0.2s; background: transparent; color: var(--muted); border-left: 2px solid transparent; }
+.nav-btn.active { background: linear-gradient(90deg, rgba(212,169,106,0.12) 0%, transparent 100%); color: var(--gold); border-left-color: var(--gold); }
+.nav-btn .icon { font-size: 16px; opacity: 0.5; }
+.nav-btn.active .icon { opacity: 1; }
+
+/* ===== MAIN ===== */
+.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 32px 36px; padding-bottom: calc(32px + var(--safe-bottom)); }
+
+/* ===== BOTTOM NAV (Mobile) ===== */
+.bottom-nav { display: none; background: var(--bg2); border-top: 1px solid var(--border); padding: 6px 0; padding-bottom: calc(6px + var(--safe-bottom)); }
+.bottom-nav-inner { display: flex; justify-content: space-around; }
+.bnav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: var(--faint); font-size: 8px; font-family: var(--font-body); letter-spacing: 0.5px; padding: 6px 4px; cursor: pointer; min-width: 50px; }
+.bnav-btn .bnav-icon { font-size: 18px; }
+.bnav-btn.active { color: var(--gold); }
+
+/* ===== COMPONENTS ===== */
+.section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.section-header h1 { font-family: var(--font-display); font-size: 32px; font-weight: 400; color: var(--gold); letter-spacing: 2px; }
+.section-header .sub { font-size: 12px; color: var(--dim); margin-top: 4px; letter-spacing: 1px; }
+
+.btn { border: none; cursor: pointer; font-family: var(--font-body); font-size: 12px; font-weight: 500; letter-spacing: 0.8px; border-radius: 6px; padding: 10px 18px; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: var(--bg); }
+.btn-ghost { background: rgba(212,169,106,0.08); color: var(--gold); border: 1px solid var(--border); }
+.btn-full { width: 100%; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; transition: all 0.2s; }
+
+.input { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; color: var(--text); font-size: 13px; font-family: var(--font-body); width: 100%; outline: none; }
+.input:focus { border-color: var(--gold); }
+textarea.input { resize: vertical; min-height: 80px; }
+select.input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a7a66' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+
+.tag { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: inline-block; }
+.tag-gold { background: rgba(212,169,106,0.1); color: var(--gold); }
+.tag-green { background: rgba(106,191,123,0.1); color: var(--green); }
+
+.grid { display: grid; gap: 14px; }
+.grid-cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+.empty { text-align: center; padding: 60px 20px; color: var(--faint); }
+.empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+.empty p { font-size: 13px; letter-spacing: 0.5px; }
+
+.close-btn { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 14px; padding: 4px; }
+.del-btn { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 13px; }
+
+/* ===== MODAL ===== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; transform: translateY(20px); transition: transform 0.2s; }
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-head h2 { font-family: var(--font-display); font-size: 22px; font-weight: 500; color: var(--gold); }
+.form-group { margin-bottom: 16px; }
+.chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 11px; font-family: var(--font-body); cursor: pointer; transition: all 0.15s; }
+.chip.active { background: rgba(212,169,106,0.15); border-color: var(--gold); color: var(--gold); }
+
+/* ===== FINANCE DASHBOARD ===== */
+.fin-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.fin-card { border-left: 3px solid; }
+.fin-card .fin-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.fin-card .fin-value { font-size: 26px; font-weight: 300; font-family: var(--font-display); }
+.tx-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+.tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ===== CHAT ===== */
+.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 96px); }
+.chat-messages { flex: 1; overflow-y: auto; padding-bottom: 12px; }
+.chat-date { text-align: center; font-size: 10px; color: var(--faint); padding: 12px 0 6px; letter-spacing: 1px; }
+.chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; margin: 3px 0; }
+.chat-bubble .chat-user { font-size: 10px; color: var(--gold); margin-bottom: 3px; font-weight: 600; }
+.chat-bubble .chat-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.chat-bubble .chat-time { font-size: 9px; color: var(--faint); margin-top: 4px; text-align: right; }
+.chat-input-bar { display: flex; gap: 10px; align-items: center; padding-top: 12px; }
+
+/* ===== OBJECTIVES ===== */
+.obj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 16px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-dark)); border-radius: 2px; transition: width 0.4s ease; }
+.goal-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(42,34,24,0.3); }
+.goal-check { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--faint); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: 12px; flex-shrink: 0; }
+.goal-check.done { border-color: var(--green); background: var(--green); }
+.goal-text { flex: 1; font-size: 13px; }
+.goal-text.done { color: var(--dim); text-decoration: line-through; }
+
+/* ===== BRAND TABLE ===== */
+.req-table { font-size: 12px; }
+.req-header { display: grid; grid-template-columns: 1.5fr 1fr 0.8fr 2fr; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.req-header span { font-size: 10px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+.req-row { display: grid; grid-template-columns: 1.5fr 1fr 0.8fr 2fr; gap: 8px; padding: 10px 12px; border-radius: 4px; }
+.req-row:nth-child(even) { background: rgba(212,169,106,0.03); }
+
+/* ===== STARS ===== */
+.stars { display: flex; gap: 2px; }
+.star-btn { background: none; border: none; cursor: pointer; font-size: 22px; color: var(--border); padding: 0; }
+.star-btn.filled { color: var(--gold); }
+
+/* ===== FILTER PILLS ===== */
+.pills { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; font-family: var(--font-body); transition: all 0.15s; }
+.pill.active { border-color: var(--gold); background: rgba(212,169,106,0.12); color: var(--gold); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .header { display: flex; }
+  .bottom-nav { display: block; }
+  .main { padding: 20px 16px; }
+  .section-header h1 { font-size: 24px; }
+  .chat-wrap { height: calc(100vh - 180px); }
+  .fin-card .fin-value { font-size: 20px; }
+  .req-row, .req-header { grid-template-columns: 1fr 1fr; }
+  .req-row span:nth-child(4), .req-header span:nth-child(4) { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER (mobile) -->
+<div class="header">
+  <span class="header-logo">MUSAMAR</span>
+  <span style="font-size:10px;color:var(--muted);letter-spacing:2px">HUB</span>
+</div>
+
+<!-- APP -->
+<div class="app">
+  <!-- SIDEBAR (desktop) -->
+  <aside class="sidebar">
+    <div class="sidebar-brand"><h1>MUSAMAR</h1><span>Business Hub</span></div>
+    <nav id="sidebar-nav"></nav>
+    <div class="version">v1.0 — 2026</div>
+  </aside>
+  <!-- MAIN -->
+  <main class="main" id="main"></main>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav"><div class="bottom-nav-inner" id="bottom-nav"></div></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const TABS = [
+  { id:'inspiration', label:'Inspiração', icon:'✦' },
+  { id:'recipes', label:'Receitas', icon:'◎' },
+  { id:'finances', label:'Finanças', icon:'◈' },
+  { id:'brand', label:'Brand', icon:'◉' },
+  { id:'chat', label:'Chat', icon:'◆' },
+  { id:'objectives', label:'Objetivos', icon:'◇' },
+];
+
+const LOGO_REQS = [
+  { type:'Instagram (Perfil)', size:'320×320 px', format:'PNG / JPG', notes:'Circular crop — manter elemento central na safe zone' },
+  { type:'Instagram (Stories)', size:'1080×1920 px', format:'PNG / JPG', notes:'Versão vertical, logo pequeno no canto ou centrado' },
+  { type:'Facebook (Perfil)', size:'170×170 px', format:'PNG', notes:'Aparece circular, fundo transparente recomendado' },
+  { type:'Facebook (Capa)', size:'820×312 px', format:'PNG / JPG', notes:'Logo adaptado ao formato horizontal/banner' },
+  { type:'WhatsApp Business', size:'640×640 px', format:'PNG / JPG', notes:'Quadrado, boa legibilidade em miniatura' },
+  { type:'Website (Favicon)', size:'32×32 / 192×192 px', format:'ICO / PNG', notes:'Ícone simplificado, reconhecível em tamanho mínimo' },
+  { type:'Website (Header)', size:'Variável (SVG ideal)', format:'SVG / PNG', notes:'Fundo transparente, versão horizontal preferível' },
+  { type:'Packaging / Rótulo', size:'300 DPI mínimo', format:'PDF / AI / SVG', notes:'Vetorial para impressão, CMYK color mode' },
+  { type:'TikTok (Perfil)', size:'200×200 px', format:'PNG / JPG', notes:'Circular crop, contraste alto para feed' },
+  { type:'Email Signature', size:'300–600 px largura', format:'PNG', notes:'Fundo transparente, max 100KB' },
+];
+
+const CATS = ['Produto','Packaging','Marketing','Receita','Outro'];
+
+const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'Membro 1',goals:[]}, member2:{name:'Membro 2',goals:[]} }, weekLabel:'' };
+
+let state = JSON.parse(JSON.stringify(DEFAULT));
+let activeTab = 'inspiration';
+
+// ===== PERSISTENCE =====
+function load() { try { const d = localStorage.getItem('musamar-hub'); if(d) state = JSON.parse(d); } catch(e){} }
+function save() { try { localStorage.setItem('musamar-hub', JSON.stringify(state)); } catch(e){} }
+load();
+
+// ===== HELPERS =====
+const $=s=>document.querySelector(s);
+const fmt=v=>{ const n=parseFloat(v); return isNaN(n)?'0.00€':n.toFixed(2)+'€'; };
+const now=()=>new Date().toLocaleDateString('pt-PT');
+const nowTime=()=>new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+const uid=()=>Date.now()+Math.random().toString(36).slice(2,6);
+
+function openModal(title, content) {
+  $('#modal-content').innerHTML = `<div class="modal-head"><h2>${title}</h2><button class="close-btn" onclick="closeModal()">✕</button></div><div>${content}</div>`;
+  $('#modal-overlay').classList.add('open');
+}
+function closeModal() { $('#modal-overlay').classList.remove('open'); }
+$('#modal-overlay').addEventListener('click', e => { if(e.target.id==='modal-overlay') closeModal(); });
+
+function renderNav() {
+  const sb = $('#sidebar-nav');
+  const bn = $('#bottom-nav');
+  sb.innerHTML = TABS.map(t=>`<button class="nav-btn ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')"><span class="icon">${t.icon}</span>${t.label}</button>`).join('');
+  bn.innerHTML = TABS.map(t=>`<button class="bnav-btn ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')"><span class="bnav-icon">${t.icon}</span>${t.label}</button>`).join('');
+}
+
+function switchTab(id) { activeTab=id; renderNav(); render(); }
+
+function render() {
+  const m=$('#main');
+  switch(activeTab) {
+    case 'inspiration': renderInspiration(m); break;
+    case 'recipes': renderRecipes(m); break;
+    case 'finances': renderFinances(m); break;
+    case 'brand': renderBrand(m); break;
+    case 'chat': renderChat(m); break;
+    case 'objectives': renderObjectives(m); break;
+  }
+}
+
+// ===== 1. INSPIRAÇÃO =====
+function renderInspiration(el) {
+  const items = state.inspiration;
+  el.innerHTML = `
+    <div class="section-header">
+      <div><h1>Inspiração</h1><div class="sub">Board de ideias e referências</div></div>
+      <button class="btn btn-primary" onclick="openInspirationModal()">+ Nova Ideia</button>
+    </div>
+    <div class="pills">${CATS.map(c=>`<span class="pill">${c} (${items.filter(i=>i.category===c).length})</span>`).join('')}</div>
+    ${items.length?`<div class="grid grid-cards">${items.map(i=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <span class="tag tag-gold">${i.category}</span>
+          <button class="close-btn" onclick="delInspiration('${i.id}')">✕</button>
+        </div>
+        <h3 style="font-size:15px;font-weight:600;margin:8px 0 6px">${esc(i.title)}</h3>
+        ${i.notes?`<p style="font-size:12px;color:var(--muted);margin:0 0 8px;line-height:1.5">${esc(i.notes)}</p>`:''}
+        ${i.url?`<a href="${esc(i.url)}" target="_blank" style="font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all">↗ ${esc(i.url.substring(0,40))}…</a>`:''}
+        <div style="font-size:10px;color:var(--faint);margin-top:10px">${i.date}</div>
+      </div>
+    `).join('')}</div>`:`<div class="empty"><div class="icon">◇</div><p>Ainda sem ideias guardadas. Começa a colecionar inspiração!</p></div>`}`;
+}
+
+function openInspirationModal() {
+  openModal('Nova Inspiração', `
+    <div class="form-group"><label class="label">Título</label><input class="input" id="f-ins-title" placeholder="Ex: Packaging minimalista do Pinterest"></div>
+    <div class="form-group"><label class="label">URL (opcional)</label><input class="input" id="f-ins-url" placeholder="https://..."></div>
+    <div class="form-group"><label class="label">Categoria</label><div class="chip-group">${CATS.map((c,i)=>`<button class="chip ${i===0?'active':''}" onclick="pickChip(this)" data-val="${c}">${c}</button>`).join('')}</div></div>
+    <div class="form-group"><label class="label">Notas</label><textarea class="input" id="f-ins-notes" placeholder="O que te chamou a atenção?"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addInspiration()">Guardar Ideia</button>
+  `);
+}
+
+function addInspiration() {
+  const t=$('#f-ins-title').value.trim(); if(!t) return;
+  const cat = $('#modal-content').querySelector('.chip.active')?.dataset.val || 'Outro';
+  state.inspiration.unshift({ id:uid(), title:t, url:$('#f-ins-url').value.trim(), notes:$('#f-ins-notes').value.trim(), category:cat, date:now() });
+  save(); closeModal(); render();
+}
+function delInspiration(id) { state.inspiration=state.inspiration.filter(i=>i.id!==id); save(); render(); }
+
+// ===== 2. RECEITAS =====
+let recipeFilter = 'all';
+
+function renderRecipes(el) {
+  const items = recipeFilter==='all' ? state.recipes : state.recipes.filter(r=>r.status===recipeFilter);
+  const all=state.recipes.length, exp=state.recipes.filter(r=>r.status==='experimentar').length, done=state.recipes.filter(r=>r.status==='concluida').length;
+
+  el.innerHTML = `
+    <div class="section-header">
+      <div><h1>Receitas</h1><div class="sub">Laboratório de tâmaras recheadas</div></div>
+      <button class="btn btn-primary" onclick="openRecipeModal()">+ Nova Receita</button>
+    </div>
+    <div class="pills">
+      <button class="pill ${recipeFilter==='all'?'active':''}" onclick="recipeFilter='all';render()">Todas (${all})</button>
+      <button class="pill ${recipeFilter==='experimentar'?'active':''}" onclick="recipeFilter='experimentar';render()">A experimentar (${exp})</button>
+      <button class="pill ${recipeFilter==='concluida'?'active':''}" onclick="recipeFilter='concluida';render()">Concluídas (${done})</button>
+    </div>
+    ${items.length?`<div class="grid grid-cards">${items.map(r=>`
+      <div class="card" style="cursor:pointer" onclick="viewRecipe('${r.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <span class="tag ${r.status==='concluida'?'tag-green':'tag-gold'}">${r.status==='concluida'?'Concluída':'A experimentar'}</span>
+          ${r.rating?`<span style="color:var(--gold);font-size:13px">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>`:''}
+        </div>
+        <h3 style="font-size:16px;font-weight:600;margin:10px 0 4px;font-family:var(--font-display)">${esc(r.name)}</h3>
+        <p style="font-size:12px;color:var(--dim)">${(r.ingredients||[]).length} ingredientes · ${(r.steps||[]).length} passos</p>
+        <div style="font-size:10px;color:var(--faint);margin-top:8px">${r.date}</div>
+      </div>
+    `).join('')}</div>`:`<div class="empty"><div class="icon">◇</div><p>Nenhuma receita encontrada.</p></div>`}`;
+}
+
+function openRecipeModal() {
+  openModal('Nova Receita', `
+    <div class="form-group"><label class="label">Nome da Receita</label><input class="input" id="f-rec-name" placeholder="Ex: Tâmara Medjool com pistáchio"></div>
+    <div class="form-group"><label class="label">Estado</label><div class="chip-group"><button class="chip active" onclick="pickChip(this)" data-val="experimentar">A experimentar</button><button class="chip" onclick="pickChip(this)" data-val="concluida">Concluída</button></div></div>
+    <div class="form-group"><label class="label">Ingredientes (um por linha)</label><textarea class="input" id="f-rec-ing" placeholder="6 tâmaras Medjool\n100g pistáchio"></textarea></div>
+    <div class="form-group"><label class="label">Passos (um por linha)</label><textarea class="input" id="f-rec-steps" placeholder="Abrir as tâmaras\nTriturar pistáchio"></textarea></div>
+    <div class="form-group"><label class="label">URL da foto (opcional)</label><input class="input" id="f-rec-photo" placeholder="https://..."></div>
+    <div class="form-group"><label class="label">Avaliação</label><div class="stars" id="f-rec-stars">${[1,2,3,4,5].map(n=>`<button class="star-btn" onclick="pickStar(${n})">★</button>`).join('')}</div></div>
+    <div class="form-group"><label class="label">Notas pessoais</label><textarea class="input" id="f-rec-notes" placeholder="Observações, ajustes..."></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addRecipe()">Guardar Receita</button>
+  `);
+}
+let pickedRating = 0;
+function pickStar(n) {
+  pickedRating = pickedRating===n ? 0 : n;
+  document.querySelectorAll('#f-rec-stars .star-btn').forEach((b,i)=>{ b.classList.toggle('filled', i<pickedRating); });
+}
+
+function addRecipe() {
+  const name=$('#f-rec-name').value.trim(); if(!name) return;
+  const status = $('#modal-content').querySelector('.chip.active')?.dataset.val || 'experimentar';
+  state.recipes.unshift({
+    id:uid(), name, status, rating:pickedRating,
+    ingredients:$('#f-rec-ing').value.split('\n').filter(Boolean),
+    steps:$('#f-rec-steps').value.split('\n').filter(Boolean),
+    photo:$('#f-rec-photo').value.trim(),
+    notes:$('#f-rec-notes').value.trim(), date:now()
+  });
+  pickedRating=0; save(); closeModal(); render();
+}
+
+function viewRecipe(id) {
+  const r=state.recipes.find(x=>x.id===id); if(!r) return;
+  openModal(esc(r.name), `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+      <span class="tag ${r.status==='concluida'?'tag-green':'tag-gold'}">${r.status==='concluida'?'Concluída':'A experimentar'}</span>
+      ${r.rating?`<span style="color:var(--gold);font-size:14px">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>`:''}
+    </div>
+    ${r.photo?`<img src="${esc(r.photo)}" style="width:100%;border-radius:8px;max-height:250px;object-fit:cover;margin-bottom:16px" onerror="this.style.display='none'">`:''}
+    <div class="form-group"><label class="label">Ingredientes</label><ul style="padding-left:18px;color:var(--text);font-size:13px;line-height:1.8">${(r.ingredients||[]).map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>
+    <div class="form-group"><label class="label">Passos</label><ol style="padding-left:18px;color:var(--text);font-size:13px;line-height:1.8">${(r.steps||[]).map(s=>`<li style="margin-bottom:6px">${esc(s)}</li>`).join('')}</ol></div>
+    ${r.notes?`<div class="form-group"><label class="label">Notas</label><p style="color:var(--muted);font-size:13px;line-height:1.6">${esc(r.notes)}</p></div>`:''}
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="toggleRecipeStatus('${r.id}')">${r.status==='concluida'?'↩ Marcar por experimentar':'✓ Marcar concluída'}</button>
+      <button class="btn btn-ghost" onclick="delRecipe('${r.id}')">Eliminar</button>
+    </div>
+  `);
+}
+function toggleRecipeStatus(id) { const r=state.recipes.find(x=>x.id===id); if(r) r.status=r.status==='concluida'?'experimentar':'concluida'; save(); closeModal(); render(); }
+function delRecipe(id) { state.recipes=state.recipes.filter(r=>r.id!==id); save(); closeModal(); render(); }
+
+// ===== 3. FINANÇAS =====
+function renderFinances(el) {
+  const items=state.finances;
+  const ent=items.filter(i=>i.type==='entrada').reduce((s,i)=>s+i.amount,0);
+  const sai=items.filter(i=>i.type==='saida').reduce((s,i)=>s+i.amount,0);
+  const bal=ent-sai;
+
+  el.innerHTML = `
+    <div class="section-header">
+      <div><h1>Finanças</h1><div class="sub">Controlo de entradas e saídas</div></div>
+      <button class="btn btn-primary" onclick="openFinanceModal()">+ Novo Registo</button>
+    </div>
+    <div class="fin-cards">
+      <div class="card fin-card" style="border-left-color:var(--green)"><div class="fin-label" style="color:var(--green)">Entradas</div><div class="fin-value" style="color:var(--green)">${fmt(ent)}</div></div>
+      <div class="card fin-card" style="border-left-color:var(--red)"><div class="fin-label" style="color:var(--red)">Saídas</div><div class="fin-value" style="color:var(--red)">${fmt(sai)}</div></div>
+      <div class="card fin-card" style="border-left-color:${bal>=0?'var(--gold)':'var(--red)'}"><div class="fin-label" style="color:var(--gold)">Balanço</div><div class="fin-value" style="color:${bal>=0?'var(--gold)':'var(--red)'}">${bal>=0?'+':''}${fmt(bal)}</div></div>
+    </div>
+    <div>${items.map(i=>`
+      <div class="tx-row">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span class="tx-dot" style="background:${i.type==='entrada'?'var(--green)':'var(--red)'}"></span>
+          <div><div style="font-size:13px;font-weight:500">${esc(i.description)}</div><div style="font-size:11px;color:var(--dim)">${i.date}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:15px;font-weight:600;color:${i.type==='entrada'?'var(--green)':'var(--red)'}">${i.type==='entrada'?'+':'-'}${fmt(i.amount)}</span>
+          <button class="del-btn" onclick="delFinance('${i.id}')">✕</button>
+        </div>
+      </div>
+    `).join('')}</div>
+    ${items.length===0?'<div class="empty"><div class="icon">◇</div><p>Sem registos financeiros ainda.</p></div>':''}`;
+}
+
+function openFinanceModal() {
+  openModal('Novo Registo', `
+    <div class="form-group"><label class="label">Tipo</label><div class="chip-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="chip" onclick="pickChip(this)" data-val="entrada" style="text-align:center;padding:10px">💰 Entrada</button><button class="chip active" onclick="pickChip(this)" data-val="saida" style="text-align:center;padding:10px">💸 Saída</button></div></div>
+    <div class="form-group"><label class="label">Descrição</label><input class="input" id="f-fin-desc" placeholder="Ex: Compra de tâmaras Medjool"></div>
+    <div class="form-group"><label class="label">Valor (€)</label><input class="input" id="f-fin-amount" type="number" step="0.01" placeholder="0.00"></div>
+    <div class="form-group"><label class="label">Data</label><input class="input" id="f-fin-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <button class="btn btn-primary btn-full" onclick="addFinance()">Guardar</button>
+  `);
+}
+function addFinance() {
+  const d=$('#f-fin-desc').value.trim(), a=parseFloat($('#f-fin-amount').value); if(!d||isNaN(a)) return;
+  const type=$('#modal-content').querySelector('.chip.active')?.dataset.val||'saida';
+  state.finances.unshift({ id:uid(), description:d, amount:a, type, date:$('#f-fin-date').value });
+  save(); closeModal(); render();
+}
+function delFinance(id) { state.finances=state.finances.filter(i=>i.id!==id); save(); render(); }
+
+// ===== 4. BRAND =====
+function renderBrand(el) {
+  const items=state.brandAssets;
+  const types=['Logo Redes','Logo Principal','Ícone','Banner','Packaging','Outro'];
+
+  el.innerHTML = `
+    <div class="section-header">
+      <div><h1>Brand Assets</h1><div class="sub">Identidade visual & guia de logos</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openLogoGuide()">📐 Requisitos</button><button class="btn btn-primary" onclick="openBrandModal()">+ Novo Asset</button></div>
+    </div>
+    ${items.length?`<div class="grid grid-cards">${items.map(i=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><span class="tag tag-gold">${esc(i.type)}</span><button class="close-btn" onclick="delBrand('${i.id}')">✕</button></div>
+        ${i.url?`<div style="width:100%;height:120px;border-radius:6px;overflow:hidden;margin-bottom:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center"><img src="${esc(i.url)}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.style.display='none'"></div>`:''}
+        <h3 style="font-size:14px;font-weight:600;margin:0 0 4px">${esc(i.name)}</h3>
+        ${i.notes?`<p style="font-size:11px;color:var(--dim);margin:0">${esc(i.notes)}</p>`:''}
+      </div>
+    `).join('')}</div>`:`<div class="empty"><div class="icon">◇</div><p>Ainda sem brand assets. Faz upload dos teus logos!</p></div>`}`;
+}
+
+function openBrandModal() {
+  const types=['Logo Redes','Logo Principal','Ícone','Banner','Packaging','Outro'];
+  openModal('Novo Brand Asset', `
+    <div class="form-group"><label class="label">Nome</label><input class="input" id="f-ba-name" placeholder="Ex: Logo Instagram v2"></div>
+    <div class="form-group"><label class="label">Tipo</label><div class="chip-group">${types.map((t,i)=>`<button class="chip ${i===0?'active':''}" onclick="pickChip(this)" data-val="${t}">${t}</button>`).join('')}</div></div>
+    <div class="form-group"><label class="label">URL da imagem</label><input class="input" id="f-ba-url" placeholder="https://..."></div>
+    <div class="form-group"><label class="label">Notas</label><textarea class="input" id="f-ba-notes" placeholder="Detalhes, contexto de uso..."></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addBrand()">Guardar Asset</button>
+  `);
+}
+function addBrand() {
+  const n=$('#f-ba-name').value.trim(); if(!n) return;
+  const type=$('#modal-content').querySelector('.chip.active')?.dataset.val||'Outro';
+  state.brandAssets.unshift({ id:uid(), name:n, type, url:$('#f-ba-url').value.trim(), notes:$('#f-ba-notes').value.trim(), date:now() });
+  save(); closeModal(); render();
+}
+function delBrand(id) { state.brandAssets=state.brandAssets.filter(i=>i.id!==id); save(); render(); }
+
+function openLogoGuide() {
+  openModal('Requisitos por Tipo de Logo', `
+    <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5">Guia de tamanhos e formatos recomendados para cada plataforma.</p>
+    <div class="req-table">
+      <div class="req-header"><span>Tipo</span><span>Tamanho</span><span>Formato</span><span>Notas</span></div>
+      ${LOGO_REQS.map(r=>`<div class="req-row"><span style="font-weight:500;color:var(--text)">${r.type}</span><span style="color:var(--muted)">${r.size}</span><span style="color:var(--muted)">${r.format}</span><span style="color:var(--dim)">${r.notes}</span></div>`).join('')}
+    </div>
+  `);
+}
+
+// ===== 5. CHAT =====
+let chatUser = 'Membro 1';
+
+function renderChat(el) {
+  const msgs=state.chat;
+  const grouped={};
+  msgs.forEach(m=>{ const d=m.date||'Hoje'; if(!grouped[d]) grouped[d]=[]; grouped[d].push(m); });
+
+  el.innerHTML = `
+    <div class="chat-wrap">
+      <div class="section-header" style="margin-bottom:16px"><div><h1>Chat</h1><div class="sub">Comunicação interna da equipa</div></div></div>
+      <div class="chat-messages" id="chat-messages">
+        ${Object.entries(grouped).map(([date,ms])=>`
+          <div class="chat-date">${date}</div>
+          ${ms.map(m=>{
+            const isMe=m.user===chatUser;
+            return `<div style="display:flex;justify-content:${isMe?'flex-end':'flex-start'};padding:3px 0">
+              <div class="chat-bubble" style="background:${isMe?'rgba(212,169,106,0.15)':'var(--card)'};border:1px solid ${isMe?'rgba(212,169,106,0.25)':'var(--border)'}">
+                <div class="chat-user">${esc(m.user)}</div>
+                <div class="chat-text">${esc(m.text)}</div>
+                <div class="chat-time">${m.time}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        `).join('')}
+      </div>
+      <div class="chat-input-bar">
+        <select class="input" style="width:120px" onchange="chatUser=this.value">
+          <option ${chatUser==='Membro 1'?'selected':''}>Membro 1</option>
+          <option ${chatUser==='Membro 2'?'selected':''}>Membro 2</option>
+        </select>
+        <input class="input" id="chat-input" placeholder="Escreve uma mensagem..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
+        <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
+      </div>
+    </div>
+  `;
+  const cm=$('#chat-messages'); cm.scrollTop=cm.scrollHeight;
+}
+
+function sendChat() {
+  const inp=$('#chat-input'); const t=inp.value.trim(); if(!t) return;
+  state.chat.push({ id:uid(), user:chatUser, text:t, time:nowTime(), date:now() });
+  save(); render();
+}
+
+// ===== 6. OBJETIVOS =====
+function renderObjectives(el) {
+  const obj=state.objectives, wk=state.weekLabel;
+
+  el.innerHTML = `
+    <div class="section-header">
+      <div>
+        <h1>Objetivos Semanais</h1>
+        <div class="sub" style="cursor:pointer" onclick="editWeekLabel()" id="week-label-display">${wk||'Clica para definir a semana'}</div>
+      </div>
+      <button class="btn btn-ghost" onclick="clearObjectives()">Limpar Tudo</button>
+    </div>
+    <div class="obj-grid">
+      ${['member1','member2'].map(mk=>{
+        const m=obj[mk]; const done=m.goals.filter(g=>g.done).length; const total=m.goals.length; const pct=total?Math.round(done/total*100):0;
+        return `<div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--gold);cursor:pointer" onclick="editMemberName('${mk}')">${esc(m.name)}</h3>
+            <span style="font-size:12px;color:var(--dim)">${done}/${total}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div style="margin-bottom:14px">${m.goals.map(g=>`
+            <div class="goal-row">
+              <button class="goal-check ${g.done?'done':''}" onclick="toggleGoal('${mk}','${g.id}')">${g.done?'✓':''}</button>
+              <span class="goal-text ${g.done?'done':''}">${esc(g.text)}</span>
+              <button class="del-btn" onclick="delGoal('${mk}','${g.id}')">✕</button>
+            </div>
+          `).join('')}</div>
+          <button class="btn btn-ghost btn-full" onclick="openGoalModal('${mk}')">+ Adicionar Objetivo</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function openGoalModal(member) {
+  const name=state.objectives[member].name;
+  openModal('Novo Objetivo — '+esc(name), `
+    <div class="form-group"><label class="label">Objetivo</label><input class="input" id="f-goal-text" placeholder="Ex: Preparar 50 caixas para encomenda X" onkeydown="if(event.key==='Enter'){addGoal('${member}')}"></div>
+    <button class="btn btn-primary btn-full" onclick="addGoal('${member}')">Adicionar</button>
+  `);
+  setTimeout(()=>$('#f-goal-text')?.focus(),100);
+}
+function addGoal(member) {
+  const t=$('#f-goal-text').value.trim(); if(!t) return;
+  state.objectives[member].goals.push({ id:uid(), text:t, done:false });
+  save(); closeModal(); render();
+}
+function toggleGoal(member,id) {
+  const g=state.objectives[member].goals.find(x=>x.id===id); if(g) g.done=!g.done;
+  save(); render();
+}
+function delGoal(member,id) { state.objectives[member].goals=state.objectives[member].goals.filter(g=>g.id!==id); save(); render(); }
+function clearObjectives() { state.objectives.member1.goals=[]; state.objectives.member2.goals=[]; save(); render(); }
+
+function editMemberName(member) {
+  const cur=state.objectives[member].name;
+  openModal('Editar Nome', `
+    <div class="form-group"><label class="label">Nome</label><input class="input" id="f-name" value="${esc(cur)}" onkeydown="if(event.key==='Enter'){saveMemberName('${member}')}"></div>
+    <button class="btn btn-primary btn-full" onclick="saveMemberName('${member}')">Guardar</button>
+  `);
+  setTimeout(()=>$('#f-name')?.focus(),100);
+}
+function saveMemberName(member) {
+  const n=$('#f-name').value.trim(); if(!n) return;
+  state.objectives[member].name=n; save(); closeModal(); render();
+}
+
+function editWeekLabel() {
+  openModal('Semana', `
+    <div class="form-group"><label class="label">Label da Semana</label><input class="input" id="f-week" value="${esc(state.weekLabel)}" placeholder="Ex: Semana 10 — 4-10 Mar" onkeydown="if(event.key==='Enter'){saveWeekLabel()}"></div>
+    <button class="btn btn-primary btn-full" onclick="saveWeekLabel()">Guardar</button>
+  `);
+  setTimeout(()=>$('#f-week')?.focus(),100);
+}
+function saveWeekLabel() { state.weekLabel=$('#f-week').value.trim(); save(); closeModal(); render(); }
+
+// ===== UTILITIES =====
+function pickChip(btn) {
+  btn.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// ===== SERVICE WORKER =====
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+// ===== INIT =====
+renderNav();
+render();
+</script>
+</body>
+</html>
