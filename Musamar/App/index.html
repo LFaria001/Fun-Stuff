@@ -639,12 +639,13 @@ function chatLongPressEnd(){ clearTimeout(_chatLP); }
 function showMsgMenu(bubble,id){
   document.querySelectorAll('.msg-menu').forEach(m=>m.remove());
   const msg=state.chat.find(m=>m.id===id); if(!msg) return;
+  const isMe=msg.user===chatUser;
   const menu=document.createElement('div');
   menu.className='msg-menu';
   menu.innerHTML=`
     <button onclick="copyMessage('${id}')">Copiar</button>
-    <button onclick="editMessage('${id}')">Editar</button>
-    <button onclick="delMessage('${id}')" style="color:var(--red,#e74c3c)">Apagar</button>`;
+    ${isMe?`<button onclick="editMessage('${id}')">Editar</button>`:''}
+    ${isMe?`<button onclick="delMessage('${id}')" style="color:var(--red,#e74c3c)">Apagar</button>`:''}`;
   bubble.appendChild(menu);
   setTimeout(()=>document.addEventListener('click',function h(){ menu.remove(); document.removeEventListener('click',h); }),10);
 }
