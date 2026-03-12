@@ -117,8 +117,9 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .chat-bubble .chat-user { font-size: 10px; color: var(--gold); margin-bottom: 3px; font-weight: 600; }
 .chat-bubble .chat-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 .chat-bubble .chat-time { font-size: 9px; color: var(--faint); margin-top: 4px; text-align: right; }
-.msg-menu { position:absolute;bottom:100%;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.4);margin-bottom:4px; }
-.msg-menu button { background:none;border:none;color:var(--red,#e74c3c);font-size:12px;padding:8px 16px;cursor:pointer;font-weight:600;white-space:nowrap; }
+.msg-menu { position:absolute;bottom:100%;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px 0;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.5);margin-bottom:6px;min-width:120px;display:flex;flex-direction:column; }
+.msg-menu button { background:none;border:none;color:var(--text);font-size:13px;padding:10px 18px;cursor:pointer;font-weight:500;white-space:nowrap;text-align:left; }
+.msg-menu button:active { background:rgba(255,255,255,0.05); }
 .chat-input-bar { display: flex; gap: 10px; align-items: center; padding-top: 12px; }
 
 /* ===== OBJECTIVES ===== */
@@ -611,9 +612,9 @@ function renderChat(el) {
           ${ms.map(m=>{
             const isMe=m.user===chatUser;
             return `<div style="display:flex;justify-content:${isMe?'flex-end':'flex-start'};padding:3px 0">
-              <div class="chat-bubble" style="background:${isMe?'rgba(212,169,106,0.15)':'var(--card)'};border:1px solid ${isMe?'rgba(212,169,106,0.25)':'var(--border)'};position:relative"
-                ontouchstart="chatLongPress(this,'${m.id}')" ontouchend="chatLongPressEnd()" ontouchmove="chatLongPressEnd()"
-                oncontextmenu="event.preventDefault();showMsgMenu(this,'${m.id}')">
+              <div class="chat-bubble" style="background:${isMe?'rgba(212,169,106,0.15)':'var(--card)'};border:1px solid ${isMe?'rgba(212,169,106,0.25)':'var(--border)'};position:relative;-webkit-user-select:none;user-select:none"
+                ontouchstart="chatLongPress(event,this,'${m.id}')" ontouchend="chatLongPressEnd()" ontouchmove="chatLongPressEnd()"
+                oncontextmenu="event.preventDefault()">
                 <div class="chat-user">${esc(m.user)}</div>
                 <div class="chat-text">${esc(m.text)}</div>
                 <div class="chat-time">${m.time}</div>
@@ -633,17 +634,30 @@ function renderChat(el) {
 }
 
 let _chatLP=null;
-function chatLongPress(el,id){ _chatLP=setTimeout(()=>showMsgMenu(el,id),500); }
+function chatLongPress(e,el,id){ e.preventDefault(); _chatLP=setTimeout(()=>{navigator.vibrate&&navigator.vibrate(30);showMsgMenu(el,id);},400); }
 function chatLongPressEnd(){ clearTimeout(_chatLP); }
 function showMsgMenu(bubble,id){
-  // Remove any existing menu
   document.querySelectorAll('.msg-menu').forEach(m=>m.remove());
+  const msg=state.chat.find(m=>m.id===id); if(!msg) return;
   const menu=document.createElement('div');
   menu.className='msg-menu';
-  menu.innerHTML=`<button onclick="delMessage('${id}')">Apagar</button>`;
+  menu.innerHTML=`
+    <button onclick="copyMessage('${id}')">Copiar</button>
+    <button onclick="editMessage('${id}')">Editar</button>
+    <button onclick="delMessage('${id}')" style="color:var(--red,#e74c3c)">Apagar</button>`;
   bubble.appendChild(menu);
-  // Close on tap outside
   setTimeout(()=>document.addEventListener('click',function h(){ menu.remove(); document.removeEventListener('click',h); }),10);
+}
+function copyMessage(id){
+  const msg=state.chat.find(m=>m.id===id); if(!msg) return;
+  navigator.clipboard.writeText(msg.text).catch(()=>{});
+  document.querySelectorAll('.msg-menu').forEach(m=>m.remove());
+}
+function editMessage(id){
+  const msg=state.chat.find(m=>m.id===id); if(!msg) return;
+  document.querySelectorAll('.msg-menu').forEach(m=>m.remove());
+  const newText=prompt('Editar mensagem:',msg.text);
+  if(newText!==null && newText.trim()){ msg.text=newText.trim(); save(); render(); }
 }
 function delMessage(id){ state.chat=state.chat.filter(m=>m.id!==id); save(); render(); }
 
