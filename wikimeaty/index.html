@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-65726M56XE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-65726M56XE');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki Meaty - Coming Soon | Join the Waitlist</title>
+    <meta name="description" content="Join the waitlist for Wiki Meaty - the world's first crowdsourced encyclopedia of meat cuts. Help us build it!">
+
+    <!-- Favicon & PWA -->
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8B0000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Wiki Meaty">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://farifari.com/wikimeaty/">
+    <meta property="og:title" content="Wiki Meaty - The World's First Crowdsourced Meat Encyclopedia">
+    <meta property="og:description" content="Help us build the ultimate guide to meat cuts, cooking methods, and recipes.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Wiki Meaty - Crowdsourced Meat Encyclopedia">
+    <meta name="twitter:description" content="Help us build the ultimate guide to meat cuts, cooking methods, and recipes.">
+
+    <link rel="preconnect" href="https://flagcdn.com">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0f 50%, #0a0a0a 100%);
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 2rem 0;
+            position: relative;
+            z-index: 100;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffb366;
+        }
+
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            padding: 4rem 0;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #8b4513, #ff6b35);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffb366, #ff6b35);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: #ccc;
+            margin-bottom: 3rem;
+        }
+
+        .email-form {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .form-flex {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-flex input {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            border: 2px solid rgba(255,179,102,0.3);
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .form-flex input:focus {
+            outline: none;
+            border-color: #ffb366;
+        }
+
+        .form-flex button {
+            padding: 1.2rem 3rem;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .form-flex button:hover {
+            transform: translateY(-2px);
+        }
+
+        .note {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .success {
+            display: none;
+            background: rgba(76,175,80,0.2);
+            border: 2px solid #4CAF50;
+            padding: 1rem;
+            border-radius: 12px;
+            color: #4CAF50;
+            margin-top: 1rem;
+        }
+
+        .growing-waitlist {
+            margin-top: 3rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffb366, #ff6b35);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border: 2px solid rgba(255,179,102,0.4);
+            border-radius: 50px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { border-color: rgba(255,179,102,0.4); transform: scale(1); }
+            50% { border-color: rgba(255,107,53,0.7); transform: scale(1.02); }
+        }
+
+        .section {
+            padding: 6rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 4rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 3rem;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255,179,102,0.1);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255,179,102,0.3);
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffb366;
+        }
+
+        .card p {
+            color: #aaa;
+        }
+
+        .contribute {
+            padding: 6rem 0;
+            background: rgba(139,69,19,0.05);
+            text-align: center;
+        }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem 3rem;
+            background: linear-gradient(135deg, #8b4513, #ff6b35);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 2rem;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .cta-btn:hover {
+            transform: scale(1.05);
+        }
+
+        footer {
+            padding: 3rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(255,179,102,0.1);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a,
+        .footer-links button {
+            color: #999;
+            text-decoration: none;
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .footer-links a:hover,
+        .footer-links button:hover {
+            color: #ffb366;
+        }
+
+        .lang-switch {
+            position: relative;
+        }
+
+        .lang-btn {
+            background: rgba(139,69,19,0.9);
+            color: #fff;
+            border: 2px solid #ffb366;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: #1a1a1a;
+            border: 2px solid #ffb366;
+            border-radius: 10px;
+            padding: 10px;
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .lang-dropdown.active { display: block; }
+
+        .lang-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lang-option:hover {
+            background: rgba(255,179,102,0.2);
+        }
+
+        .lang-flag {
+            width: 24px;
+            height: 18px;
+            border-radius: 2px;
+        }
+
+        .lang-flag + .lang-flag {
+            margin-left: 4px;
+        }
+
+        .contribute-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10,10,10,0.75);
+            z-index: 1003;
+            padding: 2rem;
+        }
+
+        .contribute-modal.active { display: flex; }
+
+        .contribute-panel {
+            background: #111;
+            border: 1px solid rgba(255,179,102,0.2);
+            border-radius: 20px;
+            max-width: 520px;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+        }
+
+        .contribute-panel h3 {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+            color: #ffb366;
+        }
+
+        .contribute-panel p {
+            color: #aaa;
+        }
+
+        .contribute-form {
+            margin-top: 1.5rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .contribute-form input,
+        .contribute-form textarea,
+        .contribute-form select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 1px solid rgba(255,179,102,0.2);
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .contribute-form select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23ffb366' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        .contribute-form select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .contribute-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .contribute-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contribute-submit {
+            padding: 0.9rem 1.6rem;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .contribute-close {
+            background: transparent;
+            border: 1px solid rgba(255,179,102,0.4);
+            color: #ffb366;
+            padding: 0.7rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .contribute-success {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .contribute-success.active {
+            display: block;
+        }
+
+        .contribute-success .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .contribute-success h4 {
+            font-size: 1.5rem;
+            color: #ffb366;
+            margin-bottom: 0.5rem;
+        }
+
+        .contribute-success p {
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+
+        .contribute-success .success-close {
+            padding: 0.9rem 2rem;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .contribute-success .success-close:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .form-flex { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <header>
+        <div class="container">
+            <div class="logo">🥩 Wiki Meaty</div>
+            <div class="lang-switch">
+                <button class="lang-btn" onclick="toggleLang()">
+                    <span id="flag"><img src="https://flagcdn.com/w40/gb.png" class="lang-flag"></span>
+                    <span id="langName">English (UK)</span>
+                    <span>▼</span>
+                </button>
+                <div class="lang-dropdown" id="dropdown"></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="badge" id="badge">🚀 Launching Soon</span>
+                <h1 id="title">The World's First Crowdsourced Meat Encyclopedia</h1>
+                <p class="subtitle" id="subtitle">Help us build the ultimate guide to meat cuts, cooking methods, and recipes. Be part of something delicious.</p>
+
+                <div class="email-form">
+                    <form class="form-flex" id="form">
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                        <button type="submit" id="joinBtn">Join Waitlist</button>
+                    </form>
+                    <p class="note" id="note">Get early access and exclusive updates. No spam, ever.</p>
+                    <div class="success" id="success">✅ <span id="successTxt">You're on the list!</span></div>
+                </div>
+
+                <p class="growing-waitlist" id="growingWaitlist">Join our growing waitlist</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title" id="whyTitle">Why Wiki Meaty?</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="icon">🌍</div>
+                    <h3 id="card1Title">Crowdsourced Knowledge</h3>
+                    <p id="card1Text">Built by chefs, butchers, and meat lovers worldwide. Real expertise from real people.</p>
+                </div>
+                <div class="card">
+                    <div class="icon">📚</div>
+                    <h3 id="card2Title">Comprehensive Database</h3>
+                    <p id="card2Text">Every cut, every cooking method, every recipe - all in one searchable platform.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contribute">
+        <div class="container">
+            <h2 class="section-title" id="contributeTitle">Help Us Build It</h2>
+            <p class="subtitle" id="contributeSub">Have expertise in meat cuts, butchery, or cooking? We need you! Contribute and get early contributor benefits.</p>
+            <button type="button" class="cta-btn" id="contributeOpen">
+                <span>🖊️</span>
+                <span id="contributeBtn">Become a Contributor</span>
+            </button>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p id="footerTxt">&copy; 2026 Wiki Meaty. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://farifari.com" target="_blank">More projects at farifari.com</a>
+                <a href="https://farifari.com/wikimeaty/privacy.html" id="privacyLink">Privacy</a>
+                <a href="https://farifari.com/wikimeaty/terms.html" id="termsLink">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+    <div class="contribute-modal" id="contributeModal" aria-hidden="true">
+        <div class="contribute-panel" role="dialog" aria-modal="true" aria-labelledby="contributeTitleModal">
+            <div class="contribute-success" id="contributeSuccess">
+                <div class="success-icon">🎉</div>
+                <h4 id="successTitle">Thank you!</h4>
+                <p id="successMessage">We'll be in touch soon.</p>
+                <button type="button" class="success-close" id="successCloseBtn">Close</button>
+            </div>
+            <h3 id="contributeTitleModal">Become a Contributor</h3>
+            <p>Tell us what you'd like to contribute and we'll follow up.</p>
+            <form class="contribute-form" id="contributeForm">
+                <input type="text" name="name" placeholder="Your name" required>
+                <input type="email" name="email" placeholder="Your email" required>
+                <select name="type" required>
+                    <option value="" disabled selected hidden>What would you like to contribute?</option>
+                    <option value="Name of Cut">Name of Cut</option>
+                    <option value="Recipe">Recipe</option>
+                    <option value="Feedback">Feedback</option>
+                </select>
+                <textarea name="idea" placeholder="We want to hear from you..." required></textarea>
+                <div class="contribute-actions">
+                    <button type="button" class="contribute-close" id="contributeClose">Close</button>
+                    <button type="submit" class="contribute-submit">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const t = {
+            en: { name: 'English (UK)', flag: 'gb', badge: '🚀 Launching Soon', title: 'The World\'s First Crowdsourced Meat Encyclopedia', subtitle: 'Help us build the ultimate guide to meat cuts, cooking methods, and recipes. Be part of something delicious.', joinBtn: 'Join Waitlist', note: 'Get early access and exclusive updates. No spam, ever.', successTxt: 'You\'re on the list! Check your email.', growingWaitlist: 'Join our growing waitlist', whyTitle: 'Why Wiki Meaty?', card1Title: 'Crowdsourced Knowledge', card1Text: 'Built by chefs, butchers, and meat lovers worldwide. Real expertise from real people.', card2Title: 'Comprehensive Database', card2Text: 'Every cut, every cooking method, every recipe - all in one searchable platform.', contributeTitle: 'Help Us Build It', contributeSub: 'Have expertise in meat cuts, butchery, or cooking? We need you! Contribute and get early contributor benefits.', contributeBtn: 'Become a Contributor', footerTxt: '© 2026 Wiki Meaty. All rights reserved.', privacyLink: 'Privacy', termsLink: 'Terms', selectValidation: 'Please select an option from the list.', requiredField: 'Please fill out this field.', invalidEmail: 'Please enter a valid email address.', successTitle: 'Thank you!', successMessage: 'We\'ll be in touch soon.', closeBtn: 'Close' },
+            us: { name: 'English (US)', flag: 'us', badge: '🚀 Launching Soon', title: 'The World\'s First Crowdsourced Meat Encyclopedia', subtitle: 'Help us build the ultimate guide to meat cuts, cooking methods, and recipes. Be part of something delicious.', joinBtn: 'Join Waitlist', note: 'Get early access and exclusive updates. No spam, ever.', successTxt: 'You\'re on the list! Check your email.', growingWaitlist: 'Join our growing waitlist', whyTitle: 'Why Wiki Meaty?', card1Title: 'Crowdsourced Knowledge', card1Text: 'Built by chefs, butchers, and meat lovers worldwide. Real expertise from real people.', card2Title: 'Comprehensive Database', card2Text: 'Every cut, every cooking method, every recipe - all in one searchable platform.', contributeTitle: 'Help Us Build It', contributeSub: 'Have expertise in meat cuts, butchery, or cooking? We need you! Contribute and get early contributor benefits.', contributeBtn: 'Become a Contributor', footerTxt: '© 2026 Wiki Meaty. All rights reserved.', privacyLink: 'Privacy', termsLink: 'Terms', selectValidation: 'Please select an option from the list.', requiredField: 'Please fill out this field.', invalidEmail: 'Please enter a valid email address.', successTitle: 'Thank you!', successMessage: 'We\'ll be in touch soon.', closeBtn: 'Close' },
+            es: { name: 'Español', flag: 'es', badge: '🚀 Próximamente', title: 'La Primera Enciclopedia Colaborativa de Carne', subtitle: 'Ayúdanos a construir la guía definitiva. Sé parte de algo delicioso.', joinBtn: 'Unirse', note: 'Acceso anticipado y actualizaciones. Sin spam.', successTxt: '¡Estás en la lista!', growingWaitlist: 'Únete a nuestra lista de espera', whyTitle: '¿Por Qué Wiki Meaty?', card1Title: 'Conocimiento Colaborativo', card1Text: 'Construido por chefs y carniceros. Experiencia real.', card2Title: 'Base Completa', card2Text: 'Cada corte, método y receta en una plataforma.', contributeTitle: 'Ayúdanos', contributeSub: '¿Tienes experiencia? ¡Te necesitamos!', contributeBtn: 'Contribuir', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Privacidad', termsLink: 'Términos', selectValidation: 'Por favor, selecciona una opción de la lista.', requiredField: 'Por favor, rellena este campo.', invalidEmail: 'Por favor, introduce un correo electrónico válido.', successTitle: '¡Gracias!', successMessage: 'Nos pondremos en contacto pronto.', closeBtn: 'Cerrar' },
+            fr: { name: 'Français', flag: 'fr', badge: '🚀 Bientôt', title: 'La Première Encyclopédie Collaborative', subtitle: 'Aidez-nous à construire le guide ultime. Faites partie de quelque chose de délicieux.', joinBtn: 'Rejoindre', note: 'Accès anticipé. Jamais de spam.', successTxt: 'Vous êtes sur la liste!', growingWaitlist: 'Rejoignez notre liste d\'attente', whyTitle: 'Pourquoi?', card1Title: 'Collaboratif', card1Text: 'Construit par des chefs et bouchers.', card2Title: 'Complet', card2Text: 'Chaque découpe, méthode, recette.', contributeTitle: 'Aidez-Nous', contributeSub: 'Expertise? Nous avons besoin de vous!', contributeBtn: 'Contribuer', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Confidentialité', termsLink: 'Conditions', selectValidation: 'Veuillez sélectionner une option dans la liste.', requiredField: 'Veuillez remplir ce champ.', invalidEmail: 'Veuillez entrer une adresse e-mail valide.', successTitle: 'Merci!', successMessage: 'Nous vous contacterons bientôt.', closeBtn: 'Fermer' },
+            de: { name: 'Deutsch', flag: 'de', badge: '🚀 Bald verfügbar', title: 'Die erste kollaborative Fleisch-Enzyklopädie', subtitle: 'Hilf mit, den ultimativen Leitfaden zu erstellen.', joinBtn: 'Beitreten', note: 'Früher Zugang. Kein Spam.', successTxt: 'Du bist dabei!', growingWaitlist: 'Tritt unserer Warteliste bei', whyTitle: 'Warum?', card1Title: 'Kollektives Wissen', card1Text: 'Von Köchen und Metzgern weltweit.', card2Title: 'Vollständig', card2Text: 'Jeder Schnitt, jede Methode, jedes Rezept.', contributeTitle: 'Hilf uns', contributeSub: 'Hast du Expertise? Wir brauchen dich!', contributeBtn: 'Beitragen', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Datenschutz', termsLink: 'AGB', selectValidation: 'Bitte wählen Sie eine Option aus der Liste.', requiredField: 'Bitte füllen Sie dieses Feld aus.', invalidEmail: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.', successTitle: 'Danke!', successMessage: 'Wir melden uns bald.', closeBtn: 'Schließen' },
+            it: { name: 'Italiano', flag: 'it', badge: '🚀 In arrivo', title: 'La prima enciclopedia collaborativa', subtitle: 'Aiutaci a costruire la guida definitiva. Fai parte di qualcosa di delizioso.', joinBtn: 'Iscriviti', note: 'Accesso anticipato. Mai spam.', successTxt: 'Sei nella lista!', growingWaitlist: 'Unisciti alla nostra lista d\'attesa', whyTitle: 'Perché?', card1Title: 'Collaborativo', card1Text: 'Costruito da chef e macellai.', card2Title: 'Completo', card2Text: 'Ogni taglio, metodo, ricetta.', contributeTitle: 'Aiutaci', contributeSub: 'Hai esperienza? Abbiamo bisogno di te!', contributeBtn: 'Contribuisci', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Privacy', termsLink: 'Termini', selectValidation: 'Seleziona un\'opzione dalla lista.', requiredField: 'Compila questo campo.', invalidEmail: 'Inserisci un indirizzo e-mail valido.', successTitle: 'Grazie!', successMessage: 'Ti contatteremo presto.', closeBtn: 'Chiudi' },
+            pt: { name: 'Português (Portugal)', flag: 'pt', badge: '🚀 Em breve', title: 'A primeira enciclopédia colaborativa', subtitle: 'Ajude-nos a construir o guia definitivo. Faça parte de algo delicioso.', joinBtn: 'Participar', note: 'Acesso antecipado. Sem spam.', successTxt: 'Você está na lista!', growingWaitlist: 'Junte-se à nossa lista de espera', whyTitle: 'Por quê?', card1Title: 'Colaborativo', card1Text: 'Construído por chefs e açougueiros.', card2Title: 'Completo', card2Text: 'Cada corte, método, receita.', contributeTitle: 'Ajude-nos', contributeSub: 'Tem experiência? Precisamos de você!', contributeBtn: 'Contribuir', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Privacidade', termsLink: 'Termos', selectValidation: 'Por favor, selecione uma opção da lista.', requiredField: 'Por favor, preencha este campo.', invalidEmail: 'Por favor, insira um e-mail válido.', successTitle: 'Obrigado!', successMessage: 'Entraremos em contacto em breve.', closeBtn: 'Fechar' },
+            'pt-br': { name: 'Português (Brasil)', flag: 'br', badge: '🚀 Em breve', title: 'A primeira enciclopédia colaborativa', subtitle: 'Ajude-nos a construir o guia definitivo. Faça parte de algo delicioso.', joinBtn: 'Participar', note: 'Acesso antecipado. Sem spam.', successTxt: 'Você está na lista!', growingWaitlist: 'Junte-se à nossa lista de espera', whyTitle: 'Por quê?', card1Title: 'Colaborativo', card1Text: 'Construído por chefs e açougueiros.', card2Title: 'Completo', card2Text: 'Cada corte, método, receita.', contributeTitle: 'Ajude-nos', contributeSub: 'Tem experiência? Precisamos de você!', contributeBtn: 'Contribuir', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Privacidade', termsLink: 'Termos', selectValidation: 'Por favor, selecione uma opção da lista.', requiredField: 'Por favor, preencha este campo.', invalidEmail: 'Por favor, insira um e-mail válido.', successTitle: 'Obrigado!', successMessage: 'Entraremos em contato em breve.', closeBtn: 'Fechar' },
+            nl: { name: 'Nederlands', flag: 'nl', badge: '🚀 Binnenkort', title: 'De eerste collaboratieve encyclopedie', subtitle: 'Help mee bouwen aan de ultieme gids.', joinBtn: 'Deelnemen', note: 'Vroege toegang. Geen spam.', successTxt: 'Je staat op de lijst!', growingWaitlist: 'Schrijf je in op onze wachtlijst', whyTitle: 'Waarom?', card1Title: 'Collaboratief', card1Text: 'Gebouwd door chefs en slagers.', card2Title: 'Compleet', card2Text: 'Elke snede, methode, recept.', contributeTitle: 'Help ons', contributeSub: 'Expertise? We hebben je nodig!', contributeBtn: 'Bijdragen', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Privacy', termsLink: 'Voorwaarden', selectValidation: 'Selecteer een optie uit de lijst.', requiredField: 'Vul dit veld in.', invalidEmail: 'Voer een geldig e-mailadres in.', successTitle: 'Bedankt!', successMessage: 'We nemen snel contact met je op.', closeBtn: 'Sluiten' },
+            pl: { name: 'Polski', flag: 'pl', badge: '🚀 Wkrótce', title: 'Pierwsza współtworzona encyklopedia', subtitle: 'Pomóż nam stworzyć najlepszy przewodnik. Bądź częścią czegoś pysznego.', joinBtn: 'Dołącz', note: 'Wczesny dostęp. Bez spamu.', successTxt: 'Jesteś na liście!', growingWaitlist: 'Dołącz do naszej listy oczekujących', whyTitle: 'Dlaczego?', card1Title: 'Współtworzenie', card1Text: 'Tworzone przez szefów i rzeźników.', card2Title: 'Kompleksowe', card2Text: 'Każdy kawałek, metoda, przepis.', contributeTitle: 'Pomóż nam', contributeSub: 'Masz wiedzę? Potrzebujemy cię!', contributeBtn: 'Współtwórz', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Prywatność', termsLink: 'Regulamin', selectValidation: 'Proszę wybrać opcję z listy.', requiredField: 'Proszę wypełnić to pole.', invalidEmail: 'Proszę podać prawidłowy adres e-mail.', successTitle: 'Dziękujemy!', successMessage: 'Wkrótce się skontaktujemy.', closeBtn: 'Zamknij' },
+            ru: { name: 'Русский', flag: 'ru', badge: '🚀 Скоро', title: 'Первая совместная энциклопедия', subtitle: 'Помоги создать лучший гид. Будь частью чего-то вкусного.', joinBtn: 'Присоединиться', note: 'Ранний доступ. Без спама.', successTxt: 'Вы в списке!', growingWaitlist: 'Присоединяйтесь к списку ожидания', whyTitle: 'Почему?', card1Title: 'Совместное', card1Text: 'Создано шеф-поварами и мясниками.', card2Title: 'Полное', card2Text: 'Каждый отруб, метод, рецепт.', contributeTitle: 'Помогите нам', contributeSub: 'Есть опыт? Мы нуждаемся в вас!', contributeBtn: 'Внести вклад', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'Конфиденциальность', termsLink: 'Условия', selectValidation: 'Пожалуйста, выберите вариант из списка.', requiredField: 'Пожалуйста, заполните это поле.', invalidEmail: 'Пожалуйста, введите действительный адрес электронной почты.', successTitle: 'Спасибо!', successMessage: 'Мы скоро свяжемся с вами.', closeBtn: 'Закрыть' },
+            ja: { name: '日本語', flag: 'jp', badge: '🚀 近日公開', title: '世界初の共同作成肉百科事典', subtitle: '究極のガイドを一緒に作りましょう。', joinBtn: '参加する', note: '早期アクセス。スパムなし。', successTxt: 'リストに登録されました！', growingWaitlist: 'ウェイトリストに参加', whyTitle: 'なぜ？', card1Title: '共同作成', card1Text: 'シェフと肉屋が作成。', card2Title: '包括的', card2Text: 'すべてのカット、方法、レシピ。', contributeTitle: 'ご協力を', contributeSub: '専門知識がありますか？お待ちしています！', contributeBtn: '貢献する', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'プライバシー', termsLink: '利用規約', selectValidation: 'リストからオプションを選択してください。', requiredField: 'このフィールドを入力してください。', invalidEmail: '有効なメールアドレスを入力してください。', successTitle: 'ありがとうございます！', successMessage: 'まもなくご連絡いたします。', closeBtn: '閉じる' },
+            zh: { name: '中文', flag: 'cn', badge: '🚀 即将推出', title: '世界首个众包肉类百科全书', subtitle: '帮助我们打造终极指南。', joinBtn: '加入候补', note: '抢先体验。无垃圾邮件。', successTxt: '您已加入！', growingWaitlist: '加入我们的候补名单', whyTitle: '为什么？', card1Title: '众包知识', card1Text: '由全球厨师和屠夫共建。', card2Title: '全面', card2Text: '每一种切割、方法、食谱。', contributeTitle: '帮助我们', contributeSub: '有专业知识？我们需要你！', contributeBtn: '贡献', footerTxt: '© 2026 Wiki Meaty.', privacyLink: '隐私政策', termsLink: '条款', selectValidation: '请从列表中选择一个选项。', requiredField: '请填写此字段。', invalidEmail: '请输入有效的电子邮件地址。', successTitle: '谢谢！', successMessage: '我们会尽快与您联系。', closeBtn: '关闭' },
+            ko: { name: '한국어', flag: 'kr', badge: '🚀 곧 출시', title: '세계 최초 크라우드소싱 고기 백과사전', subtitle: '궁극의 가이드를 함께 만들어보세요.', joinBtn: '대기자 명단', note: '조기 액세스. 스팸 없음.', successTxt: '등록되었습니다!', growingWaitlist: '대기자 명단에 참여하세요', whyTitle: '왜?', card1Title: '크라우드소싱', card1Text: '셰프와 정육점 주인이 제작.', card2Title: '포괄적', card2Text: '모든 절단, 방법, 레시피.', contributeTitle: '도움 주세요', contributeSub: '전문 지식이 있나요? 우리는 당신이 필요합니다!', contributeBtn: '기여하기', footerTxt: '© 2026 Wiki Meaty.', privacyLink: '개인정보', termsLink: '이용약관', selectValidation: '목록에서 옵션을 선택하세요.', requiredField: '이 필드를 작성해 주세요.', invalidEmail: '유효한 이메일 주소를 입력하세요.', successTitle: '감사합니다!', successMessage: '곧 연락드리겠습니다.', closeBtn: '닫기' },
+            ar: { name: 'العربية', flag: 'sa', badge: '🚀 قريباً', title: 'أول موسوعة تعاونية للحوم', subtitle: 'ساعدنا في بناء الدليل النهائي.', joinBtn: 'انضم', note: 'وصول مبكر. لا بريد عشوائي.', successTxt: 'أنت في القائمة!', growingWaitlist: 'انضم إلى قائمة الانتظار', whyTitle: 'لماذا؟', card1Title: 'تعاوني', card1Text: 'بناه الطهاة والجزارون.', card2Title: 'شامل', card2Text: 'كل قطعة، طريقة، وصفة.', contributeTitle: 'ساعدنا', contributeSub: 'لديك خبرة؟ نحن بحاجتك!', contributeBtn: 'ساهم', footerTxt: '© 2026 Wiki Meaty.', privacyLink: 'الخصوصية', termsLink: 'الشروط', selectValidation: 'يرجى اختيار خيار من القائمة.', requiredField: 'يرجى ملء هذا الحقل.', invalidEmail: 'يرجى إدخال عنوان بريد إلكتروني صالح.', successTitle: 'شكراً!', successMessage: 'سنتواصل معك قريباً.', closeBtn: 'إغلاق' }
+        };
+
+        let lang = 'en';
+
+        function updateLang(l) {
+            lang = l;
+            const d = t[l];
+            const flagsHtml = d.flags
+                ? d.flags.map(f => `<img src="https://flagcdn.com/w40/${f}.png" class="lang-flag">`).join('')
+                : `<img src="https://flagcdn.com/w40/${d.flag}.png" class="lang-flag">`;
+            document.getElementById('flag').innerHTML = flagsHtml;
+            document.getElementById('langName').textContent = d.name;
+            document.getElementById('badge').innerHTML = d.badge;
+            document.getElementById('title').textContent = d.title;
+            document.getElementById('subtitle').textContent = d.subtitle;
+            document.getElementById('joinBtn').textContent = d.joinBtn;
+            document.getElementById('note').textContent = d.note;
+            document.getElementById('successTxt').textContent = d.successTxt;
+            document.getElementById('growingWaitlist').textContent = d.growingWaitlist;
+            document.getElementById('whyTitle').textContent = d.whyTitle;
+            document.getElementById('card1Title').textContent = d.card1Title;
+            document.getElementById('card1Text').textContent = d.card1Text;
+            document.getElementById('card2Title').textContent = d.card2Title;
+            document.getElementById('card2Text').textContent = d.card2Text;
+            document.getElementById('contributeTitle').textContent = d.contributeTitle;
+            document.getElementById('contributeSub').textContent = d.contributeSub;
+            document.getElementById('contributeBtn').textContent = d.contributeBtn;
+            document.getElementById('footerTxt').textContent = d.footerTxt;
+            document.getElementById('privacyLink').textContent = d.privacyLink;
+            document.getElementById('termsLink').textContent = d.termsLink;
+            document.getElementById('successTitle').textContent = d.successTitle;
+            document.getElementById('successMessage').textContent = d.successMessage;
+            document.getElementById('successCloseBtn').textContent = d.closeBtn;
+            localStorage.setItem('wikimeaty_lang', l);
+
+            // Trigger re-validation to update messages with new language
+            document.querySelectorAll('#contributeForm input, #contributeForm select, #contributeForm textarea, #form input').forEach(field => {
+                field.setCustomValidity('');
+                if (!field.checkValidity()) {
+                    field.dispatchEvent(new Event('invalid'));
+                }
+            });
+        }
+
+        function populateDropdown() {
+            const dd = document.getElementById('dropdown');
+            dd.innerHTML = Object.entries(t).map(([k, v]) => {
+                const flagsHtml = v.flags
+                    ? v.flags.map(f => `<img src="https://flagcdn.com/w40/${f}.png" class="lang-flag">`).join('')
+                    : `<img src="https://flagcdn.com/w40/${v.flag}.png" class="lang-flag">`;
+                return `
+                <div class="lang-option" onclick="changeLang('${k}')">
+                    ${flagsHtml}
+                    <span>${v.name}</span>
+                </div>
+            `}).join('');
+        }
+
+        function toggleLang() {
+            document.getElementById('dropdown').classList.toggle('active');
+        }
+
+        function changeLang(l) {
+            updateLang(l);
+            populateDropdown();
+            toggleLang();
+        }
+
+        const contributeModal = document.getElementById('contributeModal');
+        const contributeOpen = document.getElementById('contributeOpen');
+        const contributeClose = document.getElementById('contributeClose');
+        const contributeForm = document.getElementById('contributeForm');
+
+        function openContribute() {
+            contributeModal.classList.add('active');
+            contributeModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeContribute() {
+            contributeModal.classList.remove('active');
+            contributeModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            hideContributeSuccess();
+        }
+
+        function showContributeSuccess() {
+            const successDiv = document.getElementById('contributeSuccess');
+            const formTitle = document.getElementById('contributeTitleModal');
+            const formDesc = formTitle.nextElementSibling;
+
+            contributeForm.style.display = 'none';
+            formTitle.style.display = 'none';
+            formDesc.style.display = 'none';
+            successDiv.classList.add('active');
+        }
+
+        function hideContributeSuccess() {
+            const successDiv = document.getElementById('contributeSuccess');
+            const formTitle = document.getElementById('contributeTitleModal');
+            const formDesc = formTitle.nextElementSibling;
+
+            successDiv.classList.remove('active');
+            contributeForm.style.display = 'grid';
+            formTitle.style.display = '';
+            formDesc.style.display = '';
+        }
+
+        document.getElementById('successCloseBtn').addEventListener('click', closeContribute);
+
+        contributeOpen.addEventListener('click', e => {
+            e.preventDefault();
+            openContribute();
+        });
+
+        contributeClose.addEventListener('click', closeContribute);
+
+        contributeModal.addEventListener('click', e => {
+            if (e.target === contributeModal) closeContribute();
+        });
+
+        window.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (contributeModal.classList.contains('active')) closeContribute();
+        });
+
+        const FORMSPREE_WAITLIST = 'https://formspree.io/f/mykknkow';
+        const FORMSPREE_CONTRIBUTE = 'https://formspree.io/f/meeerenz';
+
+        contributeForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            const submitBtn = contributeForm.querySelector('.contribute-submit');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(FORMSPREE_CONTRIBUTE, {
+                    method: 'POST',
+                    body: new FormData(contributeForm),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    contributeForm.reset();
+                    showContributeSuccess();
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
+            } catch (error) {
+                alert('Something went wrong. Please try again.');
+            }
+
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+
+        document.getElementById('form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Joining...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(FORMSPREE_WAITLIST, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    document.getElementById('success').style.display = 'block';
+                    form.style.display = 'none';
+                    setTimeout(() => {
+                        form.style.display = 'flex';
+                        form.reset();
+                        document.getElementById('success').style.display = 'none';
+                    }, 5000);
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
+            } catch (error) {
+                alert('Something went wrong. Please try again.');
+            }
+
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+
+        window.addEventListener('click', e => {
+            if (!document.querySelector('.lang-switch').contains(e.target)) {
+                document.getElementById('dropdown').classList.remove('active');
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            populateDropdown();
+            const saved = localStorage.getItem('wikimeaty_lang');
+            if (saved && t[saved]) updateLang(saved);
+
+            // Helper function to set up validation for a field
+            function setupValidation(field, getValidationMessage) {
+                if (!field) return;
+
+                const updateValidity = () => {
+                    field.setCustomValidity('');
+                    if (!field.checkValidity()) {
+                        field.setCustomValidity(getValidationMessage());
+                    }
+                };
+
+                field.addEventListener('input', updateValidity);
+                field.addEventListener('change', updateValidity);
+                field.addEventListener('invalid', function(e) {
+                    this.setCustomValidity(getValidationMessage());
+                });
+
+                // Set initial state
+                updateValidity();
+            }
+
+            // Contribute form fields
+            const contributeSelect = document.querySelector('#contributeForm select[name="type"]');
+            const contributeName = document.querySelector('#contributeForm input[name="name"]');
+            const contributeEmail = document.querySelector('#contributeForm input[name="email"]');
+            const contributeIdea = document.querySelector('#contributeForm textarea[name="idea"]');
+
+            setupValidation(contributeSelect, () => t[lang].selectValidation);
+            setupValidation(contributeName, () => t[lang].requiredField);
+            setupValidation(contributeEmail, () => {
+                const email = contributeEmail.value;
+                if (!email) return t[lang].requiredField;
+                return t[lang].invalidEmail;
+            });
+            setupValidation(contributeIdea, () => t[lang].requiredField);
+
+            // Waitlist email field
+            const waitlistEmail = document.querySelector('#form input[name="email"]');
+            setupValidation(waitlistEmail, () => {
+                const email = waitlistEmail.value;
+                if (!email) return t[lang].requiredField;
+                return t[lang].invalidEmail;
+            });
+        });
+    </script>
+</body>
+</html>

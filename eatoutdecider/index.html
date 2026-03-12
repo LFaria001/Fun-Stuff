@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Eat Out Decider</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6B35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Eat Out Decider">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-65726M56XE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-65726M56XE');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0D0D0D;
+            --surface: #1A1A1A;
+            --surface-hover: #252525;
+            --accent: #FF6B35;
+            --accent-dim: #CC5529;
+            --text: #FAFAFA;
+            --text-dim: #8A8A8A;
+            --success: #4ADE80;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 24px 20px;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2.5rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .tagline {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Form Screen */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option {
+            background: var(--surface);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 14px 20px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            min-width: calc(50% - 5px);
+            text-align: center;
+        }
+
+        .option:hover {
+            background: var(--surface-hover);
+        }
+
+        .option.selected {
+            border-color: var(--accent);
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .option.full-width {
+            min-width: 100%;
+        }
+
+        .cuisine-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .cuisine-options .option {
+            min-width: unset;
+            padding: 10px 6px;
+            font-size: 0.8rem;
+        }
+
+        /* Toggle switch */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 14px 20px;
+        }
+
+        .toggle-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text);
+            text-transform: none;
+            letter-spacing: normal;
+            margin-bottom: 0;
+        }
+
+        .toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: var(--surface-hover);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .toggle.active {
+            background: var(--accent);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: var(--text);
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 18px 32px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: auto;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dim);
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--surface);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+        }
+
+        /* Result Screen */
+        .result-screen {
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+
+        .restaurant-name {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2rem;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .restaurant-photo {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            background: var(--surface);
+        }
+
+        .restaurant-info {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .info-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .info-text.rating {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .reason {
+            color: var(--accent);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-maps {
+            display: block;
+            background: var(--surface);
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            padding: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-maps:hover {
+            background: var(--surface-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--surface);
+            color: var(--text-dim);
+            border-radius: var(--radius);
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-dim);
+            color: var(--text);
+        }
+
+        .btn-share {
+            background: var(--surface);
+            border: none;
+            color: var(--text);
+        }
+
+        .btn-share:hover {
+            background: var(--surface-hover);
+        }
+
+        .reroll-count {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+        }
+
+        /* Error State */
+        .error-message {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        /* Location permission */
+        .location-prompt {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .location-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .location-prompt p {
+            color: var(--text-dim);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        /* Feedback button */
+        .feedback-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--surface);
+            border: 1px solid var(--surface-hover);
+            color: var(--text-dim);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        .feedback-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .modal h2 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 16px;
+        }
+
+        .modal textarea {
+            width: 100%;
+            height: 120px;
+            background: var(--bg);
+            border: 1px solid var(--surface-hover);
+            border-radius: 12px;
+            color: var(--text);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+            margin-bottom: 16px;
+        }
+
+        .modal textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-cancel {
+            background: transparent;
+            border: 1px solid var(--surface-hover);
+            color: var(--text-dim);
+        }
+
+        .modal-submit {
+            background: var(--accent);
+            border: none;
+            color: white;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--surface);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 300;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Eat Out <span>Decider</span></h1>
+            <p class="tagline">One answer. No scrolling. Go eat.</p>
+        </header>
+
+        <!-- Location Permission Screen -->
+        <div id="locationScreen" class="screen active">
+            <div class="location-prompt">
+                <div class="location-icon">📍</div>
+                <h2 style="margin-bottom: 12px; font-family: 'Instrument Serif', serif; font-size: 1.5rem;">Allow Location Access</h2>
+                <p>Tap the button below, then tap <strong>"Allow"</strong> when your browser asks.<br><br>Without your location, we can't find restaurants near you.</p>
+                <button class="btn-primary" onclick="requestLocation()">Enable Location</button>
+            </div>
+        </div>
+
+        <!-- Form Screen -->
+        <div id="formScreen" class="screen">
+            <div class="form-group">
+                <label>How are you getting there?</label>
+                <div class="options">
+                    <button class="option selected" data-group="transport" data-value="walking">🚶 Walking</button>
+                    <button class="option" data-group="transport" data-value="driving">🚗 Driving</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>How far?</label>
+                <div class="options">
+                    <button class="option selected" data-group="distance" data-value="5">5 min</button>
+                    <button class="option" data-group="distance" data-value="15">15 min</button>
+                    <button class="option" data-group="distance" data-value="30">30 min</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Price range</label>
+                <div class="options">
+                    <button class="option" data-group="price" data-value="1">€</button>
+                    <button class="option selected" data-group="price" data-value="2">€€</button>
+                    <button class="option" data-group="price" data-value="3">€€€</button>
+                    <button class="option" data-group="price" data-value="0">Any</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Cuisine</label>
+                <div class="cuisine-options">
+                    <button class="option selected" data-group="cuisine" data-value="">Anything</button>
+                    <button class="option" data-group="cuisine" data-value="regional">Regional</button>
+                    <button class="option" data-group="cuisine" data-value="espetada">Espetada</button>
+                    <button class="option" data-group="cuisine" data-value="fish">Fish</button>
+                    <button class="option" data-group="cuisine" data-value="seafood">Seafood</button>
+                    <button class="option" data-group="cuisine" data-value="meat">Meat</button>
+                    <button class="option" data-group="cuisine" data-value="fancy">Fancy</button>
+                    <button class="option" data-group="cuisine" data-value="italian">Italian</button>
+                    <button class="option" data-group="cuisine" data-value="pizza">Pizza</button>
+                    <button class="option" data-group="cuisine" data-value="asian">Asian</button>
+                    <button class="option" data-group="cuisine" data-value="sushi">Sushi</button>
+                    <button class="option" data-group="cuisine" data-value="burger">Burger</button>
+                    <button class="option" data-group="cuisine" data-value="brunch">Brunch</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="toggle-group">
+                    <span class="toggle-label">Open now only</span>
+                    <div class="toggle" id="openNowToggle" onclick="toggleOpenNow()"></div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="findRestaurant()">Decide For Me</button>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="screen loading-screen">
+            <div class="loader"></div>
+            <p class="loading-text">Finding your spot...</p>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen result-screen">
+            <p class="result-label">You're going to</p>
+            <h2 class="restaurant-name" id="restaurantName">Loading...</h2>
+            <img class="restaurant-photo" id="restaurantPhoto" src="" alt="Restaurant photo">
+            <p class="reason" id="restaurantReason"></p>
+            <div class="restaurant-info">
+                <div class="info-row">
+                    <span class="info-icon">⭐</span>
+                    <span class="info-text rating" id="restaurantRating"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-icon">📍</span>
+                    <span class="info-text" id="restaurantAddress"></span>
+                </div>
+                <div class="info-row" id="restaurantHoursRow">
+                    <span class="info-icon">🕐</span>
+                    <span class="info-text" id="restaurantHours"></span>
+                </div>
+            </div>
+            <a class="btn-maps" id="mapsLink" href="#" target="_blank">Open in Maps →</a>
+            <button class="btn-secondary btn-share" onclick="shareResult()">📤 Share this pick</button>
+            <button class="btn-secondary" id="rerollBtn" onclick="reroll()">Not this one</button>
+            <p class="reroll-count" id="rerollCount"></p>
+            <button class="btn-secondary" onclick="startOver()">Start Over</button>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="errorScreen" class="screen">
+            <div class="error-message" id="errorMessage"></div>
+            <button class="btn-primary" onclick="startOver()">Try Again</button>
+        </div>
+    </div>
+
+    <!-- Feedback Button -->
+    <button class="feedback-btn" onclick="openFeedback()">💬 Feedback</button>
+
+    <!-- Feedback Modal -->
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal">
+            <h2>Send Feedback</h2>
+            <textarea id="feedbackText" placeholder="What could be better? Found a bug? Let me know..."></textarea>
+            <div class="modal-buttons">
+                <button class="modal-cancel" onclick="closeFeedback()">Cancel</button>
+                <button class="modal-submit" onclick="submitFeedback()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Your Cloudflare Worker URL (API key is safely hidden there)
+        const WORKER_URL = 'https://eat-out-api.lmvfaria001.workers.dev';
+        const FORMSPREE_URL = 'https://formspree.io/f/mwvowjke';
+
+        let userLocation = null;
+        let currentResults = [];
+        let currentIndex = 0;
+        let rerollsLeft = 2;
+        let currentRestaurant = null;
+
+        const selections = {
+            transport: 'walking',
+            distance: '5',
+            price: '2',
+            cuisine: '',
+            openNow: false
+        };
+
+        // Option selection
+        document.querySelectorAll('.option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const group = btn.dataset.group;
+                const value = btn.dataset.value;
+                
+                document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selections[group] = value;
+            });
+        });
+
+        function toggleOpenNow() {
+            const toggle = document.getElementById('openNowToggle');
+            toggle.classList.toggle('active');
+            selections.openNow = toggle.classList.contains('active');
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function requestLocation() {
+            if (!navigator.geolocation) {
+                showError('Geolocation is not supported by your browser.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    showScreen('formScreen');
+                },
+                (error) => {
+                    showError('Unable to get your location. Please enable location services and try again.');
+                }
+            );
+        }
+
+        async function findRestaurant() {
+            showScreen('loadingScreen');
+            currentIndex = 0;
+            rerollsLeft = 2;
+
+            try {
+                const results = await searchNearbyRestaurants();
+                
+                if (results.length === 0) {
+                    showError('No restaurants found with those exact filters. Try:\n• A longer distance\n• Different price range\n• "Anything" for cuisine');
+                    return;
+                }
+
+                currentResults = shuffleArray(results);
+                displayResult(currentResults[currentIndex]);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Something went wrong. Please try again.');
+            }
+        }
+
+        async function searchNearbyRestaurants() {
+            // Calculate radius based on transport mode and time
+            // Walking: ~80 meters per minute
+            // Driving: ~400 meters per minute (accounting for city traffic)
+            const minutes = parseInt(selections.distance);
+            const metersPerMinute = selections.transport === 'walking' ? 80 : 400;
+            const radius = minutes * metersPerMinute;
+
+            const requestBody = {
+                cuisine: selections.cuisine,
+                price: selections.price,
+                radius: radius,
+                lat: userLocation.lat,
+                lng: userLocation.lng,
+                openNow: selections.openNow
+            };
+
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('API Error:', errorData);
+                throw new Error('API request failed');
+            }
+
+            const data = await response.json();
+            let places = data.places || [];
+
+            // Sort by rating (prefer higher rated places)
+            places.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+            return places;
+        }
+
+        function displayResult(place) {
+            currentRestaurant = place;
+            
+            document.getElementById('restaurantName').textContent = place.displayName?.text || 'Unknown';
+            document.getElementById('restaurantAddress').textContent = place.formattedAddress || 'Address not available';
+            
+            const rating = place.rating ? `${place.rating} ★ (${place.userRatingCount || 0} reviews)` : 'Hidden gem — not on Google';
+            document.getElementById('restaurantRating').textContent = rating;
+
+            // Set reason
+            let reason = '';
+            if (place.fromSpreadsheet) reason = 'Local favorite';
+            else if (place.rating >= 4.5) reason = 'Highly rated by locals';
+            else if (place.rating >= 4.0) reason = 'Well-reviewed spot';
+            else if (place.userRatingCount > 100) reason = 'Popular choice';
+            else reason = 'Curated pick';
+            document.getElementById('restaurantReason').textContent = reason;
+
+            // Photo
+            const photoEl = document.getElementById('restaurantPhoto');
+            if (place.photos && place.photos.length > 0) {
+                const photoRef = place.photos[0].name;
+                photoEl.src = `${WORKER_URL}/photo?name=${encodeURIComponent(photoRef)}`;
+                photoEl.style.display = 'block';
+            } else {
+                photoEl.style.display = 'none';
+            }
+
+            // Hours
+            const hoursRow = document.getElementById('restaurantHoursRow');
+            const hoursEl = document.getElementById('restaurantHours');
+            if (place.currentOpeningHours?.openNow !== undefined) {
+                hoursEl.textContent = place.currentOpeningHours.openNow ? 'Open now' : 'Currently closed';
+                hoursEl.style.color = place.currentOpeningHours.openNow ? 'var(--success)' : 'var(--accent)';
+                hoursRow.style.display = 'flex';
+            } else {
+                hoursRow.style.display = 'none';
+            }
+
+            // Maps link
+            document.getElementById('mapsLink').href = place.googleMapsUri || 
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.displayName?.text)}&query_place_id=${place.id}`;
+
+            // Reroll button
+            updateRerollButton();
+
+            showScreen('resultScreen');
+        }
+
+        function updateRerollButton() {
+            const btn = document.getElementById('rerollBtn');
+            const count = document.getElementById('rerollCount');
+            
+            if (rerollsLeft > 0 && currentIndex < currentResults.length - 1) {
+                btn.style.display = 'block';
+                count.textContent = `${rerollsLeft} reroll${rerollsLeft > 1 ? 's' : ''} left`;
+                count.style.display = 'block';
+            } else {
+                btn.style.display = 'none';
+                count.style.display = 'none';
+            }
+        }
+
+        function reroll() {
+            if (rerollsLeft > 0 && currentIndex < currentResults.length - 1) {
+                rerollsLeft--;
+                currentIndex++;
+                displayResult(currentResults[currentIndex]);
+            }
+        }
+
+        function startOver() {
+            showScreen('formScreen');
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            showScreen('errorScreen');
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Share functionality
+        function shareResult() {
+            if (!currentRestaurant) return;
+            
+            const name = currentRestaurant.displayName?.text || 'a restaurant';
+            const mapsUrl = currentRestaurant.googleMapsUri || '';
+            const text = `I'm going to ${name}! 🍽️\n${mapsUrl}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Eat Out Decider',
+                    text: text
+                }).catch(() => {
+                    copyToClipboard(text);
+                });
+            } else {
+                copyToClipboard(text);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard!');
+            }).catch(() => {
+                showToast('Could not copy');
+            });
+        }
+
+        // Toast notifications
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Feedback modal
+        function openFeedback() {
+            document.getElementById('feedbackModal').classList.add('active');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.remove('active');
+            document.getElementById('feedbackText').value = '';
+        }
+
+        async function submitFeedback() {
+            const feedback = document.getElementById('feedbackText').value.trim();
+            if (!feedback) {
+                showToast('Please enter some feedback');
+                return;
+            }
+
+            try {
+                const response = await fetch(FORMSPREE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: feedback,
+                        source: 'Eat Out Decider'
+                    })
+                });
+
+                if (response.ok) {
+                    showToast('Thanks for your feedback!');
+                    closeFeedback();
+                } else {
+                    showToast('Could not send feedback');
+                }
+            } catch (error) {
+                showToast('Could not send feedback');
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('feedbackModal').addEventListener('click', (e) => {
+            if (e.target.id === 'feedbackModal') {
+                closeFeedback();
+            }
+        });
+
+        // Check if location is already available
+        if (navigator.permissions) {
+            navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                if (result.state === 'granted') {
+                    requestLocation();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/farifari/idealistatracker/icon.svg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/farifari/idealistatracker/icon-192.png" />
+    <link rel="manifest" href="/farifari/idealistatracker/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c0d12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Idealista" />
+    <title>Idealista Tracker</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/farifari/idealistatracker/sw.js')
+      }
+    </script>
+  </body>
+</html>
