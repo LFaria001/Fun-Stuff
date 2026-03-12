@@ -21,18 +21,19 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overflow: hidden; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; background: var(--bg2); }
+body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overflow: hidden; -webkit-tap-highlight-color: transparent; }
 body { display: flex; flex-direction: column; }
 
 /* ===== HEADER (Mobile) ===== */
-.header { display: none; background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); align-items: center; justify-content: space-between; z-index: 50; }
+.header { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); align-items: center; justify-content: space-between; z-index: 50; }
 .header-logo { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--gold); letter-spacing: 4px; }
 
 /* ===== LAYOUT ===== */
 .app { display: flex; flex: 1; overflow: hidden; }
 
 /* ===== SIDEBAR ===== */
-.sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 0; }
+.sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: none; flex-direction: column; padding: 28px 0; }
 .sidebar-brand { padding: 0 24px; margin-bottom: 40px; }
 .sidebar-brand h1 { font-family: var(--font-display); font-size: 26px; font-weight: 600; color: var(--gold); letter-spacing: 6px; margin-bottom: 2px; }
 .sidebar-brand span { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
@@ -44,18 +45,18 @@ body { display: flex; flex-direction: column; }
 .nav-btn.active .icon { opacity: 1; }
 
 /* ===== MAIN ===== */
-.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 32px 36px; padding-bottom: calc(32px + var(--safe-bottom)); }
+.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom)); }
 
 /* ===== BOTTOM NAV (Mobile) ===== */
-.bottom-nav { display: none; background: var(--bg2); border-top: 1px solid var(--border); padding: 6px 0; padding-bottom: calc(6px + var(--safe-bottom)); }
-.bottom-nav-inner { display: flex; justify-content: space-around; }
-.bnav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: var(--faint); font-size: 8px; font-family: var(--font-body); letter-spacing: 0.5px; padding: 6px 4px; cursor: pointer; min-width: 50px; }
-.bnav-btn .bnav-icon { font-size: 18px; }
+.bottom-nav { display: block; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 0 0; padding-bottom: var(--safe-bottom); }
+.bottom-nav-inner { display: flex; align-items: stretch; }
+.bnav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--faint); font-size: 9px; font-family: var(--font-body); letter-spacing: 0.3px; padding: 4px 0 8px; cursor: pointer; flex: 1; min-width: 0; }
+.bnav-btn .bnav-icon { font-size: 20px; line-height: 1; }
 .bnav-btn.active { color: var(--gold); }
 
 /* ===== COMPONENTS ===== */
 .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
-.section-header h1 { font-family: var(--font-display); font-size: 32px; font-weight: 400; color: var(--gold); letter-spacing: 2px; }
+.section-header h1 { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--gold); letter-spacing: 2px; }
 .section-header .sub { font-size: 12px; color: var(--dim); margin-top: 4px; letter-spacing: 1px; }
 
 .btn { border: none; cursor: pointer; font-family: var(--font-body); font-size: 12px; font-weight: 500; letter-spacing: 0.8px; border-radius: 6px; padding: 10px 18px; transition: all 0.2s; }
@@ -101,12 +102,12 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .fin-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
 .fin-card { border-left: 3px solid; }
 .fin-card .fin-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-.fin-card .fin-value { font-size: 26px; font-weight: 300; font-family: var(--font-display); }
+.fin-card .fin-value { font-size: 20px; font-weight: 300; font-family: var(--font-display); }
 .tx-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
 .tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* ===== CHAT ===== */
-.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 96px); }
+.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 180px); }
 .chat-messages { flex: 1; overflow-y: auto; padding-bottom: 12px; }
 .chat-date { text-align: center; font-size: 10px; color: var(--faint); padding: 12px 0 6px; letter-spacing: 1px; }
 .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; margin: 3px 0; }
@@ -127,9 +128,10 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 
 /* ===== BRAND TABLE ===== */
 .req-table { font-size: 12px; }
-.req-header { display: grid; grid-template-columns: 1.5fr 1fr 0.8fr 2fr; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.req-header { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .req-header span { font-size: 10px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
-.req-row { display: grid; grid-template-columns: 1.5fr 1fr 0.8fr 2fr; gap: 8px; padding: 10px 12px; border-radius: 4px; }
+.req-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px; border-radius: 4px; }
+.req-row span:nth-child(4), .req-header span:nth-child(4) { grid-column: 1 / -1; }
 .req-row:nth-child(even) { background: rgba(212,169,106,0.03); }
 
 /* ===== STARS ===== */
@@ -142,17 +144,17 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; font-family: var(--font-body); transition: all 0.15s; }
 .pill.active { border-color: var(--gold); background: rgba(212,169,106,0.12); color: var(--gold); }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .header { display: flex; }
-  .bottom-nav { display: block; }
-  .main { padding: 20px 16px; }
-  .section-header h1 { font-size: 24px; }
-  .chat-wrap { height: calc(100vh - 180px); }
-  .fin-card .fin-value { font-size: 20px; }
-  .req-row, .req-header { grid-template-columns: 1fr 1fr; }
-  .req-row span:nth-child(4), .req-header span:nth-child(4) { grid-column: 1 / -1; }
+/* ===== DESKTOP ===== */
+@media (min-width: 769px) {
+  .header { display: none; }
+  .sidebar { display: flex; }
+  .bottom-nav { display: none; }
+  .main { padding: 32px 36px; padding-bottom: calc(32px + var(--safe-bottom)); }
+  .section-header h1 { font-size: 32px; }
+  .chat-wrap { height: calc(100vh - 96px); }
+  .fin-card .fin-value { font-size: 26px; }
+  .req-row, .req-header { grid-template-columns: 1.5fr 1fr 0.8fr 2fr; }
+  .req-row span:nth-child(4), .req-header span:nth-child(4) { grid-column: auto; }
 }
 </style>
 </head>
@@ -210,7 +212,7 @@ const LOGO_REQS = [
 
 const CATS = ['Produto','Packaging','Marketing','Receita','Outro'];
 
-const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'Membro 1',goals:[]}, member2:{name:'Membro 2',goals:[]} }, weekLabel:'' };
+const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'' };
 
 let state = JSON.parse(JSON.stringify(DEFAULT));
 let activeTab = 'inspiration';
@@ -475,7 +477,7 @@ function openLogoGuide() {
 }
 
 // ===== 5. CHAT =====
-let chatUser = 'Membro 1';
+let chatUser = 'farifari';
 
 function renderChat(el) {
   const msgs=state.chat;
@@ -502,8 +504,8 @@ function renderChat(el) {
       </div>
       <div class="chat-input-bar">
         <select class="input" style="width:120px" onchange="chatUser=this.value">
-          <option ${chatUser==='Membro 1'?'selected':''}>Membro 1</option>
-          <option ${chatUser==='Membro 2'?'selected':''}>Membro 2</option>
+          <option ${chatUser==='farifari'?'selected':''}>farifari</option>
+          <option ${chatUser==='Mariah Crispy'?'selected':''}>Mariah Crispy</option>
         </select>
         <input class="input" id="chat-input" placeholder="Escreve uma mensagem..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
         <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
