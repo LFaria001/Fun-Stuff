@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='2';
+var APP_V='4';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -124,6 +124,13 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .chat-bubble .chat-user { font-size: 10px; color: var(--gold); margin-bottom: 3px; font-weight: 600; }
 .chat-bubble .chat-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 .chat-bubble .chat-time { font-size: 9px; color: var(--faint); margin-top: 4px; text-align: right; }
+.chat-reactions { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.chat-reactions .reaction { font-size: 14px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); cursor: pointer; display: flex; align-items: center; gap: 3px; }
+.chat-reactions .reaction .r-count { font-size: 9px; color: var(--muted); }
+.chat-reactions .reaction.mine { border-color: var(--gold-dark); background: rgba(212,169,106,0.1); }
+.react-picker { display: flex; gap: 2px; padding: 6px 8px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; position: fixed; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+.react-picker button { font-size: 20px; background: none; border: none; cursor: pointer; padding: 4px; border-radius: 6px; }
+.react-picker button:active { background: rgba(255,255,255,0.08); }
 .msg-menu { position:fixed;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px 0;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.5);min-width:120px;display:flex;flex-direction:column; }
 .msg-menu button { background:none;border:none;color:var(--text);font-size:13px;padding:10px 18px;cursor:pointer;font-weight:500;white-space:nowrap;text-align:left; }
 .msg-menu button:active { background:rgba(255,255,255,0.05); }
@@ -244,7 +251,7 @@ const LOGO_REQS = [
 
 const CATS = ['Produto','Packaging','Marketing','Receita','Outro'];
 
-const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'' };
+const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'', weekEnd:'', accountability:[] };
 
 let state = JSON.parse(JSON.stringify(DEFAULT));
 let activeTab = 'inspiration';
@@ -277,6 +284,8 @@ function save() {
     chat: state.chat,
     objectives: state.objectives,
     weekLabel: state.weekLabel,
+    weekEnd: state.weekEnd || '',
+    accountability: state.accountability || [],
     lastEditor: chatUser,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).catch(e => console.warn('Firestore save error:', e));
@@ -296,6 +305,8 @@ stateRef.onSnapshot(snap => {
   state.chat = data.chat || [];
   state.objectives = data.objectives || DEFAULT.objectives;
   state.weekLabel = data.weekLabel || '';
+  state.weekEnd = data.weekEnd || '';
+  state.accountability = data.accountability || [];
   saveLocal();
   render();
   if(!initialLoad && data.chat && data.chat.length > prevChatLen && data.lastEditor !== chatUser) {
@@ -446,11 +457,30 @@ function openRecipeModal() {
     <div class="form-group"><label class="label">Estado</label><div class="chip-group"><button class="chip active" onclick="pickChip(this)" data-val="experimentar">A experimentar</button><button class="chip" onclick="pickChip(this)" data-val="concluida">Concluída</button></div></div>
     <div class="form-group"><label class="label">Ingredientes (um por linha)</label><textarea class="input" id="f-rec-ing" placeholder="6 tâmaras Medjool\n100g pistáchio"></textarea></div>
     <div class="form-group"><label class="label">Passos (um por linha)</label><textarea class="input" id="f-rec-steps" placeholder="Abrir as tâmaras\nTriturar pistáchio"></textarea></div>
-    <div class="form-group"><label class="label">URL da foto (opcional)</label><input class="input" id="f-rec-photo" placeholder="https://..."></div>
+    <div class="form-group"><label class="label">Foto</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label class="btn btn-ghost" style="cursor:pointer;flex:1;text-align:center"><input type="file" accept="image/*" capture="environment" id="f-rec-camera" onchange="previewRecipePhoto(this)" style="display:none">📷 Câmara</label>
+        <label class="btn btn-ghost" style="cursor:pointer;flex:1;text-align:center"><input type="file" accept="image/*" id="f-rec-gallery" onchange="previewRecipePhoto(this)" style="display:none">🖼 Galeria</label>
+      </div>
+      <div id="f-rec-photo-preview" style="margin-top:8px"></div>
+      <input class="input" id="f-rec-photo" placeholder="Ou cola um URL..." style="margin-top:8px;font-size:12px">
+    </div>
     <div class="form-group"><label class="label">Avaliação</label><div class="stars" id="f-rec-stars">${[1,2,3,4,5].map(n=>`<button class="star-btn" onclick="pickStar(${n})">★</button>`).join('')}</div></div>
     <div class="form-group"><label class="label">Notas pessoais</label><textarea class="input" id="f-rec-notes" placeholder="Observações, ajustes..."></textarea></div>
     <button class="btn btn-primary btn-full" onclick="addRecipe()">Guardar Receita</button>
   `);
+}
+let recipePhotoData='';
+function previewRecipePhoto(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    recipePhotoData=e.target.result;
+    const prev=$('#f-rec-photo-preview');
+    prev.innerHTML=`<img src="${recipePhotoData}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px">`;
+    $('#f-rec-photo').value='';
+  };
+  reader.readAsDataURL(file);
 }
 let pickedRating = 0;
 function pickStar(n) {
@@ -465,10 +495,10 @@ function addRecipe() {
     id:uid(), name, status, rating:pickedRating,
     ingredients:$('#f-rec-ing').value.split('\n').filter(Boolean),
     steps:$('#f-rec-steps').value.split('\n').filter(Boolean),
-    photo:$('#f-rec-photo').value.trim(),
+    photo:recipePhotoData||$('#f-rec-photo').value.trim(),
     notes:$('#f-rec-notes').value.trim(), date:now()
   });
-  pickedRating=0; save(); closeModal(); render();
+  pickedRating=0; recipePhotoData=''; save(); closeModal(); render();
 }
 
 function viewRecipe(id) {
@@ -508,6 +538,7 @@ function renderFinances(el) {
       <div class="card fin-card" style="border-left-color:var(--red)"><div class="fin-label" style="color:var(--red)">Saídas</div><div class="fin-value" style="color:var(--red)">${fmt(sai)}</div></div>
       <div class="card fin-card" style="border-left-color:${bal>=0?'var(--gold)':'var(--red)'}"><div class="fin-label" style="color:var(--gold)">Balanço</div><div class="fin-value" style="color:${bal>=0?'var(--gold)':'var(--red)'}">${bal>=0?'+':''}${fmt(bal)}</div></div>
     </div>
+    ${items.length?renderFinChart(items):''}
     <div>${items.map(i=>`
       <div class="tx-row">
         <div style="display:flex;align-items:center;gap:14px">
@@ -521,6 +552,39 @@ function renderFinances(el) {
       </div>
     `).join('')}</div>
     ${items.length===0?'<div class="empty"><div class="icon">◇</div><p>Sem registos financeiros ainda.</p></div>':''}`;
+}
+
+function renderFinChart(items) {
+  const months={};
+  items.forEach(i=>{
+    const m=i.date?i.date.slice(0,7):'unknown';
+    if(!months[m]) months[m]={ent:0,sai:0};
+    if(i.type==='entrada') months[m].ent+=i.amount; else months[m].sai+=i.amount;
+  });
+  const sorted=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6);
+  if(!sorted.length) return '';
+  const max=Math.max(...sorted.map(([,v])=>Math.max(v.ent,v.sai)),1);
+  return `<div class="card" style="margin-bottom:20px;padding:18px">
+    <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;font-weight:600">Últimos Meses</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;height:120px">
+      ${sorted.map(([month,v])=>{
+        const label=month.slice(5)+'/'+month.slice(2,4);
+        const hE=Math.round(v.ent/max*100);
+        const hS=Math.round(v.sai/max*100);
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div style="flex:1;background:var(--green);border-radius:3px 3px 0 0;height:${Math.max(hE,2)}%;min-height:2px;opacity:0.8"></div>
+            <div style="flex:1;background:var(--red);border-radius:3px 3px 0 0;height:${Math.max(hS,2)}%;min-height:2px;opacity:0.8"></div>
+          </div>
+          <span style="font-size:9px;color:var(--dim)">${label}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:14px;justify-content:center;margin-top:10px">
+      <span style="font-size:10px;color:var(--green)">● Entradas</span>
+      <span style="font-size:10px;color:var(--red)">● Saídas</span>
+    </div>
+  </div>`;
 }
 
 function openFinanceModal() {
@@ -612,7 +676,7 @@ function renderChat(el) {
 
   el.innerHTML = `
     <div class="chat-wrap">
-      <div class="section-header" style="margin-bottom:16px"><div><h1>Chat</h1><div class="sub">Chat interno da Musamar</div></div></div>
+      <div class="section-header" style="margin-bottom:16px"><div><h1>Chat</h1><div class="sub">farifari & Mariah Crispy</div></div></div>
       <div class="chat-messages" id="chat-messages">
         ${Object.entries(grouped).map(([date,ms])=>`
           <div class="chat-date">${date}</div>
@@ -623,15 +687,18 @@ function renderChat(el) {
                 ontouchstart="chatLongPress(event,this,'${m.id}')" ontouchend="chatLongPressEnd()" ontouchmove="chatLongPressEnd()"
                 oncontextmenu="event.preventDefault()">
                 <div class="chat-user">${esc(m.user)}</div>
+                ${m.photo?`<img src="${esc(m.photo)}" style="max-width:100%;border-radius:8px;margin:4px 0" onerror="this.style.display='none'">`:''}
                 <div class="chat-text">${esc(m.text)}</div>
                 <div class="chat-time">${m.time}</div>
+                ${(m.reactions&&Object.keys(m.reactions).length)?`<div class="chat-reactions">${Object.entries(m.reactions).map(([emoji,users])=>`<span class="reaction ${users.includes(chatUser)?'mine':''}" onclick="toggleReaction('${m.id}','${emoji}')">${emoji}<span class="r-count">${users.length}</span></span>`).join('')}</div>`:''}
               </div>
             </div>`;
           }).join('')}
         `).join('')}
       </div>
+      <div id="chat-photo-preview" style="padding:0 0 8px"></div>
       <div class="chat-input-bar">
-        <span style="font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap;letter-spacing:0.5px">${esc(chatUser)}</span>
+        <label style="cursor:pointer;font-size:18px;padding:4px"><input type="file" accept="image/*" id="chat-photo-input" onchange="previewChatPhoto(this)" style="display:none">📷</label>
         <input class="input" id="chat-input" placeholder="Escreve uma mensagem..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
         <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
       </div>
@@ -650,6 +717,7 @@ function showMsgMenu(bubble,id){
   const menu=document.createElement('div');
   menu.className='msg-menu';
   menu.innerHTML=`
+    <button onclick="openReactPicker('${id}',this)">Reagir</button>
     <button onclick="copyMessage('${id}')">Copiar</button>
     ${isMe?`<button onclick="editMessage('${id}')">Editar</button>`:''}
     ${isMe?`<button onclick="delMessage('${id}')" style="color:var(--red,#e74c3c)">Apagar</button>`:''}`;
@@ -675,16 +743,64 @@ function editMessage(id){
   if(newText!==null && newText.trim()){ msg.text=newText.trim(); save(); render(); }
 }
 function delMessage(id){ state.chat=state.chat.filter(m=>m.id!==id); save(); render(); }
+function openReactPicker(id){
+  document.querySelectorAll('.msg-menu,.react-picker').forEach(m=>m.remove());
+  const emojis=['❤️','😂','👍','🔥','😍','👏'];
+  const picker=document.createElement('div');
+  picker.className='react-picker';
+  picker.innerHTML=emojis.map(e=>`<button onclick="toggleReaction('${id}','${e}')">${e}</button>`).join('');
+  document.body.appendChild(picker);
+  picker.style.top='50%'; picker.style.left='50%'; picker.style.transform='translate(-50%,-50%)';
+  setTimeout(()=>document.addEventListener('click',function h(ev){if(!picker.contains(ev.target)){picker.remove();document.removeEventListener('click',h);}},10));
+}
+function toggleReaction(id,emoji){
+  const msg=state.chat.find(m=>m.id===id); if(!msg) return;
+  if(!msg.reactions) msg.reactions={};
+  if(!msg.reactions[emoji]) msg.reactions[emoji]=[];
+  const idx=msg.reactions[emoji].indexOf(chatUser);
+  if(idx>=0) msg.reactions[emoji].splice(idx,1); else msg.reactions[emoji].push(chatUser);
+  if(msg.reactions[emoji].length===0) delete msg.reactions[emoji];
+  document.querySelectorAll('.react-picker').forEach(p=>p.remove());
+  save(); render();
+}
 
+let chatPhotoData='';
+function previewChatPhoto(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    chatPhotoData=e.target.result;
+    const prev=$('#chat-photo-preview');
+    if(prev) prev.innerHTML=`<div style="position:relative;display:inline-block"><img src="${chatPhotoData}" style="max-height:100px;border-radius:8px"><button onclick="chatPhotoData='';this.parentElement.remove()" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer">✕</button></div>`;
+  };
+  reader.readAsDataURL(file);
+}
 function sendChat() {
-  const inp=$('#chat-input'); const t=inp.value.trim(); if(!t) return;
-  state.chat.push({ id:uid(), user:chatUser, text:t, time:nowTime(), date:now() });
+  const inp=$('#chat-input'); const t=inp.value.trim();
+  if(!t && !chatPhotoData) return;
+  const msg={ id:uid(), user:chatUser, text:t, time:nowTime(), date:now() };
+  if(chatPhotoData){ msg.photo=chatPhotoData; chatPhotoData=''; }
+  state.chat.push(msg);
   save(); render();
 }
 
 // ===== 6. OBJETIVOS =====
+function getWeekDates(weekStr) {
+  if(!weekStr) return null;
+  const match=weekStr.match(/(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : null;
+}
+function isWeekPast() {
+  const wk=state.weekEnd;
+  if(!wk) return false;
+  return new Date(wk) < new Date(new Date().toISOString().slice(0,10));
+}
 function renderObjectives(el) {
   const obj=state.objectives, wk=state.weekLabel;
+  const allGoals=[...obj.member1.goals,...obj.member2.goals];
+  const totalAll=allGoals.length, doneAll=allGoals.filter(g=>g.done).length;
+  const weekPast=isWeekPast();
+  const hasAccountability=state.accountability&&state.accountability.length;
 
   el.innerHTML = `
     <div class="section-header">
@@ -692,14 +808,25 @@ function renderObjectives(el) {
         <h1>Objetivos Semanais</h1>
         <div class="sub" style="cursor:pointer" onclick="editWeekLabel()" id="week-label-display">${wk||'Clica para definir a semana'}</div>
       </div>
-      <button class="btn btn-ghost" onclick="clearObjectives()">Limpar Tudo</button>
+      <div style="display:flex;gap:8px">
+        ${weekPast?`<button class="btn btn-primary" onclick="openAccountability()">📝 Accountability</button>`:''}
+        <button class="btn btn-ghost" onclick="newWeek()">Nova Semana</button>
+      </div>
     </div>
+    ${hasAccountability?`<div class="card" style="margin-bottom:20px;padding:18px">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Accountability</div>
+      ${state.accountability.map(a=>`<div style="margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--gold);font-weight:600">${esc(a.member)}</span><span style="font-size:10px;color:var(--dim)">${esc(a.week)}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${a.done}/${a.total} objetivos concluídos</div>
+        ${a.reflection?`<p style="font-size:12px;color:var(--text);line-height:1.5;margin:0">${esc(a.reflection)}</p>`:''}
+      </div>`).join('')}
+    </div>`:''}
     <div class="obj-grid">
       ${['member1','member2'].map(mk=>{
         const m=obj[mk]; const done=m.goals.filter(g=>g.done).length; const total=m.goals.length; const pct=total?Math.round(done/total*100):0;
         return `<div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <h3 style="font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--gold);cursor:pointer" onclick="editMemberName('${mk}')">${esc(m.name)}</h3>
+            <h3 style="font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--gold)">${esc(m.name)}</h3>
             <span style="font-size:12px;color:var(--dim)">${done}/${total}</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -707,6 +834,7 @@ function renderObjectives(el) {
             <div class="goal-row">
               <button class="goal-check ${g.done?'done':''}" onclick="toggleGoal('${mk}','${g.id}')">${g.done?'✓':''}</button>
               <span class="goal-text ${g.done?'done':''}">${esc(g.text)}</span>
+              <span style="font-size:9px;color:var(--dim);white-space:nowrap">${g.assignee?esc(g.assignee):''}</span>
               <button class="del-btn" onclick="delGoal('${mk}','${g.id}')">✕</button>
             </div>
           `).join('')}</div>
@@ -720,13 +848,15 @@ function openGoalModal(member) {
   const name=state.objectives[member].name;
   openModal('Novo Objetivo — '+esc(name), `
     <div class="form-group"><label class="label">Objetivo</label><input class="input" id="f-goal-text" placeholder="Ex: Preparar 50 caixas para encomenda X" onkeydown="if(event.key==='Enter'){addGoal('${member}')}"></div>
+    <div class="form-group"><label class="label">Atribuir a</label><div class="chip-group"><button class="chip active" onclick="pickChip(this)" data-val="">Ambos</button><button class="chip" onclick="pickChip(this)" data-val="farifari">farifari</button><button class="chip" onclick="pickChip(this)" data-val="Mariah Crispy">Mariah Crispy</button></div></div>
     <button class="btn btn-primary btn-full" onclick="addGoal('${member}')">Adicionar</button>
   `);
   setTimeout(()=>$('#f-goal-text')?.focus(),100);
 }
 function addGoal(member) {
   const t=$('#f-goal-text').value.trim(); if(!t) return;
-  state.objectives[member].goals.push({ id:uid(), text:t, done:false });
+  const assignee=$('#modal-content').querySelector('.chip.active')?.dataset.val||'';
+  state.objectives[member].goals.push({ id:uid(), text:t, done:false, assignee });
   save(); closeModal(); render();
 }
 function toggleGoal(member,id) {
@@ -736,27 +866,76 @@ function toggleGoal(member,id) {
 function delGoal(member,id) { state.objectives[member].goals=state.objectives[member].goals.filter(g=>g.id!==id); save(); render(); }
 function clearObjectives() { state.objectives.member1.goals=[]; state.objectives.member2.goals=[]; save(); render(); }
 
-function editMemberName(member) {
-  const cur=state.objectives[member].name;
-  openModal('Editar Nome', `
-    <div class="form-group"><label class="label">Nome</label><input class="input" id="f-name" value="${esc(cur)}" onkeydown="if(event.key==='Enter'){saveMemberName('${member}')}"></div>
-    <button class="btn btn-primary btn-full" onclick="saveMemberName('${member}')">Guardar</button>
-  `);
-  setTimeout(()=>$('#f-name')?.focus(),100);
-}
-function saveMemberName(member) {
-  const n=$('#f-name').value.trim(); if(!n) return;
-  state.objectives[member].name=n; save(); closeModal(); render();
-}
-
 function editWeekLabel() {
-  openModal('Semana', `
-    <div class="form-group"><label class="label">Label da Semana</label><input class="input" id="f-week" value="${esc(state.weekLabel)}" placeholder="Ex: Semana 10 — 4-10 Mar" onkeydown="if(event.key==='Enter'){saveWeekLabel()}"></div>
+  openModal('Definir Semana', `
+    <div class="form-group"><label class="label">Nome da Semana</label><input class="input" id="f-week" value="${esc(state.weekLabel)}" placeholder="Ex: Semana 11 — 10-16 Mar"></div>
+    <div class="form-group"><label class="label">Data de fim da semana</label><input class="input" id="f-week-end" type="date" value="${state.weekEnd||''}"></div>
     <button class="btn btn-primary btn-full" onclick="saveWeekLabel()">Guardar</button>
   `);
   setTimeout(()=>$('#f-week')?.focus(),100);
 }
-function saveWeekLabel() { state.weekLabel=$('#f-week').value.trim(); save(); closeModal(); render(); }
+function saveWeekLabel() {
+  state.weekLabel=$('#f-week').value.trim();
+  state.weekEnd=$('#f-week-end').value||'';
+  save(); closeModal(); render();
+}
+
+function newWeek() {
+  openModal('Nova Semana', `
+    <p style="font-size:13px;color:var(--text);margin-bottom:16px">Isto vai arquivar os objetivos atuais e começar uma semana nova.</p>
+    <div class="form-group"><label class="label">Nome da Nova Semana</label><input class="input" id="f-new-week" placeholder="Ex: Semana 12 — 17-23 Mar"></div>
+    <div class="form-group"><label class="label">Data de fim</label><input class="input" id="f-new-week-end" type="date"></div>
+    <button class="btn btn-primary btn-full" onclick="startNewWeek()">Começar Nova Semana</button>
+  `);
+}
+function startNewWeek() {
+  const label=$('#f-new-week').value.trim();
+  if(!label) return;
+  // Archive current week stats
+  if(!state.accountability) state.accountability=[];
+  ['member1','member2'].forEach(mk=>{
+    const m=state.objectives[mk];
+    const done=m.goals.filter(g=>g.done).length;
+    state.accountability.unshift({
+      member:m.name, week:state.weekLabel||'Sem nome',
+      done, total:m.goals.length, date:now()
+    });
+  });
+  // Clear goals
+  state.objectives.member1.goals=[];
+  state.objectives.member2.goals=[];
+  state.weekLabel=label;
+  state.weekEnd=$('#f-new-week-end').value||'';
+  save(); closeModal(); render();
+}
+
+function openAccountability() {
+  openModal('Accountability — '+esc(state.weekLabel), `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">A semana terminou. Reflete sobre o que correu bem e o que pode melhorar.</p>
+    ${['member1','member2'].map(mk=>{
+      const m=state.objectives[mk];
+      const done=m.goals.filter(g=>g.done).length;
+      return `<div class="form-group">
+        <label class="label">${esc(m.name)} (${done}/${m.goals.length} concluídos)</label>
+        <textarea class="input" id="f-acc-${mk}" placeholder="O que correu bem? O que melhorar?"></textarea>
+      </div>`;
+    }).join('')}
+    <button class="btn btn-primary btn-full" onclick="saveAccountability()">Guardar Reflexão</button>
+  `);
+}
+function saveAccountability() {
+  if(!state.accountability) state.accountability=[];
+  ['member1','member2'].forEach(mk=>{
+    const m=state.objectives[mk];
+    const done=m.goals.filter(g=>g.done).length;
+    const reflection=$('#f-acc-'+mk).value.trim();
+    state.accountability.unshift({
+      member:m.name, week:state.weekLabel||'Sem nome',
+      done, total:m.goals.length, reflection, date:now()
+    });
+  });
+  save(); closeModal(); render();
+}
 
 // ===== UTILITIES =====
 function pickChip(btn) {
