@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='4';
+var APP_V='5';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -785,32 +785,54 @@ function sendChat() {
 }
 
 // ===== 6. OBJETIVOS =====
-function getWeekDates(weekStr) {
-  if(!weekStr) return null;
-  const match=weekStr.match(/(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : null;
+function getWeekInfo(d) {
+  const date = d || new Date();
+  const day = date.getDay(); // 0=Sun
+  const mon = new Date(date); mon.setDate(date.getDate() - ((day+6)%7)); // Monday
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); // Sunday
+  // ISO week number
+  const jan4 = new Date(mon.getFullYear(),0,4);
+  const weekNum = Math.ceil(((mon - jan4)/86400000 + jan4.getDay() + 1) / 7);
+  const fmt = d => d.getDate() + ' ' + ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][d.getMonth()];
+  return {
+    num: weekNum,
+    label: 'Semana ' + weekNum + ' — ' + fmt(mon) + ' a ' + fmt(sun),
+    monISO: mon.toISOString().slice(0,10),
+    sunISO: sun.toISOString().slice(0,10)
+  };
 }
-function isWeekPast() {
-  const wk=state.weekEnd;
-  if(!wk) return false;
-  return new Date(wk) < new Date(new Date().toISOString().slice(0,10));
+function checkWeekChange() {
+  const cur = getWeekInfo();
+  if(state.weekEnd && state.weekEnd < cur.monISO && state.objectives.member1.goals.length + state.objectives.member2.goals.length > 0) {
+    // Week changed — auto-archive
+    if(!state.accountability) state.accountability=[];
+    ['member1','member2'].forEach(mk=>{
+      const m=state.objectives[mk];
+      const done=m.goals.filter(g=>g.done).length;
+      state.accountability.unshift({
+        member:m.name, week:state.weekLabel||'Sem nome',
+        done, total:m.goals.length, date:now()
+      });
+    });
+    state.objectives.member1.goals=[];
+    state.objectives.member2.goals=[];
+  }
+  state.weekLabel = cur.label;
+  state.weekEnd = cur.sunISO;
 }
 function renderObjectives(el) {
+  checkWeekChange();
   const obj=state.objectives, wk=state.weekLabel;
-  const allGoals=[...obj.member1.goals,...obj.member2.goals];
-  const totalAll=allGoals.length, doneAll=allGoals.filter(g=>g.done).length;
-  const weekPast=isWeekPast();
   const hasAccountability=state.accountability&&state.accountability.length;
 
   el.innerHTML = `
     <div class="section-header">
       <div>
         <h1>Objetivos Semanais</h1>
-        <div class="sub" style="cursor:pointer" onclick="editWeekLabel()" id="week-label-display">${wk||'Clica para definir a semana'}</div>
+        <div class="sub">${wk}</div>
       </div>
       <div style="display:flex;gap:8px">
-        ${weekPast?`<button class="btn btn-primary" onclick="openAccountability()">📝 Accountability</button>`:''}
-        <button class="btn btn-ghost" onclick="newWeek()">Nova Semana</button>
+        <button class="btn btn-ghost" onclick="openAccountability()">📝 Accountability</button>
       </div>
     </div>
     ${hasAccountability?`<div class="card" style="margin-bottom:20px;padding:18px">
@@ -866,52 +888,10 @@ function toggleGoal(member,id) {
 function delGoal(member,id) { state.objectives[member].goals=state.objectives[member].goals.filter(g=>g.id!==id); save(); render(); }
 function clearObjectives() { state.objectives.member1.goals=[]; state.objectives.member2.goals=[]; save(); render(); }
 
-function editWeekLabel() {
-  openModal('Definir Semana', `
-    <div class="form-group"><label class="label">Nome da Semana</label><input class="input" id="f-week" value="${esc(state.weekLabel)}" placeholder="Ex: Semana 11 — 10-16 Mar"></div>
-    <div class="form-group"><label class="label">Data de fim da semana</label><input class="input" id="f-week-end" type="date" value="${state.weekEnd||''}"></div>
-    <button class="btn btn-primary btn-full" onclick="saveWeekLabel()">Guardar</button>
-  `);
-  setTimeout(()=>$('#f-week')?.focus(),100);
-}
-function saveWeekLabel() {
-  state.weekLabel=$('#f-week').value.trim();
-  state.weekEnd=$('#f-week-end').value||'';
-  save(); closeModal(); render();
-}
-
-function newWeek() {
-  openModal('Nova Semana', `
-    <p style="font-size:13px;color:var(--text);margin-bottom:16px">Isto vai arquivar os objetivos atuais e começar uma semana nova.</p>
-    <div class="form-group"><label class="label">Nome da Nova Semana</label><input class="input" id="f-new-week" placeholder="Ex: Semana 12 — 17-23 Mar"></div>
-    <div class="form-group"><label class="label">Data de fim</label><input class="input" id="f-new-week-end" type="date"></div>
-    <button class="btn btn-primary btn-full" onclick="startNewWeek()">Começar Nova Semana</button>
-  `);
-}
-function startNewWeek() {
-  const label=$('#f-new-week').value.trim();
-  if(!label) return;
-  // Archive current week stats
-  if(!state.accountability) state.accountability=[];
-  ['member1','member2'].forEach(mk=>{
-    const m=state.objectives[mk];
-    const done=m.goals.filter(g=>g.done).length;
-    state.accountability.unshift({
-      member:m.name, week:state.weekLabel||'Sem nome',
-      done, total:m.goals.length, date:now()
-    });
-  });
-  // Clear goals
-  state.objectives.member1.goals=[];
-  state.objectives.member2.goals=[];
-  state.weekLabel=label;
-  state.weekEnd=$('#f-new-week-end').value||'';
-  save(); closeModal(); render();
-}
-
 function openAccountability() {
+  const hasGoals = state.objectives.member1.goals.length + state.objectives.member2.goals.length > 0;
   openModal('Accountability — '+esc(state.weekLabel), `
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">A semana terminou. Reflete sobre o que correu bem e o que pode melhorar.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Reflete sobre o que correu bem e o que pode melhorar esta semana.</p>
     ${['member1','member2'].map(mk=>{
       const m=state.objectives[mk];
       const done=m.goals.filter(g=>g.done).length;
