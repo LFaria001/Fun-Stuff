@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='5';
+var APP_V='6';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -811,7 +811,8 @@ function checkWeekChange() {
       const done=m.goals.filter(g=>g.done).length;
       state.accountability.unshift({
         member:m.name, week:state.weekLabel||'Sem nome',
-        done, total:m.goals.length, date:now()
+        done, total:m.goals.length, date:now(),
+        goals:m.goals.map(g=>({text:g.text,done:g.done,assignee:g.assignee||''}))
       });
     });
     state.objectives.member1.goals=[];
@@ -819,6 +820,19 @@ function checkWeekChange() {
   }
   state.weekLabel = cur.label;
   state.weekEnd = cur.sunISO;
+}
+function renderAccGoals(goals) {
+  if(!goals||!goals.length) return '';
+  return goals.map(function(g){
+    var color=g.done?'var(--green)':'var(--red)';
+    var style=g.done?'text-decoration:line-through;opacity:.7':'';
+    var icon=g.done?'✅':'❌';
+    var assignee=g.assignee?'<span style="font-size:9px;color:var(--dim);margin-left:auto">'+esc(g.assignee)+'</span>':'';
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+      +'<span style="font-size:12px;width:16px;text-align:center">'+icon+'</span>'
+      +'<span style="font-size:12px;color:'+color+';'+style+'">'+esc(g.text)+'</span>'
+      +assignee+'</div>';
+  }).join('');
 }
 function renderObjectives(el) {
   checkWeekChange();
@@ -839,8 +853,9 @@ function renderObjectives(el) {
       <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Accountability</div>
       ${state.accountability.map(a=>`<div style="margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--gold);font-weight:600">${esc(a.member)}</span><span style="font-size:10px;color:var(--dim)">${esc(a.week)}</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${a.done}/${a.total} objetivos concluídos</div>
-        ${a.reflection?`<p style="font-size:12px;color:var(--text);line-height:1.5;margin:0">${esc(a.reflection)}</p>`:''}
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${a.done}/${a.total} objetivos concluídos</div>
+        ${renderAccGoals(a.goals)}
+        ${a.reflection?`<p style="font-size:12px;color:var(--text);line-height:1.5;margin:6px 0 0">${esc(a.reflection)}</p>`:''}
       </div>`).join('')}
     </div>`:''}
     <div class="obj-grid">
@@ -911,7 +926,8 @@ function saveAccountability() {
     const reflection=$('#f-acc-'+mk).value.trim();
     state.accountability.unshift({
       member:m.name, week:state.weekLabel||'Sem nome',
-      done, total:m.goals.length, reflection, date:now()
+      done, total:m.goals.length, reflection, date:now(),
+      goals:m.goals.map(g=>({text:g.text,done:g.done,assignee:g.assignee||''}))
     });
   });
   save(); closeModal(); render();
