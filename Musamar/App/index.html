@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='9';
+var APP_V='t1773425344';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -38,6 +38,10 @@ body { display: flex; flex-direction: column; }
 /* ===== HEADER (Mobile) ===== */
 .header { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); align-items: center; justify-content: space-between; z-index: 50; }
 .header-logo { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--gold); letter-spacing: 4px; }
+.header-left { display: flex; align-items: center; gap: 8px; }
+.header-tab { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+.menu-btn { background: none; border: 1px solid var(--border); color: var(--gold); font-size: 20px; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.menu-btn:active { background: rgba(212,169,106,0.12); }
 
 /* ===== LAYOUT ===== */
 .app { display: flex; flex: 1; overflow: hidden; }
@@ -55,14 +59,22 @@ body { display: flex; flex-direction: column; }
 .nav-btn.active .icon { opacity: 1; }
 
 /* ===== MAIN ===== */
-.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom)); display: flex; flex-direction: column; }
+.main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 16px 32px; display: flex; flex-direction: column; }
 
-/* ===== BOTTOM NAV (Mobile) ===== */
-.bottom-nav { display: block; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 0 0; padding-bottom: var(--safe-bottom); }
-.bottom-nav-inner { display: flex; align-items: stretch; }
-.bnav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--faint); font-size: 9px; font-family: var(--font-body); letter-spacing: 0.3px; padding: 4px 0 8px; cursor: pointer; flex: 1; min-width: 0; }
-.bnav-btn .bnav-icon { font-size: 20px; line-height: 1; }
-.bnav-btn.active { color: var(--gold); }
+/* ===== BOTTOM NAV (Mobile) — hidden, kept for desktop ===== */
+.bottom-nav { display: none; }
+/* Tab menu overlay */
+.tab-menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(4px); }
+.tab-menu-overlay.open { display: block; }
+.tab-menu { position: absolute; top: calc(12px + var(--safe-top) + 48px); right: 12px; width: 220px; background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+.tab-menu-title { font-family: var(--font-display); font-size: 11px; color: var(--dim); letter-spacing: 1.5px; margin-bottom: 8px; padding: 0 4px; }
+.tab-menu-grid { display: flex; flex-direction: column; gap: 2px; }
+.tab-menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: transparent; border: none; cursor: pointer; transition: all 0.15s; }
+.tab-menu-item:active { background: rgba(212,169,106,0.12); }
+.tab-menu-item.active { background: rgba(212,169,106,0.1); }
+.tab-menu-item .tmi-icon { font-size: 18px; width: 24px; text-align: center; }
+.tab-menu-item .tmi-label { font-size: 13px; color: var(--text); letter-spacing: 0.3px; }
+.tab-menu-item.active .tmi-label { color: var(--gold); font-weight: 500; }
 
 /* ===== COMPONENTS ===== */
 .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
@@ -85,6 +97,24 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .tag { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: inline-block; }
 .tag-gold { background: rgba(212,169,106,0.1); color: var(--gold); }
 .tag-green { background: rgba(106,191,123,0.1); color: var(--green); }
+
+/* ===== DASHBOARD ===== */
+.dash-header { margin-bottom: 28px; }
+.dash-greeting { font-family: var(--font-display); font-size: 28px; color: var(--gold); font-weight: 400; letter-spacing: 1px; margin-bottom: 2px; }
+.dash-date { font-size: 11px; color: var(--dim); letter-spacing: 1px; }
+.dash-summary { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.dash-summary-title { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+.dash-items { display: flex; flex-direction: column; gap: 0; }
+.dash-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(42,34,24,0.6); cursor: pointer; }
+.dash-item:last-child { border-bottom: none; padding-bottom: 0; }
+.dash-item:first-child { padding-top: 0; }
+.dash-item .di-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.dash-item .di-content { flex: 1; min-width: 0; }
+.dash-item .di-title { font-size: 12px; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 2px; }
+.dash-item .di-value { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-item .di-badge { font-family: var(--font-display); font-size: 20px; color: var(--gold); flex-shrink: 0; letter-spacing: 0.5px; }
+.dash-progress { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.dash-progress-bar { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s; }
 
 .grid { display: grid; gap: 14px; }
 .grid-cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
@@ -117,8 +147,8 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* ===== CHAT ===== */
-.chat-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.chat-messages { flex: 1; overflow-y: auto; padding-bottom: 12px; }
+.chat-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.chat-messages { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; overscroll-behavior: contain; }
 .chat-date { text-align: center; font-size: 10px; color: var(--faint); padding: 12px 0 6px; letter-spacing: 1px; }
 .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; margin: 3px 0; }
 .chat-bubble .chat-user { font-size: 10px; color: var(--gold); margin-bottom: 3px; font-weight: 600; }
@@ -179,6 +209,7 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 </head>
 <body>
 
@@ -201,8 +232,11 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 
 <!-- HEADER (mobile) -->
 <div class="header">
-  <span class="header-logo">MUSAMAR</span>
-  <span style="font-size:10px;color:var(--muted);letter-spacing:2px">HUB</span>
+  <div class="header-left">
+    <span class="header-logo">MUSAMAR</span>
+    <span class="header-tab" id="header-tab"></span>
+  </div>
+  <button class="menu-btn" onclick="openTabMenu()" aria-label="Menu">≡</button>
 </div>
 
 <!-- APP -->
@@ -220,6 +254,14 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 <!-- BOTTOM NAV (mobile) -->
 <div class="bottom-nav"><div class="bottom-nav-inner" id="bottom-nav"></div></div>
 
+<!-- TAB MENU OVERLAY -->
+<div class="tab-menu-overlay" id="tab-menu-overlay" onclick="if(event.target===this)closeTabMenu()">
+  <div class="tab-menu">
+    <div class="tab-menu-title">SECÇÕES</div>
+    <div class="tab-menu-grid" id="tab-menu-grid"></div>
+  </div>
+</div>
+
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content"></div>
@@ -228,13 +270,14 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 <script>
 // ===== DATA =====
 const TABS = [
-  { id:'inspiration', label:'Inspiração', icon:'✦' },
-  { id:'recipes', label:'Receitas', icon:'◎' },
-  { id:'finances', label:'Finanças', icon:'◈' },
-  { id:'brand', label:'Brand', icon:'◉' },
-  { id:'chat', label:'Chat', icon:'◆' },
-  { id:'objectives', label:'Objetivos', icon:'◇' },
-  { id:'calendar', label:'Calendário', icon:'▣' },
+  { id:'dashboard', label:'Início', icon:'🏠' },
+  { id:'inspiration', label:'Inspiração', icon:'💡' },
+  { id:'recipes', label:'Receitas', icon:'🍫' },
+  { id:'finances', label:'Finanças', icon:'💰' },
+  { id:'brand', label:'Brand', icon:'🎨' },
+  { id:'chat', label:'Chat', icon:'💬' },
+  { id:'objectives', label:'Objetivos', icon:'🎯' },
+  { id:'calendar', label:'Calendário', icon:'📅' },
 ];
 
 const LOGO_REQS = [
@@ -255,7 +298,7 @@ const CATS = ['Produto','Packaging','Marketing','Receita','Outro'];
 const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'', weekEnd:'', accountability:[], calendar:[] };
 
 let state = JSON.parse(JSON.stringify(DEFAULT));
-let activeTab = 'inspiration';
+let activeTab = 'dashboard';
 
 // ===== FIREBASE =====
 firebase.initializeApp({
@@ -268,11 +311,22 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 const stateRef = db.collection('hub').doc('state');
+const CLOUDINARY_CLOUD = 'di4ee9gm1';
+const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/di4ee9gm1/auto/upload';
 
 // Load from localStorage first (instant display)
 function loadLocal() { try { const d = localStorage.getItem('musamar-hub'); if(d) { const p = JSON.parse(d); Object.assign(state, p); } } catch(e){} }
 function saveLocal() { try { localStorage.setItem('musamar-hub', JSON.stringify(state)); } catch(e){} }
 loadLocal();
+
+// Migrate: remove old base64 photo data from chat messages (too large for Firestore)
+(function migratePhotos(){
+  let changed=false;
+  state.chat.forEach(m=>{
+    if(m.photo && m.photo.startsWith('data:')){ m.photo=''; changed=true; }
+  });
+  if(changed) saveLocal();
+})();
 
 // Save to Firestore
 function save() {
@@ -312,15 +366,46 @@ stateRef.onSnapshot(snap => {
   state.calendar = data.calendar || [];
   saveLocal();
   render();
-  if(!initialLoad && data.chat && data.chat.length > prevChatLen && data.lastEditor !== chatUser) {
-    const lastMsg = data.chat[data.chat.length - 1];
-    showNotification(lastMsg.user, lastMsg.text);
-  }
+  // Chat notification handled by FCM push — no inline notification needed
   initialLoad = false;
 }, err => console.warn('Firestore listen error:', err));
 
-// ===== NOTIFICATIONS =====
+// ===== NOTIFICATIONS + FCM =====
 const notifSupported = ('Notification' in window);
+const VAPID_KEY = 'BMenAxJFz8N20T4o8sgrMvfxGdd_ZVu1258FNFgiqaXuhqXKeqyzU9O2KXF8A27smukWG4mdl0OsDnMpBaKS3SU';
+let fcmMessaging = null;
+let fcmSwReg = null;
+
+async function initFCM() {
+  try {
+    fcmMessaging = firebase.messaging();
+    fcmSwReg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    console.log('FCM SW registered:', fcmSwReg.scope);
+  } catch(e) { console.warn('FCM init error:', e); }
+}
+initFCM();
+
+async function saveFCMToken() {
+  if(!fcmMessaging || !chatUser) return;
+  const status = $('#fcm-status');
+  try {
+    if(!fcmSwReg) fcmSwReg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    if(status) status.textContent = '⏳ A obter token...';
+    const token = await fcmMessaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: fcmSwReg });
+    if(token) {
+      db.collection('fcmTokens').doc(chatUser).set({ token, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      if(status) status.textContent = '✅ Notificações ativas';
+      if(status) status.style.color = 'var(--green)';
+    } else {
+      if(status) status.textContent = '❌ Token vazio';
+      if(status) status.style.color = 'var(--red)';
+    }
+  } catch(e) {
+    console.warn('FCM token error:', e);
+    if(status) { status.textContent = '❌ ' + e.message; status.style.color = 'var(--red)'; }
+  }
+}
+
 function updateNotifBanner() {
   const b = document.getElementById('notif-banner');
   if(!b) return;
@@ -335,13 +420,14 @@ function enableNotifications() {
   Notification.requestPermission().then(p => {
     updateNotifBanner();
     if(p === 'granted') {
-      // Send a test notification to confirm it works
       showNotification('Musamar Hub', 'Notificações ativadas!');
+      saveFCMToken();
     }
   });
 }
 function requestNotifications() {
   updateNotifBanner();
+  if(Notification.permission === 'granted') saveFCMToken();
 }
 function showNotification(user, body) {
   if(!notifSupported || Notification.permission !== 'granted') return;
@@ -362,18 +448,84 @@ function openModal(title, content) {
 function closeModal() { $('#modal-overlay').classList.remove('open'); }
 $('#modal-overlay').addEventListener('click', e => { if(e.target.id==='modal-overlay') closeModal(); });
 
-function renderNav() {
-  const sb = $('#sidebar-nav');
-  const bn = $('#bottom-nav');
-  sb.innerHTML = TABS.map(t=>`<button class="nav-btn ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')"><span class="icon">${t.icon}</span>${t.label}</button>`).join('');
-  bn.innerHTML = TABS.map(t=>`<button class="bnav-btn ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')"><span class="bnav-icon">${t.icon}</span>${t.label}</button>`).join('');
+async function saveMedia(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const ext = blob.type.includes('png') ? '.png' : blob.type.includes('gif') ? '.gif' : '.jpg';
+    const file = new File([blob], 'musamar' + Date.now() + ext, { type: blob.type });
+
+    if(navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      return;
+    }
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  } catch(e) {
+    if(e.name !== 'AbortError') {
+      window.open(url, '_blank');
+    }
+  }
+}
+async function saveAllMedia(id) {
+  document.querySelectorAll('.msg-menu').forEach(m=>m.remove());
+  const msg = state.chat.find(m=>m.id===id); if(!msg) return;
+  const urls = msg.media || [];
+  for(const u of urls) { await saveMedia(u); }
 }
 
+function renderNav() {
+  const sb = $('#sidebar-nav');
+  sb.innerHTML = TABS.map(t=>`<button class="nav-btn ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}')"><span class="icon">${t.icon}</span>${t.label}</button>`).join('');
+  const cur = TABS.find(t=>t.id===activeTab);
+  const ht = $('#header-tab');
+  if(ht) ht.textContent = (cur && cur.id!=='dashboard') ? cur.label.toUpperCase() : 'HUB';
+  const grid = $('#tab-menu-grid');
+  if(grid) grid.innerHTML = TABS.map(t=>`<div class="tab-menu-item ${activeTab===t.id?'active':''}" onclick="switchTab('${t.id}');closeTabMenu()"><span class="tmi-icon">${t.icon}</span><span class="tmi-label">${t.label}</span></div>`).join('');
+}
+
+function openTabMenu() { $('#tab-menu-overlay').classList.add('open'); }
+function closeTabMenu() { $('#tab-menu-overlay').classList.remove('open'); }
+
 function switchTab(id) { activeTab=id; renderNav(); render(); requestNotifications(); }
+
+// ===== SHARE TARGET =====
+(function handleShareTarget(){
+  const params = new URLSearchParams(location.search);
+  const shTitle = params.get('share_title') || '';
+  const shText = params.get('share_text') || '';
+  const shUrl = params.get('share_url') || '';
+  if(!shTitle && !shText && !shUrl) return;
+  // Extract URL from text if share_url is empty (some apps put URL in text)
+  let url = shUrl;
+  if(!url && shText) { const m=shText.match(/https?:\/\/\S+/); if(m) url=m[0]; }
+  const title = shTitle || (shText && !url ? shText.substring(0,80) : '') || 'Partilha externa';
+  const notes = shText && shText !== url ? shText : '';
+  // Clean URL so share params don't persist
+  history.replaceState(null, '', location.pathname);
+  // Wait for first render then open modal with shared data
+  setTimeout(()=>{
+    switchTab('inspiration');
+    openModal('Nova Inspiração (Partilha)', `
+      <div class="form-group"><label class="label">Título</label><input class="input" id="f-ins-title" value="${esc(title)}"></div>
+      <div class="form-group"><label class="label">URL</label><input class="input" id="f-ins-url" value="${esc(url)}"></div>
+      <div class="form-group"><label class="label">Categoria</label><div class="chip-group">${CATS.map((c,i)=>`<button class="chip ${i===0?'active':''}" onclick="pickChip(this)" data-val="${c}">${c}</button>`).join('')}</div></div>
+      <div class="form-group"><label class="label">Notas</label><textarea class="input" id="f-ins-notes">${esc(notes)}</textarea></div>
+      <button class="btn btn-primary btn-full" onclick="addInspiration()">Guardar Ideia</button>
+    `);
+  }, 300);
+})();
 
 function render() {
   const m=$('#main');
   switch(activeTab) {
+    case 'dashboard': renderDashboard(m); break;
     case 'inspiration': renderInspiration(m); break;
     case 'recipes': renderRecipes(m); break;
     case 'finances': renderFinances(m); break;
@@ -381,6 +533,145 @@ function render() {
     case 'chat': renderChat(m); break;
     case 'objectives': renderObjectives(m); break;
     case 'calendar': renderCalendar(m); break;
+  }
+}
+
+// ===== 0. DASHBOARD =====
+function dashFinChart(finances) {
+  const year = new Date().getFullYear();
+  const months = Array(12).fill(0);
+  finances.forEach(f => {
+    if(!f.date) return;
+    const d = new Date(f.date);
+    if(d.getFullYear() !== year) return;
+    const m = d.getMonth();
+    const v = parseFloat(f.amount) || 0;
+    months[m] += f.type === 'entrada' ? v : -v;
+  });
+  // Cumulative balance per month
+  const cum = [];
+  let running = 0;
+  for(let i = 0; i < 12; i++) { running += months[i]; cum.push(running); }
+  const max = Math.max(...cum.map(Math.abs), 1);
+  const w = 100, h = 32, pad = 2;
+  const points = cum.map((v, i) => {
+    const x = pad + (i / 11) * (w - pad * 2);
+    const y = pad + ((max - v) / (max * 2)) * (h - pad * 2);
+    return x + ',' + y;
+  }).join(' ');
+  const lastV = cum[new Date().getMonth()];
+  const color = lastV >= 0 ? 'var(--green)' : 'var(--red)';
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="flex-shrink:0">'
+    + '<line x1="'+pad+'" y1="'+h/2+'" x2="'+(w-pad)+'" y2="'+h/2+'" stroke="var(--border)" stroke-width="0.5"/>'
+    + '<polyline points="'+points+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg>';
+}
+
+function renderDashboard(el) {
+  const d = new Date();
+  const diasSemana = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const dateStr = diasSemana[d.getDay()] + ', ' + d.getDate() + ' de ' + meses[d.getMonth()];
+  const hour = d.getHours();
+  const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  const name = chatUser || 'Musamar';
+
+  // Objectives stats
+  const g1 = state.objectives.member1.goals;
+  const g2 = state.objectives.member2.goals;
+  // My goals (current user + ambos)
+  const myKey = chatUser === state.objectives.member1.name ? 'member1' : 'member2';
+  const myGoals = state.objectives[myKey].goals;
+  const ambosGoals = myKey === 'member1'
+    ? state.objectives.member2.goals.filter(g => !g.assignee && myGoals.some(mg => mg.text === g.text))
+    : state.objectives.member1.goals.filter(g => !g.assignee && myGoals.some(mg => mg.text === g.text));
+  const allMyGoals = myGoals;
+  const myTotal = allMyGoals.length;
+  const myDone = allMyGoals.filter(g=>g.done).length;
+
+  // Finances
+  const totalIn = state.finances.filter(f=>f.type==='entrada').reduce((s,f)=>s+(parseFloat(f.amount)||0),0);
+  const totalOut = state.finances.filter(f=>f.type==='saida').reduce((s,f)=>s+(parseFloat(f.amount)||0),0);
+  const balance = totalIn - totalOut;
+
+  // Upcoming events
+  const today = d.toISOString().slice(0,10);
+  const upcoming = (state.calendar||[]).filter(ev=>ev.date>=today).sort((a,b)=>a.date.localeCompare(b.date)||((a.time||'').localeCompare(b.time||'')));
+
+  // Last chat
+  const lastMsg = state.chat.length ? state.chat[state.chat.length-1] : null;
+  const lastMsgText = lastMsg ? (lastMsg.text || (lastMsg.media&&lastMsg.media.length?'📎 Media':'')) : '';
+
+  el.innerHTML = `
+    <div class="dash-header">
+      <div class="dash-greeting">${greet}, ${esc(name.split(' ')[0])}</div>
+      <div class="dash-date">${dateStr}</div>
+      <div id="fcm-status" style="font-size:10px;color:var(--dim);margin-top:4px;letter-spacing:0.5px">⏳ A verificar notificações...</div>
+    </div>
+
+    <div class="dash-summary">
+      <div class="dash-summary-title">Resumo</div>
+      <div class="dash-items">
+        <div class="dash-item" onclick="switchTab('objectives')">
+          <span class="di-icon">🎯</span>
+          <div class="di-content">
+            <div class="di-title">Objetivos da semana</div>
+            <div class="di-value">${myTotal===0?'Nenhum definido':myTotal===myDone?'Tudo concluído!':((myTotal-myDone)+' por concluir')}</div>
+            ${myTotal>0?`<div class="dash-progress"><div class="dash-progress-bar" style="width:${Math.round(myDone/myTotal*100)}%"></div></div>`:''}
+          </div>
+          <span class="di-badge">${myDone}/${myTotal}</span>
+        </div>
+        <div class="dash-item" onclick="switchTab('finances')">
+          <span class="di-icon">💰</span>
+          <div class="di-content">
+            <div class="di-title">Balanço financeiro</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:4px">${dashFinChart(state.finances)}<span class="di-badge" style="color:${balance>=0?'var(--green)':'var(--red)'}"> ${balance>=0?'+':''}${balance.toFixed(2)}€</span></div>
+          </div>
+        </div>
+        <div class="dash-item" onclick="switchTab('calendar')">
+          <span class="di-icon">📅</span>
+          <div class="di-content">
+            <div class="di-title">Próximo evento</div>
+            <div class="di-value">${upcoming.length?esc(upcoming[0].title):'Sem eventos próximos'}</div>
+          </div>
+          ${upcoming.length?`<span style="font-size:11px;color:var(--dim);flex-shrink:0">${upcoming[0].date.split('-').reverse().join('/')}${upcoming[0].time?' '+upcoming[0].time:''}</span>`:''}
+        </div>
+        <div class="dash-item" onclick="switchTab('chat')">
+          <span class="di-icon">💬</span>
+          <div class="di-content">
+            <div class="di-title">Última mensagem${lastMsg?' · '+esc(lastMsg.user):''}</div>
+            <div class="di-value">${lastMsg?esc(lastMsgText):'Sem mensagens'}</div>
+          </div>
+          ${lastMsg?`<span style="font-size:11px;color:var(--dim);flex-shrink:0">${lastMsg.time}</span>`:''}
+        </div>
+      </div>
+    </div>
+  `;
+  // Trigger FCM check after render
+  setTimeout(()=>checkFCMStatus(), 500);
+}
+
+async function checkFCMStatus() {
+  const status = $('#fcm-status');
+  if(!status) return;
+  const perm = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+  if(perm === 'granted') {
+    await saveFCMToken();
+  } else if(perm === 'denied') {
+    status.textContent = '❌ Notificações bloqueadas nas definições';
+    status.style.color = 'var(--red)';
+  } else if(perm === 'default') {
+    status.textContent = '🔔 Toca para ativar notificações';
+    status.style.color = 'var(--gold)';
+    status.style.cursor = 'pointer';
+    status.onclick = async () => {
+      const p = await Notification.requestPermission();
+      if(p === 'granted') { await saveFCMToken(); }
+      else { status.textContent = '❌ Permissão recusada'; status.style.color = 'var(--red)'; }
+    };
+  } else {
+    status.textContent = '❌ Notificações não suportadas';
+    status.style.color = 'var(--red)';
   }
 }
 
@@ -664,6 +955,7 @@ function pickIdentity(name) {
   chatUser = name;
   document.getElementById('identity-screen').style.display = 'none';
   requestNotifications();
+  saveFCMToken();
 }
 
 // Show identity screen if not set
@@ -680,7 +972,7 @@ function renderChat(el) {
 
   el.innerHTML = `
     <div class="chat-wrap">
-      <div class="section-header" style="margin-bottom:16px"><div><h1>Chat</h1><div class="sub">farifari & Mariah Crispy</div></div></div>
+      <div class="section-header" style="margin-bottom:16px"><div><h1>Chat</h1><div class="sub">farifari & Mariah Crispy</div></div><button onclick="clearChat()" style="background:none;border:1px solid var(--red,#e74c3c);color:var(--red,#e74c3c);padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer">Apagar tudo</button></div>
       <div class="chat-messages" id="chat-messages">
         ${Object.entries(grouped).map(([date,ms])=>`
           <div class="chat-date">${date}</div>
@@ -691,8 +983,13 @@ function renderChat(el) {
                 ontouchstart="chatLongPress(event,this,'${m.id}')" ontouchend="chatLongPressEnd()" ontouchmove="chatLongPressEnd()"
                 oncontextmenu="event.preventDefault()">
                 <div class="chat-user">${esc(m.user)}</div>
-                ${m.photo?`<img src="${esc(m.photo)}" style="max-width:100%;border-radius:8px;margin:4px 0" onerror="this.style.display='none'">`:''}
-                <div class="chat-text">${esc(m.text)}</div>
+                ${(m.media&&m.media.length)?m.media.map(u=>{
+                  const isVid=u.match(/\.mp4|\.mov|\.webm|\/video\//i);
+                  if(isVid) return `<video src="${esc(u)}" controls playsinline style="max-width:100%;border-radius:8px;margin:4px 0"></video>`;
+                  return `<img src="${esc(u)}" style="max-width:100%;border-radius:8px;margin:4px 0">`;
+                }).join(''):''}
+                ${m.photo?`<div style="margin:4px 0"><img src="${esc(m.photo)}" style="max-width:100%;border-radius:8px"></div>`:''}
+                ${m.text?`<div class="chat-text">${esc(m.text)}</div>`:''}
                 <div class="chat-time">${m.time}</div>
                 ${(m.reactions&&Object.keys(m.reactions).length)?`<div class="chat-reactions">${Object.entries(m.reactions).map(([emoji,users])=>`<span class="reaction ${users.includes(chatUser)?'mine':''}" onclick="toggleReaction('${m.id}','${emoji}')">${emoji}<span class="r-count">${users.length}</span></span>`).join('')}</div>`:''}
               </div>
@@ -702,9 +999,9 @@ function renderChat(el) {
       </div>
       <div id="chat-photo-preview" style="padding:0 0 8px"></div>
       <div class="chat-input-bar">
-        <label style="cursor:pointer;font-size:18px;padding:4px"><input type="file" accept="image/*" id="chat-photo-input" onchange="previewChatPhoto(this)" style="display:none">📷</label>
+        <label style="cursor:pointer;font-size:18px;padding:4px"><input type="file" accept="image/*,video/*" multiple id="chat-media-input" onchange="previewChatMedia(this)" style="display:none">📎</label>
         <input class="input" id="chat-input" placeholder="Escreve uma mensagem..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
-        <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
+        <button class="btn btn-primary" id="chat-send-btn" onclick="sendChat()">Enviar</button>
       </div>
     </div>
   `;
@@ -712,7 +1009,7 @@ function renderChat(el) {
 }
 
 let _chatLP=null;
-function chatLongPress(e,el,id){ e.preventDefault(); _chatLP=setTimeout(()=>{navigator.vibrate&&navigator.vibrate(30);showMsgMenu(el,id);},400); }
+function chatLongPress(e,el,id){ _chatLP=setTimeout(()=>{navigator.vibrate&&navigator.vibrate(30);showMsgMenu(el,id);},400); }
 function chatLongPressEnd(){ clearTimeout(_chatLP); }
 function showMsgMenu(bubble,id){
   document.querySelectorAll('.msg-menu').forEach(m=>m.remove());
@@ -720,9 +1017,11 @@ function showMsgMenu(bubble,id){
   const isMe=msg.user===chatUser;
   const menu=document.createElement('div');
   menu.className='msg-menu';
+  const hasMedia=(msg.media&&msg.media.length);
   menu.innerHTML=`
     <button onclick="openReactPicker('${id}',this)">Reagir</button>
     <button onclick="copyMessage('${id}')">Copiar</button>
+    ${hasMedia?`<button onclick="saveAllMedia('${id}')">Guardar media</button>`:''}
     ${isMe?`<button onclick="editMessage('${id}')">Editar</button>`:''}
     ${isMe?`<button onclick="delMessage('${id}')" style="color:var(--red,#e74c3c)">Apagar</button>`:''}`;
   document.body.appendChild(menu);
@@ -747,6 +1046,7 @@ function editMessage(id){
   if(newText!==null && newText.trim()){ msg.text=newText.trim(); save(); render(); }
 }
 function delMessage(id){ state.chat=state.chat.filter(m=>m.id!==id); save(); render(); }
+function clearChat(){ if(!confirm('Apagar todas as mensagens do chat?')) return; state.chat=[]; save(); render(); }
 function openReactPicker(id){
   document.querySelectorAll('.msg-menu,.react-picker').forEach(m=>m.remove());
   const emojis=['❤️','😂','👍','🔥','😍','👏'];
@@ -768,22 +1068,54 @@ function toggleReaction(id,emoji){
   save(); render();
 }
 
-let chatPhotoData='';
-function previewChatPhoto(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    chatPhotoData=e.target.result;
-    const prev=$('#chat-photo-preview');
-    if(prev) prev.innerHTML=`<div style="position:relative;display:inline-block"><img src="${chatPhotoData}" style="max-height:100px;border-radius:8px"><button onclick="chatPhotoData='';this.parentElement.remove()" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer">✕</button></div>`;
-  };
-  reader.readAsDataURL(file);
+let chatMediaFiles=[];
+function previewChatMedia(input){
+  const files=Array.from(input.files); if(!files.length) return;
+  files.forEach(f=>chatMediaFiles.push(f));
+  renderMediaPreviews();
+  input.value='';
 }
-function sendChat() {
+function renderMediaPreviews(){
+  const prev=$('#chat-photo-preview');
+  if(!prev) return;
+  prev.innerHTML=chatMediaFiles.map((f,i)=>{
+    const isVideo=f.type.startsWith('video');
+    const url=URL.createObjectURL(f);
+    return `<div style="position:relative;display:inline-block;margin:0 6px 6px 0">`
+      +(isVideo?`<video src="${url}" style="max-height:80px;border-radius:8px"></video>`
+               :`<img src="${url}" style="max-height:80px;border-radius:8px">`)
+      +`<button onclick="removeChatMedia(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer">✕</button></div>`;
+  }).join('');
+}
+function removeChatMedia(i){ chatMediaFiles.splice(i,1); renderMediaPreviews(); }
+
+async function uploadMedia(file){
+  const fd=new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', 'musamar_chat');
+  fd.append('folder', 'chat');
+  const res=await fetch(CLOUDINARY_UPLOAD_URL, {method:'POST', body:fd});
+  if(!res.ok) throw new Error('Upload failed: '+res.status);
+  const data=await res.json();
+  return data.secure_url;
+}
+
+async function sendChat() {
   const inp=$('#chat-input'); const t=inp.value.trim();
-  if(!t && !chatPhotoData) return;
-  const msg={ id:uid(), user:chatUser, text:t, time:nowTime(), date:now() };
-  if(chatPhotoData){ msg.photo=chatPhotoData; chatPhotoData=''; }
+  if(!t && !chatMediaFiles.length) return;
+  const msg={ id:uid(), user:chatUser, text:t, time:nowTime(), date:now(), media:[] };
+
+  if(chatMediaFiles.length){
+    const sendBtn=$('#chat-send-btn');
+    if(sendBtn){ sendBtn.disabled=true; sendBtn.textContent='A enviar...'; }
+    try {
+      const urls=await Promise.all(chatMediaFiles.map(f=>uploadMedia(f)));
+      msg.media=urls;
+    } catch(e){ console.warn('Upload error:',e); alert('Erro ao enviar ficheiro(s). Tenta novamente.'); if(sendBtn){sendBtn.disabled=false;sendBtn.textContent='Enviar';} return; }
+    chatMediaFiles=[];
+    if(sendBtn){ sendBtn.disabled=false; sendBtn.textContent='Enviar'; }
+  }
+
   state.chat.push(msg);
   save(); render();
 }
