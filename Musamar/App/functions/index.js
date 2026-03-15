@@ -60,3 +60,71 @@ exports.onChatMessage = functions.firestore
 
     return null;
   });
+
+// ===== SUNDAY OBJECTIVES REMINDER =====
+// Runs every Sunday at 10:00, 15:00, and 19:00 (Europe/Lisbon)
+exports.sundayReminder10 = functions.pubsub
+  .schedule('0 10 * * 0')
+  .timeZone('Europe/Lisbon')
+  .onRun(() => sendSundayReminders());
+
+exports.sundayReminder15 = functions.pubsub
+  .schedule('0 15 * * 0')
+  .timeZone('Europe/Lisbon')
+  .onRun(() => sendSundayReminders());
+
+exports.sundayReminder19 = functions.pubsub
+  .schedule('0 19 * * 0')
+  .timeZone('Europe/Lisbon')
+  .onRun(() => sendSundayReminders());
+
+async function sendSundayReminders() {
+  const db = admin.firestore();
+  const stateSnap = await db.collection('hub').doc('state').get();
+  if (!stateSnap.exists) return null;
+  const state = stateSnap.data();
+  const objectives = state.objectives;
+  if (!objectives) return null;
+
+  const members = ['member1', 'member2'];
+
+  for (const mk of members) {
+    const member = objectives[mk];
+    if (!member || !member.name) continue;
+    const goals = member.goals || [];
+    if (goals.length === 0) continue;
+
+    const done = goals.filter(g => g.done).length;
+    const pending = goals.length - done;
+
+    const body = pending > 0
+      ? 'Ainda tens ' + pending + ' objetivo(s) por concluir! Faz o balanço da semana.'
+      : 'Todos os objetivos concluídos! Não te esqueças de fazer a reflexão semanal.';
+
+    // Get this member's FCM token
+    const tokenDoc = await db.collection('fcmTokens').doc(member.name).get();
+    if (!tokenDoc.exists) continue;
+    const token = tokenDoc.data().token;
+    if (!token) continue;
+
+    try {
+      await admin.messaging().send({
+        token,
+        webpush: {
+          notification: {
+            title: 'Musamar Hub',
+            body: body,
+            icon: 'icons/icon-192.png',
+          },
+        },
+      });
+    } catch (err) {
+      if (err.code === 'messaging/invalid-registration-token' ||
+          err.code === 'messaging/registration-token-not-registered') {
+        await db.collection('fcmTokens').doc(member.name).delete();
+      }
+    }
+  }
+
+  return null;
+}

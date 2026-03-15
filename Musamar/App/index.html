@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='t1773425344';
+var APP_V='t1773526670';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
 }).catch(function(){});
@@ -184,6 +184,32 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .req-row span:nth-child(4), .req-header span:nth-child(4) { grid-column: 1 / -1; }
 .req-row:nth-child(even) { background: rgba(212,169,106,0.03); }
 
+/* ===== STATUS BADGES ===== */
+.badge { font-size:10px; padding:3px 8px; border-radius:12px; font-weight:600; letter-spacing:0.5px; display:inline-block; }
+.badge-pending { background:rgba(212,169,106,0.15); color:var(--gold); }
+.badge-paid { background:rgba(106,191,123,0.15); color:var(--green); }
+.badge-production { background:rgba(106,160,191,0.15); color:#6aa0bf; }
+.badge-shipped { background:rgba(160,106,191,0.15); color:#a06abf; }
+.badge-delivered { background:rgba(106,191,123,0.25); color:var(--green); }
+.badge-cancelled { background:rgba(191,106,106,0.15); color:var(--red); }
+.badge-low { background:rgba(191,106,106,0.15); color:var(--red); }
+.badge-ok { background:rgba(106,191,123,0.15); color:var(--green); }
+
+/* ===== TABLE ===== */
+.data-table { width:100%; border-collapse:collapse; font-size:12px; }
+.data-table th { text-align:left; font-size:10px; color:var(--gold); letter-spacing:1px; text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--border); font-weight:600; }
+.data-table td { padding:10px; border-bottom:1px solid rgba(42,34,24,0.4); color:var(--text); vertical-align:middle; }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr { cursor:pointer; transition:background 0.1s; }
+.data-table tr:hover { background:rgba(212,169,106,0.04); }
+
+/* ===== KPI GRID ===== */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+.kpi-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.kpi-value { font-size:22px; font-family:var(--font-display); font-weight:400; color:var(--text); }
+.kpi-sub { font-size:10px; color:var(--dim); margin-top:2px; }
+
 /* ===== STARS ===== */
 .stars { display: flex; gap: 2px; }
 .star-btn { background: none; border: none; cursor: pointer; font-size: 22px; color: var(--border); padding: 0; }
@@ -270,14 +296,18 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 <script>
 // ===== DATA =====
 const TABS = [
-  { id:'dashboard', label:'Início', icon:'🏠' },
-  { id:'inspiration', label:'Inspiração', icon:'💡' },
-  { id:'recipes', label:'Receitas', icon:'🍫' },
+  { id:'dashboard', label:'Dashboard', icon:'📊' },
+  { id:'orders', label:'Encomendas', icon:'📦' },
+  { id:'products', label:'Produtos', icon:'🍫' },
+  { id:'customers', label:'Clientes', icon:'👥' },
+  { id:'inventory', label:'Inventário', icon:'📋' },
+  { id:'feedback', label:'Feedback', icon:'⭐' },
   { id:'finances', label:'Finanças', icon:'💰' },
-  { id:'brand', label:'Brand', icon:'🎨' },
   { id:'chat', label:'Chat', icon:'💬' },
   { id:'objectives', label:'Objetivos', icon:'🎯' },
   { id:'calendar', label:'Calendário', icon:'📅' },
+  { id:'analytics', label:'Analytics', icon:'📈' },
+  { id:'notes', label:'Notas', icon:'📝' },
 ];
 
 const LOGO_REQS = [
@@ -295,7 +325,14 @@ const LOGO_REQS = [
 
 const CATS = ['Produto','Packaging','Marketing','Receita','Outro'];
 
-const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'', weekEnd:'', accountability:[], calendar:[] };
+const CHANNELS = ['Instagram','TikTok','WhatsApp','Website','Referência','Outro'];
+const ORDER_STATUSES = ['pendente','pago','em produção','enviado','entregue','cancelado'];
+const PAY_STATUSES = ['pendente','pago','parcial','reembolsado'];
+const INV_CATS = ['Tâmaras','Recheios','Embalagem','Rótulos','Outro'];
+
+const PACK_SIZES = [3, 6, 10];
+
+const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:[], objectives:{ member1:{name:'farifari',goals:[]}, member2:{name:'Mariah Crispy',goals:[]} }, weekLabel:'', weekEnd:'', accountability:[], calendar:[], notes:[], flavors:[], packs:[], orders:[], customers:[], inventory:[], feedback:[], orderSeq:0 };
 
 let state = JSON.parse(JSON.stringify(DEFAULT));
 let activeTab = 'dashboard';
@@ -342,6 +379,14 @@ function save() {
     weekEnd: state.weekEnd || '',
     accountability: state.accountability || [],
     calendar: state.calendar || [],
+    notes: state.notes || [],
+    flavors: state.flavors || [],
+    packs: state.packs || [],
+    orders: state.orders || [],
+    customers: state.customers || [],
+    inventory: state.inventory || [],
+    feedback: state.feedback || [],
+    orderSeq: state.orderSeq || 0,
     lastEditor: chatUser,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).catch(e => console.warn('Firestore save error:', e));
@@ -364,6 +409,14 @@ stateRef.onSnapshot(snap => {
   state.weekEnd = data.weekEnd || '';
   state.accountability = data.accountability || [];
   state.calendar = data.calendar || [];
+  state.notes = data.notes || [];
+  state.flavors = data.flavors || [];
+  state.packs = data.packs || [];
+  state.orders = data.orders || [];
+  state.customers = data.customers || [];
+  state.inventory = data.inventory || [];
+  state.feedback = data.feedback || [];
+  state.orderSeq = data.orderSeq || 0;
   saveLocal();
   render();
   // Chat notification handled by FCM push — no inline notification needed
@@ -511,7 +564,8 @@ function switchTab(id) { activeTab=id; renderNav(); render(); requestNotificatio
   history.replaceState(null, '', location.pathname);
   // Wait for first render then open modal with shared data
   setTimeout(()=>{
-    switchTab('inspiration');
+    activeNoteSection='Inspiração';
+    switchTab('notes');
     openModal('Nova Inspiração (Partilha)', `
       <div class="form-group"><label class="label">Título</label><input class="input" id="f-ins-title" value="${esc(title)}"></div>
       <div class="form-group"><label class="label">URL</label><input class="input" id="f-ins-url" value="${esc(url)}"></div>
@@ -526,129 +580,122 @@ function render() {
   const m=$('#main');
   switch(activeTab) {
     case 'dashboard': renderDashboard(m); break;
-    case 'inspiration': renderInspiration(m); break;
-    case 'recipes': renderRecipes(m); break;
+    case 'products': renderProducts(m); break;
+    case 'orders': renderOrders(m); break;
+    case 'customers': renderCustomers(m); break;
+    case 'inventory': renderInventory(m); break;
+    case 'feedback': renderFeedback(m); break;
     case 'finances': renderFinances(m); break;
-    case 'brand': renderBrand(m); break;
     case 'chat': renderChat(m); break;
     case 'objectives': renderObjectives(m); break;
     case 'calendar': renderCalendar(m); break;
+    case 'analytics': renderAnalytics(m); break;
+    case 'notes': renderNotes(m); break;
   }
 }
 
-// ===== 0. DASHBOARD =====
-function dashFinChart(finances) {
-  const year = new Date().getFullYear();
-  const months = Array(12).fill(0);
-  finances.forEach(f => {
-    if(!f.date) return;
-    const d = new Date(f.date);
-    if(d.getFullYear() !== year) return;
-    const m = d.getMonth();
-    const v = parseFloat(f.amount) || 0;
-    months[m] += f.type === 'entrada' ? v : -v;
-  });
-  // Cumulative balance per month
-  const cum = [];
-  let running = 0;
-  for(let i = 0; i < 12; i++) { running += months[i]; cum.push(running); }
-  const max = Math.max(...cum.map(Math.abs), 1);
-  const w = 100, h = 32, pad = 2;
-  const points = cum.map((v, i) => {
-    const x = pad + (i / 11) * (w - pad * 2);
-    const y = pad + ((max - v) / (max * 2)) * (h - pad * 2);
-    return x + ',' + y;
-  }).join(' ');
-  const lastV = cum[new Date().getMonth()];
-  const color = lastV >= 0 ? 'var(--green)' : 'var(--red)';
-  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="flex-shrink:0">'
-    + '<line x1="'+pad+'" y1="'+h/2+'" x2="'+(w-pad)+'" y2="'+h/2+'" stroke="var(--border)" stroke-width="0.5"/>'
-    + '<polyline points="'+points+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
-    + '</svg>';
+// ===== BUSINESS HELPERS =====
+function flavorUnitCost(f) { return (parseFloat(f.dateCost)||0)+(parseFloat(f.fillingCost)||0); }
+function packTotalCost(pack, flavor) {
+  const unitCost=flavorUnitCost(flavor);
+  return unitCost*(parseFloat(pack.size)||0)+(parseFloat(pack.packagingCost)||0)+(parseFloat(pack.deliveryCost)||0);
 }
+function packProfit(pack, flavor) { return (parseFloat(pack.salePrice)||0)-packTotalCost(pack,flavor); }
+function packMargin(pack, flavor) { const sp=parseFloat(pack.salePrice)||0; return sp>0?(packProfit(pack,flavor)/sp*100):0; }
+function orderRevenue(o) { return (o.items||[]).reduce((s,i)=>(s+(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0)),0); }
+function orderCost(o) { return (o.items||[]).reduce((s,i)=>(s+(parseFloat(i.qty)||0)*(parseFloat(i.unitCost)||0)),0); }
+function orderProfit(o) { return orderRevenue(o)-orderCost(o); }
+function getCustomerStats(cId) {
+  const ords=(state.orders||[]).filter(o=>o.customerId===cId&&o.status!=='cancelado');
+  const total=ords.reduce((s,o)=>s+orderRevenue(o),0);
+  const dates=ords.map(o=>o.date).filter(Boolean).sort();
+  return { count:ords.length, total, first:dates[0]||'', last:dates[dates.length-1]||'' };
+}
+function invCurrentStock(item) { return (parseFloat(item.qtyReceived)||0)-(parseFloat(item.qtyUsed)||0)-(parseFloat(item.qtyWasted)||0); }
+function isLowStock(item) { return invCurrentStock(item)<(parseFloat(item.minStock)||0); }
+function statusBadge(status) {
+  const map={'pendente':'pending','pago':'paid','em produção':'production','enviado':'shipped','entregue':'delivered','cancelado':'cancelled','parcial':'pending','reembolsado':'cancelled'};
+  return '<span class="badge badge-'+(map[status]||'pending')+'">'+esc(status)+'</span>';
+}
+function thisMonth(dateStr) { if(!dateStr) return false; const now=new Date(); return dateStr.slice(0,7)===now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); }
 
+// ===== 0. DASHBOARD =====
 function renderDashboard(el) {
-  const d = new Date();
-  const diasSemana = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const dateStr = diasSemana[d.getDay()] + ', ' + d.getDate() + ' de ' + meses[d.getMonth()];
-  const hour = d.getHours();
-  const greet = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-  const name = chatUser || 'Musamar';
+  const d=new Date();
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const diasSemana=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const dateStr=diasSemana[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()];
+  const hour=d.getHours();
+  const greet=hour<12?'Bom dia':hour<18?'Boa tarde':'Boa noite';
+  const name=chatUser||'Musamar';
 
-  // Objectives stats
-  const g1 = state.objectives.member1.goals;
-  const g2 = state.objectives.member2.goals;
-  // My goals (current user + ambos)
-  const myKey = chatUser === state.objectives.member1.name ? 'member1' : 'member2';
-  const myGoals = state.objectives[myKey].goals;
-  const ambosGoals = myKey === 'member1'
-    ? state.objectives.member2.goals.filter(g => !g.assignee && myGoals.some(mg => mg.text === g.text))
-    : state.objectives.member1.goals.filter(g => !g.assignee && myGoals.some(mg => mg.text === g.text));
-  const allMyGoals = myGoals;
-  const myTotal = allMyGoals.length;
-  const myDone = allMyGoals.filter(g=>g.done).length;
+  // Quick stats
+  const monthOrders=(state.orders||[]).filter(o=>thisMonth(o.date)&&o.status!=='cancelado');
+  const monthRevenue=monthOrders.reduce((s,o)=>s+orderRevenue(o),0);
+  const monthProfit=monthOrders.reduce((s,o)=>s+orderProfit(o),0);
+  const pendingOrders=(state.orders||[]).filter(o=>o.status==='pendente'||o.status==='em produção');
+  const lowStockItems=(state.inventory||[]).filter(i=>isLowStock(i));
+  const today=d.toISOString().slice(0,10);
+  const upcoming=(state.calendar||[]).filter(ev=>ev.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  const goals1=state.objectives.member1.goals||[], goals2=state.objectives.member2.goals||[];
+  const myKey=['member1','member2'].find(mk=>state.objectives[mk].name===chatUser);
+  const myGoals=myKey?state.objectives[myKey].goals:[];
+  const myDone=myGoals.filter(g=>g.done).length;
 
-  // Finances
-  const totalIn = state.finances.filter(f=>f.type==='entrada').reduce((s,f)=>s+(parseFloat(f.amount)||0),0);
-  const totalOut = state.finances.filter(f=>f.type==='saida').reduce((s,f)=>s+(parseFloat(f.amount)||0),0);
-  const balance = totalIn - totalOut;
-
-  // Upcoming events
-  const today = d.toISOString().slice(0,10);
-  const upcoming = (state.calendar||[]).filter(ev=>ev.date>=today).sort((a,b)=>a.date.localeCompare(b.date)||((a.time||'').localeCompare(b.time||'')));
-
-  // Last chat
-  const lastMsg = state.chat.length ? state.chat[state.chat.length-1] : null;
-  const lastMsgText = lastMsg ? (lastMsg.text || (lastMsg.media&&lastMsg.media.length?'📎 Media':'')) : '';
-
-  el.innerHTML = `
+  el.innerHTML=`
     <div class="dash-header">
       <div class="dash-greeting">${greet}, ${esc(name.split(' ')[0])}</div>
       <div class="dash-date">${dateStr}</div>
       <div id="fcm-status" style="font-size:10px;color:var(--dim);margin-top:4px;letter-spacing:0.5px">⏳ A verificar notificações...</div>
     </div>
 
+    <div class="kpi-grid">
+      <div class="kpi-card" onclick="switchTab('orders')" style="cursor:pointer">
+        <div class="kpi-label">Vendas mês</div>
+        <div class="kpi-value" style="color:var(--green)">${fmt(monthRevenue)}</div>
+        <div class="kpi-sub">${monthOrders.length} encomendas</div>
+      </div>
+      <div class="kpi-card" onclick="switchTab('orders')" style="cursor:pointer">
+        <div class="kpi-label">Lucro mês</div>
+        <div class="kpi-value" style="color:${monthProfit>=0?'var(--green)':'var(--red)'}">${fmt(monthProfit)}</div>
+      </div>
+      <div class="kpi-card" onclick="switchTab('orders')" style="cursor:pointer">
+        <div class="kpi-label">Por preparar</div>
+        <div class="kpi-value" style="color:${pendingOrders.length?'var(--gold)':'var(--green)'}">${pendingOrders.length}</div>
+        <div class="kpi-sub">encomendas</div>
+      </div>
+      <div class="kpi-card" onclick="switchTab('analytics')" style="cursor:pointer">
+        <div class="kpi-label">Analytics</div>
+        <div class="kpi-value" style="color:var(--gold)">📈</div>
+        <div class="kpi-sub">Ver métricas</div>
+      </div>
+    </div>
+
     <div class="dash-summary">
-      <div class="dash-summary-title">Resumo</div>
+      <div class="dash-summary-title">Hoje</div>
       <div class="dash-items">
-        <div class="dash-item" onclick="switchTab('objectives')">
+        ${myGoals.length?`<div class="dash-item" onclick="switchTab('objectives')">
           <span class="di-icon">🎯</span>
-          <div class="di-content">
-            <div class="di-title">Objetivos da semana</div>
-            <div class="di-value">${myTotal===0?'Nenhum definido':myTotal===myDone?'Tudo concluído!':((myTotal-myDone)+' por concluir')}</div>
-            ${myTotal>0?`<div class="dash-progress"><div class="dash-progress-bar" style="width:${Math.round(myDone/myTotal*100)}%"></div></div>`:''}
-          </div>
-          <span class="di-badge">${myDone}/${myTotal}</span>
-        </div>
-        <div class="dash-item" onclick="switchTab('finances')">
-          <span class="di-icon">💰</span>
-          <div class="di-content">
-            <div class="di-title">Balanço financeiro</div>
-            <div style="display:flex;align-items:center;gap:10px;margin-top:4px">${dashFinChart(state.finances)}<span class="di-badge" style="color:${balance>=0?'var(--green)':'var(--red)'}"> ${balance>=0?'+':''}${balance.toFixed(2)}€</span></div>
-          </div>
-        </div>
+          <div class="di-content"><div class="di-title">Objetivos da semana</div><div class="di-value">${myDone}/${myGoals.length} concluídos</div>
+          <div class="dash-progress"><div class="dash-progress-bar" style="width:${myGoals.length?Math.round(myDone/myGoals.length*100):0}%"></div></div></div>
+        </div>`:''}
+        ${pendingOrders.length?`<div class="dash-item" onclick="switchTab('orders')">
+          <span class="di-icon">📦</span>
+          <div class="di-content"><div class="di-title">Encomendas pendentes</div><div class="di-value">${pendingOrders.map(o=>'#'+(o.orderNum||'?')).join(', ')}</div></div>
+        </div>`:''}
+        ${lowStockItems.length?`<div class="dash-item" onclick="switchTab('inventory')">
+          <span class="di-icon">⚠️</span>
+          <div class="di-content"><div class="di-title">Stock baixo</div><div class="di-value" style="color:var(--red)">${lowStockItems.map(i=>esc(i.name)).join(', ')}</div></div>
+        </div>`:''}
         <div class="dash-item" onclick="switchTab('calendar')">
           <span class="di-icon">📅</span>
-          <div class="di-content">
-            <div class="di-title">Próximo evento</div>
-            <div class="di-value">${upcoming.length?esc(upcoming[0].title):'Sem eventos próximos'}</div>
-          </div>
-          ${upcoming.length?`<span style="font-size:11px;color:var(--dim);flex-shrink:0">${upcoming[0].date.split('-').reverse().join('/')}${upcoming[0].time?' '+upcoming[0].time:''}</span>`:''}
-        </div>
-        <div class="dash-item" onclick="switchTab('chat')">
-          <span class="di-icon">💬</span>
-          <div class="di-content">
-            <div class="di-title">Última mensagem${lastMsg?' · '+esc(lastMsg.user):''}</div>
-            <div class="di-value">${lastMsg?esc(lastMsgText):'Sem mensagens'}</div>
-          </div>
-          ${lastMsg?`<span style="font-size:11px;color:var(--dim);flex-shrink:0">${lastMsg.time}</span>`:''}
+          <div class="di-content"><div class="di-title">Próximo evento</div><div class="di-value">${upcoming.length?esc(upcoming[0].title):'Sem eventos'}</div></div>
+          ${upcoming.length?`<span style="font-size:11px;color:var(--dim)">${upcoming[0].date.split('-').reverse().join('/')}</span>`:''}
         </div>
       </div>
     </div>
   `;
-  // Trigger FCM check after render
-  setTimeout(()=>checkFCMStatus(), 500);
+  setTimeout(()=>checkFCMStatus(),500);
 }
 
 async function checkFCMStatus() {
@@ -675,29 +722,544 @@ async function checkFCMStatus() {
   }
 }
 
-// ===== 1. INSPIRAÇÃO =====
-function renderInspiration(el) {
-  const items = state.inspiration;
-  el.innerHTML = `
+// ===== PRODUCTS (Sabores + Packs) =====
+function renderProducts(el) {
+  const flavors=state.flavors||[];
+  const packs=state.packs||[];
+  // Find most expensive flavor for reference
+  const maxUnitCost=flavors.length?Math.max(...flavors.map(f=>flavorUnitCost(f))):0;
+
+  el.innerHTML=`
     <div class="section-header">
-      <div><h1>Inspiração</h1><div class="sub">Board de ideias e referências</div></div>
-      <button class="btn btn-primary" onclick="openInspirationModal()">+ Nova Ideia</button>
+      <div><h1>Produtos</h1><div class="sub">${flavors.length} sabores · ${packs.length} packs</div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost" onclick="openFlavorModal()">+ Sabor</button><button class="btn btn-primary" onclick="openPackModal()">+ Pack</button></div>
     </div>
-    <div class="pills">${CATS.map(c=>`<span class="pill">${c} (${items.filter(i=>i.category===c).length})</span>`).join('')}</div>
-    ${items.length?`<div class="grid grid-cards">${items.map(i=>`
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-          <span class="tag tag-gold">${i.category}</span>
-          <button class="close-btn" onclick="delInspiration('${i.id}')">✕</button>
-        </div>
-        <h3 style="font-size:15px;font-weight:600;margin:8px 0 6px">${esc(i.title)}</h3>
-        ${i.notes?`<p style="font-size:12px;color:var(--muted);margin:0 0 8px;line-height:1.5">${esc(i.notes)}</p>`:''}
-        ${i.url?`<a href="${esc(i.url)}" target="_blank" style="font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all">↗ ${esc(i.url.substring(0,40))}…</a>`:''}
-        <div style="font-size:10px;color:var(--faint);margin-top:10px">${i.date}</div>
-      </div>
-    `).join('')}</div>`:`<div class="empty"><div class="icon">◇</div><p>Ainda sem ideias guardadas. Começa a colecionar inspiração!</p></div>`}`;
+
+    ${packs.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Packs</div>
+    <div class="card" style="padding:0;overflow-x:auto;margin-bottom:24px"><table class="data-table">
+      <thead><tr><th>Pack</th><th>Preço</th><th>Embalagem</th><th>Entrega</th></tr></thead>
+      <tbody>${packs.map(p=>`<tr onclick="openPackModal('${p.id}')" style="cursor:pointer">
+        <td style="font-weight:600;color:var(--gold)">Pack ${p.size}</td>
+        <td>${fmt(p.salePrice)}</td>
+        <td style="color:var(--muted)">${fmt(p.packagingCost)}</td>
+        <td style="color:var(--muted)">${fmt(p.deliveryCost)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`:''}
+
+    ${flavors.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Sabores</div>
+    <div class="card" style="padding:0;overflow-x:auto;margin-bottom:24px"><table class="data-table">
+      <thead><tr><th>Sabor</th><th>Custo tâmara</th><th>Custo recheio</th><th>Custo unitário</th><th>Receita</th></tr></thead>
+      <tbody>${flavors.map(f=>{
+        const uc=flavorUnitCost(f);
+        const inv=state.inventory||[];
+        const recipeStr=(f.recipe||[]).map(r=>{const it=inv.find(i=>i.id===r.inventoryId);return it?(r.qty+' '+(r.unit||it.unit||'un')+' '+it.name):'?';}).join(', ');
+        return `<tr onclick="openFlavorModal('${f.id}')" style="cursor:pointer">
+          <td style="font-weight:500">${esc(f.name)}</td>
+          <td style="color:var(--muted)">${fmt(f.dateCost)}</td>
+          <td style="color:var(--muted)">${fmt(f.fillingCost)}</td>
+          <td>${fmt(uc)}</td>
+          <td style="font-size:10px;color:var(--dim)">${recipeStr||'Sem receita'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`:''}
+
+    ${flavors.length&&packs.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Matriz Lucro (Sabor × Pack)</div>
+    <div class="card" style="padding:0;overflow-x:auto"><table class="data-table">
+      <thead><tr><th>Sabor</th>${packs.map(p=>`<th colspan="2">Pack ${p.size} (${fmt(p.salePrice)})</th>`).join('')}</tr>
+      <tr><th></th>${packs.map(()=>'<th style="font-size:9px">Custo</th><th style="font-size:9px">Lucro</th>').join('')}</tr></thead>
+      <tbody>${flavors.map(f=>`<tr>
+        <td style="font-weight:500">${esc(f.name)}</td>
+        ${packs.map(p=>{
+          const cost=packTotalCost(p,f), profit=packProfit(p,f), margin=packMargin(p,f);
+          return `<td style="color:var(--muted)">${fmt(cost)}</td><td style="color:${profit>=0?'var(--green)':'var(--red)'}"><div>${fmt(profit)}</div><div style="font-size:9px;opacity:0.7">${margin.toFixed(0)}%</div></td>`;
+        }).join('')}
+      </tr>`).join('')}</tbody>
+    </table></div>`:'<div class="empty"><div class="icon">🍫</div><p>Adiciona sabores e packs para ver a matriz de lucro.</p></div>'}`;
 }
 
+function openFlavorModal(editId) {
+  const f=editId?(state.flavors||[]).find(x=>x.id===editId):null;
+  const inv=state.inventory||[];
+  const recipe=f?(f.recipe||[]):[];
+  openModal(f?'Editar Sabor':'Novo Sabor', `
+    <div class="form-group"><label class="label">Nome do sabor</label><input class="input" id="f-flav-name" value="${esc(f?f.name:'')}" placeholder="Ex: Pistáchio, Amendoim, Nutella..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Custo tâmara (€/un)</label><input class="input" type="number" step="0.01" id="f-flav-date" value="${f?f.dateCost:''}" placeholder="Custo de 1 tâmara"></div>
+      <div class="form-group"><label class="label">Custo recheio (€/un)</label><input class="input" type="number" step="0.01" id="f-flav-filling" value="${f?f.fillingCost:''}" placeholder="Custo recheio por 1 tâmara"></div>
+    </div>
+    <div style="font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:16px 0 8px;font-weight:600">Receita por 1 tâmara</div>
+    <div id="f-flav-recipe">${recipe.map((r,i)=>recipeIngRow(r,inv)).join('')}</div>
+    <button class="btn btn-ghost btn-full" onclick="addRecipeRow()" style="margin-bottom:16px">+ Adicionar Ingrediente</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="saveFlavor('${editId||''}')">${f?'Guardar':'Criar Sabor'}</button>
+      ${f?`<button class="btn btn-ghost" onclick="delFlavor('${f.id}')" style="color:var(--red)">Eliminar</button>`:''}
+    </div>
+  `);
+}
+
+function recipeIngRow(r,inv) {
+  r=r||{};
+  inv=inv||(state.inventory||[]);
+  return `<div class="recipe-row" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+    <div class="form-group" style="margin:0"><label class="label">Ingrediente</label><select class="input f-ri-inv">
+      <option value="">—</option>
+      ${inv.map(i=>`<option value="${i.id}" ${r.inventoryId===i.id?'selected':''}>${esc(i.name)} (${esc(i.unit||'un')})</option>`).join('')}
+    </select></div>
+    <div class="form-group" style="margin:0"><label class="label">Qtd/tâmara</label><input class="input f-ri-qty" type="number" step="0.01" value="${r.qty||''}"></div>
+    <div class="form-group" style="margin:0"><label class="label">Unidade</label><input class="input f-ri-unit" value="${esc(r.unit||'')}" placeholder="g, ml, un..." style="font-size:11px"></div>
+    <button class="del-btn" onclick="this.closest('.recipe-row').remove()" style="margin-bottom:4px">✕</button>
+  </div>`;
+}
+
+function addRecipeRow() {
+  const div=document.createElement('div');
+  div.innerHTML=recipeIngRow({},state.inventory||[]);
+  document.getElementById('f-flav-recipe').appendChild(div.firstElementChild);
+}
+
+function saveFlavor(editId) {
+  const name=$('#f-flav-name').value.trim(); if(!name) return;
+  // Collect recipe
+  const recipe=[];
+  document.querySelectorAll('#f-flav-recipe .recipe-row').forEach(r=>{
+    const invId=r.querySelector('.f-ri-inv').value;
+    const qty=parseFloat(r.querySelector('.f-ri-qty').value)||0;
+    const unit=r.querySelector('.f-ri-unit').value.trim();
+    if(invId&&qty>0) recipe.push({inventoryId:invId,qty,unit});
+  });
+  const data={ name, dateCost:parseFloat($('#f-flav-date').value)||0, fillingCost:parseFloat($('#f-flav-filling').value)||0, recipe };
+  if(!state.flavors) state.flavors=[];
+  if(editId) { const f=state.flavors.find(x=>x.id===editId); if(f) Object.assign(f,data); }
+  else { data.id=uid(); state.flavors.push(data); }
+  save(); closeModal(); render();
+}
+function delFlavor(id) { state.flavors=(state.flavors||[]).filter(x=>x.id!==id); save(); closeModal(); render(); }
+
+// Auto-deduct inventory when order is delivered
+function deductInventoryForOrder(order) {
+  if(order._stockDeducted) return; // prevent double deduction
+  (order.items||[]).forEach(item=>{
+    const flavor=(state.flavors||[]).find(f=>f.id===item.flavorId);
+    if(!flavor||!flavor.recipe) return;
+    const totalUnits=(parseFloat(item.qty)||0)*(parseFloat(item.packSize||((state.packs||[]).find(p=>p.id===item.packId)||{}).size)||0);
+    flavor.recipe.forEach(r=>{
+      const inv=(state.inventory||[]).find(i=>i.id===r.inventoryId);
+      if(inv) { inv.qtyUsed=(parseFloat(inv.qtyUsed)||0)+(r.qty*totalUnits); }
+    });
+  });
+  order._stockDeducted=true;
+}
+
+function openPackModal(editId) {
+  const p=editId?(state.packs||[]).find(x=>x.id===editId):null;
+  openModal(p?'Editar Pack':'Novo Pack', `
+    <div class="form-group"><label class="label">Tamanho (nº tâmaras)</label><input class="input" type="number" id="f-pack-size" value="${p?p.size:''}" placeholder="3, 6 ou 10"></div>
+    <div class="form-group"><label class="label">Preço de venda (€)</label><input class="input" type="number" step="0.01" id="f-pack-price" value="${p?p.salePrice:''}" placeholder="Preço fixo do pack"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Embalagem (€)</label><input class="input" type="number" step="0.01" id="f-pack-pkg" value="${p?p.packagingCost:''}"></div>
+      <div class="form-group"><label class="label">Entrega (€)</label><input class="input" type="number" step="0.01" id="f-pack-del" value="${p?p.deliveryCost:''}"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="savePack('${editId||''}')">${p?'Guardar':'Criar Pack'}</button>
+      ${p?`<button class="btn btn-ghost" onclick="delPack('${p.id}')" style="color:var(--red)">Eliminar</button>`:''}
+    </div>
+  `);
+}
+
+function savePack(editId) {
+  const size=parseInt($('#f-pack-size').value); if(!size) return;
+  const data={ size, salePrice:parseFloat($('#f-pack-price').value)||0, packagingCost:parseFloat($('#f-pack-pkg').value)||0, deliveryCost:parseFloat($('#f-pack-del').value)||0 };
+  if(!state.packs) state.packs=[];
+  if(editId) { const p=state.packs.find(x=>x.id===editId); if(p) Object.assign(p,data); }
+  else { data.id=uid(); state.packs.push(data); }
+  state.packs.sort((a,b)=>a.size-b.size);
+  save(); closeModal(); render();
+}
+function delPack(id) { state.packs=(state.packs||[]).filter(x=>x.id!==id); save(); closeModal(); render(); }
+
+// ===== ORDERS =====
+let orderFilter='all';
+function renderOrders(el) {
+  const orders=state.orders||[];
+  const filtered=orderFilter==='all'?orders:orders.filter(o=>o.status===orderFilter);
+  const counts={};ORDER_STATUSES.forEach(s=>counts[s]=orders.filter(o=>o.status===s).length);
+
+  el.innerHTML=`
+    <div class="section-header">
+      <div><h1>Encomendas</h1><div class="sub">${orders.length} total</div></div>
+      <button class="btn btn-primary" onclick="openOrderModal()">+ Nova Encomenda</button>
+    </div>
+    <div class="pills" style="margin-bottom:16px">
+      <button class="pill ${orderFilter==='all'?'active':''}" onclick="orderFilter='all';render()">Todas (${orders.length})</button>
+      ${ORDER_STATUSES.map(s=>`<button class="pill ${orderFilter===s?'active':''}" onclick="orderFilter='${s}';render()">${s} (${counts[s]||0})</button>`).join('')}
+    </div>
+    ${filtered.length?`<div class="card" style="padding:0;overflow-x:auto"><table class="data-table">
+      <thead><tr><th>#</th><th>Data</th><th>Cliente</th><th>Canal</th><th>Estado</th><th>Total</th><th>Lucro</th></tr></thead>
+      <tbody>${filtered.slice().reverse().map(o=>{
+        const cust=(state.customers||[]).find(c=>c.id===o.customerId);
+        const rev=orderRevenue(o), prof=orderProfit(o);
+        return `<tr onclick="viewOrder('${o.id}')">
+          <td style="font-weight:600;color:var(--gold)">#${o.orderNum||'—'}</td>
+          <td style="color:var(--muted)">${o.date||'—'}</td>
+          <td>${esc(cust?cust.name:(o.customerName||'—'))}</td>
+          <td style="color:var(--muted)">${esc(o.channel||'—')}</td>
+          <td>${statusBadge(o.status||'pendente')}</td>
+          <td>${fmt(rev)}</td>
+          <td style="color:${prof>=0?'var(--green)':'var(--red)'}">${fmt(prof)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`:'<div class="empty"><div class="icon">📦</div><p>Sem encomendas.</p></div>'}`;
+}
+
+function openOrderModal(editId) {
+  const o=editId?(state.orders||[]).find(x=>x.id===editId):null;
+  const custs=state.customers||[];
+  openModal(o?'Editar Encomenda #'+o.orderNum:'Nova Encomenda', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Data</label><input class="input" type="date" id="f-ord-date" value="${o?o.date:new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="label">Canal</label><select class="input" id="f-ord-channel">${CHANNELS.map(c=>`<option ${o&&o.channel===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label class="label">Cliente</label><select class="input" id="f-ord-cust">
+      <option value="">— Selecionar —</option>
+      ${custs.map(c=>`<option value="${c.id}" ${o&&o.customerId===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}
+      <option value="__new">+ Novo cliente...</option>
+    </select></div>
+    <div id="f-ord-new-cust" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="label">Nome</label><input class="input" id="f-ord-cust-name"></div>
+        <div class="form-group"><label class="label">Telefone</label><input class="input" id="f-ord-cust-phone"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Estado</label><select class="input" id="f-ord-status">${ORDER_STATUSES.map(s=>`<option ${o&&o.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="label">Pagamento</label><select class="input" id="f-ord-pay">${PAY_STATUSES.map(s=>`<option ${o&&o.paymentStatus===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div style="font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px;font-weight:600">Itens</div>
+    <div id="f-ord-items">${(o?o.items:[]).map((it,i)=>orderItemRow(i,it)).join('')}</div>
+    <button class="btn btn-ghost btn-full" onclick="addOrderItemRow()" style="margin-bottom:12px">+ Adicionar Item</button>
+    <div class="form-group"><label class="label">Notas</label><textarea class="input" id="f-ord-notes">${esc(o?o.notes:'')}</textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="saveOrder('${editId||''}')">${o?'Guardar':'Criar Encomenda'}</button>
+      ${o?`<button class="btn btn-ghost" onclick="delOrder('${o.id}')" style="color:var(--red)">Eliminar</button>`:''}
+    </div>
+  `);
+  if(!o) addOrderItemRow();
+  document.getElementById('f-ord-cust').onchange=function(){
+    document.getElementById('f-ord-new-cust').style.display=this.value==='__new'?'block':'none';
+  };
+}
+
+function orderItemRow(idx,item) {
+  item=item||{};
+  const flavors=state.flavors||[];
+  const packs=state.packs||[];
+  return `<div class="ord-item-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+    <div class="form-group" style="margin:0"><label class="label">Sabor</label><select class="input f-oi-flavor" onchange="orderItemCalc(this.closest('.ord-item-row'))">
+      <option value="">—</option>
+      ${flavors.map(f=>`<option value="${f.id}" ${item.flavorId===f.id?'selected':''}>${esc(f.name)}</option>`).join('')}
+    </select></div>
+    <div class="form-group" style="margin:0"><label class="label">Pack</label><select class="input f-oi-pack" onchange="orderItemCalc(this.closest('.ord-item-row'))">
+      <option value="">—</option>
+      ${packs.map(p=>`<option value="${p.id}" ${item.packId===p.id?'selected':''}>${'Pack '+p.size+' — '+fmt(p.salePrice)}</option>`).join('')}
+    </select></div>
+    <div class="form-group" style="margin:0"><label class="label">Qtd packs</label><input class="input f-oi-qty" type="number" min="1" value="${item.qty||1}"></div>
+    <button class="del-btn" onclick="this.closest('.ord-item-row').remove()" style="margin-bottom:4px">✕</button>
+  </div>`;
+}
+
+function addOrderItemRow() {
+  const div=document.createElement('div');
+  div.innerHTML=orderItemRow(0,{});
+  document.getElementById('f-ord-items').appendChild(div.firstElementChild);
+}
+
+function orderItemCalc(row) { /* auto-fill handled at save time via flavor+pack lookup */ }
+
+function saveOrder(editId) {
+  const rows=document.querySelectorAll('#f-ord-items .ord-item-row');
+  const items=[];
+  rows.forEach(r=>{
+    const flavorId=r.querySelector('.f-oi-flavor').value;
+    const packId=r.querySelector('.f-oi-pack').value;
+    const flavor=(state.flavors||[]).find(f=>f.id===flavorId);
+    const pack=(state.packs||[]).find(p=>p.id===packId);
+    if(!flavor||!pack) return;
+    const cost=packTotalCost(pack,flavor);
+    items.push({
+      flavorId, packId, packSize:pack.size,
+      productName:flavor.name+' — Pack '+pack.size,
+      qty:parseFloat(r.querySelector('.f-oi-qty').value)||1,
+      unitPrice:parseFloat(pack.salePrice)||0,
+      unitCost:cost
+    });
+  });
+  // Handle new customer inline
+  let customerId=$('#f-ord-cust').value;
+  if(customerId==='__new') {
+    const cn=$('#f-ord-cust-name').value.trim();
+    if(cn) { const nc={id:uid(),name:cn,phone:$('#f-ord-cust-phone').value.trim(),email:'',source:$('#f-ord-channel').value,createdAt:Date.now()};
+      if(!state.customers) state.customers=[]; state.customers.push(nc); customerId=nc.id; }
+    else customerId='';
+  }
+  const newStatus=$('#f-ord-status').value;
+  const data={
+    date:$('#f-ord-date').value, channel:$('#f-ord-channel').value,
+    customerId, status:newStatus, paymentStatus:$('#f-ord-pay').value,
+    notes:$('#f-ord-notes').value.trim(), items
+  };
+  if(!state.orders) state.orders=[];
+  if(editId) {
+    const o=state.orders.find(x=>x.id===editId);
+    if(o) {
+      const wasDelivered=o.status==='entregue';
+      Object.assign(o,data);
+      // Auto-deduct stock when marked as delivered
+      if(newStatus==='entregue'&&!wasDelivered) deductInventoryForOrder(o);
+    }
+  } else {
+    data.id=uid(); state.orderSeq=(state.orderSeq||0)+1; data.orderNum=state.orderSeq; data.createdAt=Date.now();
+    if(newStatus==='entregue') { data._stockDeducted=false; state.orders.push(data); deductInventoryForOrder(data); }
+    else state.orders.push(data);
+  }
+  // Auto-create finance entry when marked as paid
+  if(newStatus==='pago'||data.paymentStatus==='pago') {
+    const ordId=editId||data.id;
+    const alreadyLogged=(state.finances||[]).some(f=>f.orderId===ordId);
+    if(!alreadyLogged) {
+      const rev=orderRevenue(data);
+      state.finances.unshift({id:uid(),description:'Encomenda #'+(data.orderNum||''),amount:rev,type:'entrada',date:data.date,orderId:ordId});
+    }
+  }
+  save(); closeModal(); render();
+}
+
+function viewOrder(id) {
+  const o=(state.orders||[]).find(x=>x.id===id); if(!o) return;
+  const cust=(state.customers||[]).find(c=>c.id===o.customerId);
+  const rev=orderRevenue(o), cost=orderCost(o), prof=orderProfit(o);
+  openModal('Encomenda #'+o.orderNum, `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">${statusBadge(o.status)} ${statusBadge(o.paymentStatus||'pendente')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div><div class="label">Data</div><div style="font-size:13px">${o.date||'—'}</div></div>
+      <div><div class="label">Canal</div><div style="font-size:13px">${esc(o.channel||'—')}</div></div>
+      <div><div class="label">Cliente</div><div style="font-size:13px">${esc(cust?cust.name:'—')}</div></div>
+    </div>
+    <div class="label" style="margin-bottom:8px">Itens</div>
+    ${(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span>${esc(i.productName||'—')} × ${i.qty}</span>
+      <span style="color:var(--muted)">${fmt(i.qty*i.unitPrice)}</span>
+    </div>`).join('')}
+    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:600">
+      <span>Total</span><span>${fmt(rev)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--muted)">
+      <span>Custo</span><span>${fmt(cost)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;font-weight:600;color:${prof>=0?'var(--green)':'var(--red)'}">
+      <span>Lucro</span><span>${fmt(prof)}</span>
+    </div>
+    ${o.notes?`<div style="margin-top:12px"><div class="label">Notas</div><p style="font-size:12px;color:var(--muted)">${esc(o.notes)}</p></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" onclick="closeModal();openOrderModal('${o.id}')">Editar</button>
+      <button class="btn btn-ghost" onclick="delOrder('${o.id}')" style="color:var(--red)">Eliminar</button>
+    </div>
+  `);
+}
+function delOrder(id) { state.orders=(state.orders||[]).filter(x=>x.id!==id); save(); closeModal(); render(); }
+
+// ===== CUSTOMERS =====
+function renderCustomers(el) {
+  const custs=state.customers||[];
+  el.innerHTML=`
+    <div class="section-header">
+      <div><h1>Clientes</h1><div class="sub">${custs.length} registados</div></div>
+      <button class="btn btn-primary" onclick="openCustomerModal()">+ Novo Cliente</button>
+    </div>
+    ${custs.length?`<div class="card" style="padding:0;overflow-x:auto"><table class="data-table">
+      <thead><tr><th>Nome</th><th>Contacto</th><th>Encomendas</th><th>Total gasto</th><th>Tipo</th><th>Última compra</th></tr></thead>
+      <tbody>${custs.map(c=>{
+        const s=getCustomerStats(c.id);
+        const days=s.last?Math.round((Date.now()-new Date(s.last).getTime())/86400000):'—';
+        return `<tr onclick="openCustomerModal('${c.id}')">
+          <td style="font-weight:500">${esc(c.name)}</td>
+          <td style="color:var(--muted);font-size:11px">${esc(c.phone||c.email||'—')}</td>
+          <td>${s.count}</td>
+          <td>${fmt(s.total)}</td>
+          <td>${s.count>1?'<span class="badge badge-ok">Recorrente</span>':'<span class="badge badge-pending">Novo</span>'}</td>
+          <td style="color:var(--dim);font-size:11px">${s.last?s.last.split('-').reverse().join('/'):'—'}${typeof days==='number'?' ('+days+'d)':''}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`:'<div class="empty"><div class="icon">👥</div><p>Sem clientes registados.</p></div>'}`;
+}
+
+function openCustomerModal(editId) {
+  const c=editId?(state.customers||[]).find(x=>x.id===editId):null;
+  openModal(c?'Editar Cliente':'Novo Cliente', `
+    <div class="form-group"><label class="label">Nome completo</label><input class="input" id="f-cust-name" value="${esc(c?c.name:'')}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Telefone</label><input class="input" id="f-cust-phone" value="${esc(c?c.phone:'')}"></div>
+      <div class="form-group"><label class="label">Email</label><input class="input" id="f-cust-email" type="email" value="${esc(c?c.email:'')}"></div>
+    </div>
+    <div class="form-group"><label class="label">Canal de aquisição</label><select class="input" id="f-cust-source">${CHANNELS.map(ch=>`<option ${c&&c.source===ch?'selected':''}>${ch}</option>`).join('')}</select></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="saveCustomer('${editId||''}')">${c?'Guardar':'Criar Cliente'}</button>
+      ${c?`<button class="btn btn-ghost" onclick="delCustomer('${c.id}')" style="color:var(--red)">Eliminar</button>`:''}
+    </div>
+  `);
+}
+
+function saveCustomer(editId) {
+  const name=$('#f-cust-name').value.trim(); if(!name) return;
+  const data={name, phone:$('#f-cust-phone').value.trim(), email:$('#f-cust-email').value.trim(), source:$('#f-cust-source').value};
+  if(!state.customers) state.customers=[];
+  if(editId) { const c=state.customers.find(x=>x.id===editId); if(c) Object.assign(c,data); }
+  else { data.id=uid(); data.createdAt=Date.now(); state.customers.push(data); }
+  save(); closeModal(); render();
+}
+function delCustomer(id) { state.customers=(state.customers||[]).filter(x=>x.id!==id); save(); closeModal(); render(); }
+
+// ===== INVENTORY =====
+function renderInventory(el) {
+  const items=state.inventory||[];
+  const low=items.filter(i=>isLowStock(i));
+  el.innerHTML=`
+    <div class="section-header">
+      <div><h1>Inventário</h1><div class="sub">${items.length} itens${low.length?' · <span style="color:var(--red)">'+low.length+' stock baixo</span>':''}</div></div>
+      <button class="btn btn-primary" onclick="openInvModal()">+ Novo Item</button>
+    </div>
+    ${items.length?`<div class="card" style="padding:0;overflow-x:auto"><table class="data-table">
+      <thead><tr><th>Material</th><th>Categoria</th><th>Stock</th><th>Mín.</th><th>Estado</th><th>Desperdício</th><th>Custo/un</th></tr></thead>
+      <tbody>${items.map(i=>{
+        const stock=invCurrentStock(i), isLow=stock<(parseFloat(i.minStock)||0);
+        const wasted=parseFloat(i.qtyWasted)||0;
+        const received=parseFloat(i.qtyReceived)||0;
+        const wastePct=received>0?(wasted/received*100):0;
+        return `<tr onclick="openInvModal('${i.id}')">
+          <td><div style="font-weight:500">${esc(i.name)}</div>${i.supplier?`<div style="font-size:10px;color:var(--dim)">${esc(i.supplier)}</div>`:''}</td>
+          <td style="color:var(--muted)">${esc(i.category||'—')}</td>
+          <td style="font-weight:600;color:${isLow?'var(--red)':'var(--text)'}">${stock} ${esc(i.unit||'un')}</td>
+          <td style="color:var(--dim)">${i.minStock||'—'}</td>
+          <td>${isLow?'<span class="badge badge-low">Baixo</span>':'<span class="badge badge-ok">OK</span>'}</td>
+          <td style="color:${wastePct>10?'var(--red)':wastePct>0?'var(--gold)':'var(--dim)'}">${wasted>0?wastePct.toFixed(1)+'%':'0%'}</td>
+          <td style="color:var(--muted)">${i.costPerUnit?fmt(i.costPerUnit):'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`:'<div class="empty"><div class="icon">📋</div><p>Sem itens no inventário.</p></div>'}`;
+}
+
+function openInvModal(editId) {
+  const i=editId?(state.inventory||[]).find(x=>x.id===editId):null;
+  openModal(i?'Editar Item':'Novo Item de Inventário', `
+    <div class="form-group"><label class="label">Nome do material</label><input class="input" id="f-inv-name" value="${esc(i?i.name:'')}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Categoria</label><select class="input" id="f-inv-cat">${INV_CATS.map(c=>`<option ${i&&i.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="label">Unidade</label><input class="input" id="f-inv-unit" value="${esc(i?i.unit:'un')}" placeholder="kg, un, L..."></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Fornecedor</label><input class="input" id="f-inv-supplier" value="${esc(i?i.supplier:'')}"></div>
+      <div class="form-group"><label class="label">Custo por un. (€)</label><input class="input" type="number" step="0.01" id="f-inv-cost" value="${i?i.costPerUnit:''}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Recebido</label><input class="input" type="number" id="f-inv-received" value="${i?i.qtyReceived:'0'}"></div>
+      <div class="form-group"><label class="label">Usado</label><input class="input" type="number" id="f-inv-used" value="${i?i.qtyUsed:'0'}"></div>
+      <div class="form-group"><label class="label">Desperdiçado</label><input class="input" type="number" id="f-inv-wasted" value="${i?i.qtyWasted:'0'}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Stock mínimo</label><input class="input" type="number" id="f-inv-min" value="${i?i.minStock:''}"></div>
+      <div class="form-group"><label class="label">Validade</label><input class="input" type="date" id="f-inv-exp" value="${i?i.expirationDate||'':''}"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="saveInv('${editId||''}')">${i?'Guardar':'Criar Item'}</button>
+      ${i?`<button class="btn btn-ghost" onclick="delInv('${i.id}')" style="color:var(--red)">Eliminar</button>`:''}
+    </div>
+  `);
+}
+
+function saveInv(editId) {
+  const name=$('#f-inv-name').value.trim(); if(!name) return;
+  const data={
+    name, category:$('#f-inv-cat').value, unit:$('#f-inv-unit').value.trim(),
+    supplier:$('#f-inv-supplier').value.trim(), costPerUnit:parseFloat($('#f-inv-cost').value)||0,
+    qtyReceived:parseFloat($('#f-inv-received').value)||0, qtyUsed:parseFloat($('#f-inv-used').value)||0,
+    qtyWasted:parseFloat($('#f-inv-wasted').value)||0, minStock:parseFloat($('#f-inv-min').value)||0,
+    expirationDate:$('#f-inv-exp').value||''
+  };
+  if(!state.inventory) state.inventory=[];
+  if(editId) { const i=state.inventory.find(x=>x.id===editId); if(i) Object.assign(i,data); }
+  else { data.id=uid(); data.createdAt=Date.now(); state.inventory.push(data); }
+  save(); closeModal(); render();
+}
+function delInv(id) { state.inventory=(state.inventory||[]).filter(x=>x.id!==id); save(); closeModal(); render(); }
+
+// ===== FEEDBACK =====
+function renderFeedback(el) {
+  const fb=state.feedback||[];
+  const avgRating=fb.length?(fb.reduce((s,f)=>s+(f.rating||0),0)/fb.length):0;
+  el.innerHTML=`
+    <div class="section-header">
+      <div><h1>Feedback</h1><div class="sub">${fb.length} avaliações · Média ${avgRating.toFixed(1)}★</div></div>
+      <button class="btn btn-primary" onclick="openFeedbackModal()">+ Novo Feedback</button>
+    </div>
+    ${fb.length?fb.slice().reverse().map(f=>{
+      const cust=(state.customers||[]).find(c=>c.id===f.customerId);
+      const ord=(state.orders||[]).find(o=>o.id===f.orderId);
+      return `<div class="card" style="padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <div>
+            <div style="color:var(--gold);font-size:14px;margin-bottom:4px">${'★'.repeat(f.rating||0)}${'☆'.repeat(5-(f.rating||0))}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${esc(cust?cust.name:'Anónimo')}${ord?' · #'+ord.orderNum:''}</div>
+          </div>
+          <button class="del-btn" onclick="delFeedback('${f.id}')">✕</button>
+        </div>
+        ${f.favProduct?`<div style="font-size:11px;color:var(--muted);margin-top:6px">❤️ Favorito: ${esc(f.favProduct)}</div>`:''}
+        ${f.comment?`<div style="font-size:12px;color:var(--text);margin-top:8px;line-height:1.5">${esc(f.comment)}</div>`:''}
+        ${f.complaintType?`<div style="margin-top:6px"><span class="badge badge-low">${esc(f.complaintType)}</span></div>`:''}
+        ${f.packagingFb?`<div style="font-size:11px;color:var(--muted);margin-top:4px">📦 Embalagem: ${esc(f.packagingFb)}</div>`:''}
+        ${f.deliveryFb?`<div style="font-size:11px;color:var(--muted);margin-top:2px">🚚 Entrega: ${esc(f.deliveryFb)}</div>`:''}
+        ${f.suggestion?`<div style="font-size:11px;color:var(--gold);margin-top:4px">💡 ${esc(f.suggestion)}</div>`:''}
+      </div>`;
+    }).join(''):'<div class="empty"><div class="icon">⭐</div><p>Sem feedback registado.</p></div>'}`;
+}
+
+function openFeedbackModal() {
+  const custs=state.customers||[];
+  const ords=(state.orders||[]).filter(o=>o.status==='entregue');
+  const complaints=['Qualidade do produto','Embalagem danificada','Entrega atrasada','Produto errado','Outro'];
+  openModal('Novo Feedback', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Cliente</label><select class="input" id="f-fb-cust"><option value="">—</option>${custs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="label">Encomenda</label><select class="input" id="f-fb-ord"><option value="">—</option>${ords.map(o=>`<option value="${o.id}">#${o.orderNum}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label class="label">Avaliação</label><div class="stars" id="f-fb-stars">${[1,2,3,4,5].map(n=>`<button class="star-btn" onclick="pickFbStar(${n})">★</button>`).join('')}</div></div>
+    <div class="form-group"><label class="label">Produto favorito</label><select class="input" id="f-fb-fav"><option value="">—</option>${(state.flavors||[]).map(f=>`<option>${esc(f.name)}</option>`).join('')}</select></div>
+    <div class="form-group"><label class="label">Comentário</label><textarea class="input" id="f-fb-comment" placeholder="O que o cliente achou..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Feedback embalagem</label><input class="input" id="f-fb-pkg" placeholder="Opcional"></div>
+      <div class="form-group"><label class="label">Feedback entrega</label><input class="input" id="f-fb-del" placeholder="Opcional"></div>
+    </div>
+    <div class="form-group"><label class="label">Tipo de reclamação</label><select class="input" id="f-fb-complaint"><option value="">Sem reclamação</option>${complaints.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="form-group"><label class="label">Sugestão de melhoria</label><input class="input" id="f-fb-sug" placeholder="Opcional"></div>
+    <button class="btn btn-primary btn-full" onclick="saveFeedback()">Guardar Feedback</button>
+  `);
+}
+
+let fbRating=0;
+function pickFbStar(n) { fbRating=fbRating===n?0:n; document.querySelectorAll('#f-fb-stars .star-btn').forEach((b,i)=>b.classList.toggle('filled',i<fbRating)); }
+
+function saveFeedback() {
+  if(!state.feedback) state.feedback=[];
+  state.feedback.push({
+    id:uid(), customerId:$('#f-fb-cust').value, orderId:$('#f-fb-ord').value,
+    rating:fbRating, favProduct:$('#f-fb-fav').value,
+    comment:$('#f-fb-comment').value.trim(), packagingFb:$('#f-fb-pkg').value.trim(),
+    deliveryFb:$('#f-fb-del').value.trim(), complaintType:$('#f-fb-complaint').value,
+    suggestion:$('#f-fb-sug').value.trim(), createdAt:Date.now()
+  });
+  fbRating=0; save(); closeModal(); render();
+}
+function delFeedback(id) { state.feedback=(state.feedback||[]).filter(x=>x.id!==id); save(); render(); }
+
+// ===== 1. INSPIRAÇÃO (dentro de Notas) =====
 function openInspirationModal() {
   openModal('Nova Inspiração', `
     <div class="form-group"><label class="label">Título</label><input class="input" id="f-ins-title" placeholder="Ex: Packaging minimalista do Pinterest"></div>
@@ -715,106 +1277,6 @@ function addInspiration() {
   save(); closeModal(); render();
 }
 function delInspiration(id) { state.inspiration=state.inspiration.filter(i=>i.id!==id); save(); render(); }
-
-// ===== 2. RECEITAS =====
-let recipeFilter = 'all';
-
-function renderRecipes(el) {
-  const items = recipeFilter==='all' ? state.recipes : state.recipes.filter(r=>r.status===recipeFilter);
-  const all=state.recipes.length, exp=state.recipes.filter(r=>r.status==='experimentar').length, done=state.recipes.filter(r=>r.status==='concluida').length;
-
-  el.innerHTML = `
-    <div class="section-header">
-      <div><h1>Receitas</h1><div class="sub">Laboratório de tâmaras recheadas</div></div>
-      <button class="btn btn-primary" onclick="openRecipeModal()">+ Nova Receita</button>
-    </div>
-    <div class="pills">
-      <button class="pill ${recipeFilter==='all'?'active':''}" onclick="recipeFilter='all';render()">Todas (${all})</button>
-      <button class="pill ${recipeFilter==='experimentar'?'active':''}" onclick="recipeFilter='experimentar';render()">A experimentar (${exp})</button>
-      <button class="pill ${recipeFilter==='concluida'?'active':''}" onclick="recipeFilter='concluida';render()">Concluídas (${done})</button>
-    </div>
-    ${items.length?`<div class="grid grid-cards">${items.map(r=>`
-      <div class="card" style="cursor:pointer" onclick="viewRecipe('${r.id}')">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <span class="tag ${r.status==='concluida'?'tag-green':'tag-gold'}">${r.status==='concluida'?'Concluída':'A experimentar'}</span>
-          ${r.rating?`<span style="color:var(--gold);font-size:13px">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>`:''}
-        </div>
-        <h3 style="font-size:16px;font-weight:600;margin:10px 0 4px;font-family:var(--font-display)">${esc(r.name)}</h3>
-        <p style="font-size:12px;color:var(--dim)">${(r.ingredients||[]).length} ingredientes · ${(r.steps||[]).length} passos</p>
-        <div style="font-size:10px;color:var(--faint);margin-top:8px">${r.date}</div>
-      </div>
-    `).join('')}</div>`:`<div class="empty"><div class="icon">◇</div><p>Nenhuma receita encontrada.</p></div>`}`;
-}
-
-function openRecipeModal() {
-  openModal('Nova Receita', `
-    <div class="form-group"><label class="label">Nome da Receita</label><input class="input" id="f-rec-name" placeholder="Ex: Tâmara Medjool com pistáchio"></div>
-    <div class="form-group"><label class="label">Estado</label><div class="chip-group"><button class="chip active" onclick="pickChip(this)" data-val="experimentar">A experimentar</button><button class="chip" onclick="pickChip(this)" data-val="concluida">Concluída</button></div></div>
-    <div class="form-group"><label class="label">Ingredientes (um por linha)</label><textarea class="input" id="f-rec-ing" placeholder="6 tâmaras Medjool\n100g pistáchio"></textarea></div>
-    <div class="form-group"><label class="label">Passos (um por linha)</label><textarea class="input" id="f-rec-steps" placeholder="Abrir as tâmaras\nTriturar pistáchio"></textarea></div>
-    <div class="form-group"><label class="label">Foto</label>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label class="btn btn-ghost" style="cursor:pointer;flex:1;text-align:center"><input type="file" accept="image/*" capture="environment" id="f-rec-camera" onchange="previewRecipePhoto(this)" style="display:none">📷 Câmara</label>
-        <label class="btn btn-ghost" style="cursor:pointer;flex:1;text-align:center"><input type="file" accept="image/*" id="f-rec-gallery" onchange="previewRecipePhoto(this)" style="display:none">🖼 Galeria</label>
-      </div>
-      <div id="f-rec-photo-preview" style="margin-top:8px"></div>
-      <input class="input" id="f-rec-photo" placeholder="Ou cola um URL..." style="margin-top:8px;font-size:12px">
-    </div>
-    <div class="form-group"><label class="label">Avaliação</label><div class="stars" id="f-rec-stars">${[1,2,3,4,5].map(n=>`<button class="star-btn" onclick="pickStar(${n})">★</button>`).join('')}</div></div>
-    <div class="form-group"><label class="label">Notas pessoais</label><textarea class="input" id="f-rec-notes" placeholder="Observações, ajustes..."></textarea></div>
-    <button class="btn btn-primary btn-full" onclick="addRecipe()">Guardar Receita</button>
-  `);
-}
-let recipePhotoData='';
-function previewRecipePhoto(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    recipePhotoData=e.target.result;
-    const prev=$('#f-rec-photo-preview');
-    prev.innerHTML=`<img src="${recipePhotoData}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px">`;
-    $('#f-rec-photo').value='';
-  };
-  reader.readAsDataURL(file);
-}
-let pickedRating = 0;
-function pickStar(n) {
-  pickedRating = pickedRating===n ? 0 : n;
-  document.querySelectorAll('#f-rec-stars .star-btn').forEach((b,i)=>{ b.classList.toggle('filled', i<pickedRating); });
-}
-
-function addRecipe() {
-  const name=$('#f-rec-name').value.trim(); if(!name) return;
-  const status = $('#modal-content').querySelector('.chip.active')?.dataset.val || 'experimentar';
-  state.recipes.unshift({
-    id:uid(), name, status, rating:pickedRating,
-    ingredients:$('#f-rec-ing').value.split('\n').filter(Boolean),
-    steps:$('#f-rec-steps').value.split('\n').filter(Boolean),
-    photo:recipePhotoData||$('#f-rec-photo').value.trim(),
-    notes:$('#f-rec-notes').value.trim(), date:now()
-  });
-  pickedRating=0; recipePhotoData=''; save(); closeModal(); render();
-}
-
-function viewRecipe(id) {
-  const r=state.recipes.find(x=>x.id===id); if(!r) return;
-  openModal(esc(r.name), `
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
-      <span class="tag ${r.status==='concluida'?'tag-green':'tag-gold'}">${r.status==='concluida'?'Concluída':'A experimentar'}</span>
-      ${r.rating?`<span style="color:var(--gold);font-size:14px">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>`:''}
-    </div>
-    ${r.photo?`<img src="${esc(r.photo)}" style="width:100%;border-radius:8px;max-height:250px;object-fit:cover;margin-bottom:16px" onerror="this.style.display='none'">`:''}
-    <div class="form-group"><label class="label">Ingredientes</label><ul style="padding-left:18px;color:var(--text);font-size:13px;line-height:1.8">${(r.ingredients||[]).map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>
-    <div class="form-group"><label class="label">Passos</label><ol style="padding-left:18px;color:var(--text);font-size:13px;line-height:1.8">${(r.steps||[]).map(s=>`<li style="margin-bottom:6px">${esc(s)}</li>`).join('')}</ol></div>
-    ${r.notes?`<div class="form-group"><label class="label">Notas</label><p style="color:var(--muted);font-size:13px;line-height:1.6">${esc(r.notes)}</p></div>`:''}
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn btn-primary" onclick="toggleRecipeStatus('${r.id}')">${r.status==='concluida'?'↩ Marcar por experimentar':'✓ Marcar concluída'}</button>
-      <button class="btn btn-ghost" onclick="delRecipe('${r.id}')">Eliminar</button>
-    </div>
-  `);
-}
-function toggleRecipeStatus(id) { const r=state.recipes.find(x=>x.id===id); if(r) r.status=r.status==='concluida'?'experimentar':'concluida'; save(); closeModal(); render(); }
-function delRecipe(id) { state.recipes=state.recipes.filter(r=>r.id!==id); save(); closeModal(); render(); }
 
 // ===== 3. FINANÇAS =====
 function renderFinances(el) {
@@ -899,26 +1361,7 @@ function addFinance() {
 }
 function delFinance(id) { state.finances=state.finances.filter(i=>i.id!==id); save(); render(); }
 
-// ===== 4. BRAND =====
-function renderBrand(el) {
-  const items=state.brandAssets;
-  const types=['Logo Redes','Logo Principal','Ícone','Banner','Packaging','Outro'];
-
-  el.innerHTML = `
-    <div class="section-header">
-      <div><h1>Brand Assets</h1><div class="sub">Identidade visual & guia de logos</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openLogoGuide()">📐 Requisitos</button><button class="btn btn-primary" onclick="openBrandModal()">+ Novo Asset</button></div>
-    </div>
-    ${items.length?`<div class="grid grid-cards">${items.map(i=>`
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><span class="tag tag-gold">${esc(i.type)}</span><button class="close-btn" onclick="delBrand('${i.id}')">✕</button></div>
-        ${i.url?`<div style="width:100%;height:120px;border-radius:6px;overflow:hidden;margin-bottom:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center"><img src="${esc(i.url)}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.style.display='none'"></div>`:''}
-        <h3 style="font-size:14px;font-weight:600;margin:0 0 4px">${esc(i.name)}</h3>
-        ${i.notes?`<p style="font-size:11px;color:var(--dim);margin:0">${esc(i.notes)}</p>`:''}
-      </div>
-    `).join('')}</div>`:`<div class="empty"><div class="icon">◇</div><p>Ainda sem brand assets. Faz upload dos teus logos!</p></div>`}`;
-}
-
+// ===== 4. BRAND (dentro de Notas) =====
 function openBrandModal() {
   const types=['Logo Redes','Logo Principal','Ícone','Banner','Packaging','Outro'];
   openModal('Novo Brand Asset', `
@@ -1006,6 +1449,9 @@ function renderChat(el) {
     </div>
   `;
   const cm=$('#chat-messages'); cm.scrollTop=cm.scrollHeight;
+  // Re-scroll after media loads
+  cm.querySelectorAll('img,video').forEach(el=>{ el.onload=el.onloadedmetadata=()=>{ cm.scrollTop=cm.scrollHeight; }; });
+  setTimeout(()=>{ cm.scrollTop=cm.scrollHeight; },300);
 }
 
 let _chatLP=null;
@@ -1046,7 +1492,7 @@ function editMessage(id){
   if(newText!==null && newText.trim()){ msg.text=newText.trim(); save(); render(); }
 }
 function delMessage(id){ state.chat=state.chat.filter(m=>m.id!==id); save(); render(); }
-function clearChat(){ if(!confirm('Apagar todas as mensagens do chat?')) return; state.chat=[]; save(); render(); }
+function clearChat(){ const r=prompt('Qual é o número favorito da Mariah?'); if(!r||r.trim()!=='2'){ if(r!==null) alert('Resposta errada!'); return; } state.chat=[]; save(); render(); }
 function openReactPicker(id){
   document.querySelectorAll('.msg-menu,.react-picker').forEach(m=>m.remove());
   const emojis=['❤️','😂','👍','🔥','😍','👏'];
@@ -1118,6 +1564,391 @@ async function sendChat() {
 
   state.chat.push(msg);
   save(); render();
+}
+
+// ===== ANALYTICS =====
+let analyticsPeriod='all';
+function renderAnalytics(el) {
+  const orders=(state.orders||[]).filter(o=>o.status!=='cancelado');
+  const allOrders=state.orders||[];
+  const custs=state.customers||[];
+  const flavors=state.flavors||[];
+  const packs=state.packs||[];
+  const inv=state.inventory||[];
+  const fb=state.feedback||[];
+  const fins=state.finances||[];
+  const now=new Date();
+  const nowISO=now.toISOString().slice(0,10);
+  const thisMonthKey=nowISO.slice(0,7);
+  const lastMonthD=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const lastMonthKey=lastMonthD.getFullYear()+'-'+String(lastMonthD.getMonth()+1).padStart(2,'0');
+
+  // ── Period filter ──
+  let filtered=orders;
+  if(analyticsPeriod==='month') filtered=orders.filter(o=>o.date&&o.date.slice(0,7)===thisMonthKey);
+  else if(analyticsPeriod==='last') filtered=orders.filter(o=>o.date&&o.date.slice(0,7)===lastMonthKey);
+  else if(analyticsPeriod==='quarter') {
+    const q=new Date(now.getFullYear(),now.getMonth()-2,1).toISOString().slice(0,10);
+    filtered=orders.filter(o=>o.date&&o.date>=q);
+  }
+
+  // ── 1. KPIs globais ──
+  const totalRev=filtered.reduce((s,o)=>s+orderRevenue(o),0);
+  const totalCost=filtered.reduce((s,o)=>s+orderCost(o),0);
+  const totalProfit=totalRev-totalCost;
+  const avgTicket=filtered.length?totalRev/filtered.length:0;
+  const avgMargin=totalRev>0?(totalProfit/totalRev*100):0;
+  const totalUnits=filtered.reduce((s,o)=>s+(o.items||[]).reduce((ss,i)=>ss+(parseFloat(i.qty)||0)*(parseFloat(i.packSize)||0),0),0);
+
+  // ── 2. Comparativo mensal (últimos 12 meses) ──
+  const monthlyData={};
+  orders.forEach(o=>{
+    if(!o.date) return;
+    const m=o.date.slice(0,7);
+    if(!monthlyData[m]) monthlyData[m]={rev:0,cost:0,orders:0,units:0,customers:new Set()};
+    monthlyData[m].rev+=orderRevenue(o);
+    monthlyData[m].cost+=orderCost(o);
+    monthlyData[m].orders++;
+    monthlyData[m].units+=(o.items||[]).reduce((s,i)=>s+(parseFloat(i.qty)||0),0);
+    if(o.customerId) monthlyData[m].customers.add(o.customerId);
+  });
+  const monthKeys=Object.keys(monthlyData).sort().slice(-12);
+
+  // ── 3. Top clientes por LTV ──
+  const custLTV=custs.map(c=>{
+    const cOrds=orders.filter(o=>o.customerId===c.id);
+    const total=cOrds.reduce((s,o)=>s+orderRevenue(o),0);
+    const profit=cOrds.reduce((s,o)=>s+orderProfit(o),0);
+    const dates=cOrds.map(o=>o.date).filter(Boolean).sort();
+    const lastDate=dates[dates.length-1]||'';
+    const daysSince=lastDate?Math.round((now-new Date(lastDate))/86400000):999;
+    let segment='Novo';
+    if(cOrds.length>1&&daysSince<=60) segment='Recorrente';
+    else if(cOrds.length>0&&daysSince>60) segment='Inativo';
+    else if(cOrds.length===0) segment='Sem compras';
+    return {id:c.id,name:c.name,orders:cOrds.length,total,profit,lastDate,daysSince,segment,avgTicket:cOrds.length?total/cOrds.length:0};
+  }).sort((a,b)=>b.total-a.total);
+
+  const segCounts={Novo:0,Recorrente:0,Inativo:0,'Sem compras':0};
+  custLTV.forEach(c=>segCounts[c.segment]=(segCounts[c.segment]||0)+1);
+
+  // ── 4. Top sabores ──
+  const flavorSales={};
+  filtered.forEach(o=>(o.items||[]).forEach(i=>{
+    const fId=i.flavorId||'';
+    if(!fId) return;
+    if(!flavorSales[fId]) flavorSales[fId]={id:fId,name:'',qty:0,rev:0,profit:0,packs:0};
+    flavorSales[fId].qty+=(parseFloat(i.qty)||0)*(parseFloat(i.packSize)||0);
+    flavorSales[fId].packs+=(parseFloat(i.qty)||0);
+    flavorSales[fId].rev+=(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0);
+    flavorSales[fId].profit+=(parseFloat(i.qty)||0)*((parseFloat(i.unitPrice)||0)-(parseFloat(i.unitCost)||0));
+  }));
+  Object.values(flavorSales).forEach(fs=>{
+    const f=flavors.find(x=>x.id===fs.id);
+    fs.name=f?f.name:fs.id;
+  });
+  const topFlavors=Object.values(flavorSales).sort((a,b)=>b.qty-a.qty);
+
+  // ── 5. Margens por pack ──
+  const packAnalysis=packs.map(p=>{
+    const packOrders=filtered.reduce((s,o)=>s+(o.items||[]).filter(i=>i.packId===p.id).reduce((ss,i)=>ss+(parseFloat(i.qty)||0),0),0);
+    const packRev=filtered.reduce((s,o)=>s+(o.items||[]).filter(i=>i.packId===p.id).reduce((ss,i)=>ss+(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0),0),0);
+    const packCost=filtered.reduce((s,o)=>s+(o.items||[]).filter(i=>i.packId===p.id).reduce((ss,i)=>ss+(parseFloat(i.qty)||0)*(parseFloat(i.unitCost)||0),0),0);
+    const avgFlavorMargins=flavors.map(f=>({name:f.name,margin:packMargin(p,f),profit:packProfit(p,f)}));
+    return {size:p.size,price:p.salePrice,sold:packOrders,rev:packRev,cost:packCost,profit:packRev-packCost,margin:packRev>0?((packRev-packCost)/packRev*100):0,flavorMargins:avgFlavorMargins};
+  });
+
+  // ── 6. Vendas por canal ──
+  const channelData={};
+  filtered.forEach(o=>{
+    const ch=o.channel||'Outro';
+    if(!channelData[ch]) channelData[ch]={rev:0,orders:0,profit:0};
+    channelData[ch].rev+=orderRevenue(o);
+    channelData[ch].orders++;
+    channelData[ch].profit+=orderProfit(o);
+  });
+  const channels=Object.entries(channelData).sort((a,b)=>b[1].rev-a[1].rev);
+
+  // ── 7. Previsão de stock ──
+  const stockForecast=inv.map(item=>{
+    const stock=invCurrentStock(item);
+    const used=parseFloat(item.qtyUsed)||0;
+    const received=parseFloat(item.qtyReceived)||0;
+    const wasted=parseFloat(item.qtyWasted)||0;
+    // Estimate weekly usage from total orders
+    const firstOrd=orders.map(o=>o.date).filter(Boolean).sort()[0];
+    const weeks=firstOrd?Math.max(1,(now-new Date(firstOrd))/604800000):1;
+    const weeklyUsage=(used+wasted)/weeks;
+    const weeksLeft=weeklyUsage>0?stock/weeklyUsage:999;
+    const wastePct=received>0?(wasted/received*100):0;
+    return {name:item.name,stock,unit:item.unit||'un',minStock:item.minStock||0,weeklyUsage:weeklyUsage,weeksLeft:weeksLeft,isLow:stock<(parseFloat(item.minStock)||0),wastePct,expiry:item.expirationDate||''};
+  }).sort((a,b)=>a.weeksLeft-b.weeksLeft);
+
+  // ── 8. Sazonalidade ──
+  const monthNames=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const seasonality=Array(12).fill(null).map((_,i)=>({month:monthNames[i],rev:0,orders:0,units:0}));
+  orders.forEach(o=>{
+    if(!o.date) return;
+    const m=parseInt(o.date.slice(5,7))-1;
+    seasonality[m].rev+=orderRevenue(o);
+    seasonality[m].orders++;
+    seasonality[m].units+=(o.items||[]).reduce((s,i)=>s+(parseFloat(i.qty)||0),0);
+  });
+  const maxSeasonRev=Math.max(...seasonality.map(s=>s.rev),1);
+
+  // Flavor seasonality
+  const flavorSeason={};
+  orders.forEach(o=>{
+    if(!o.date) return;
+    const m=parseInt(o.date.slice(5,7))-1;
+    (o.items||[]).forEach(i=>{
+      const fId=i.flavorId; if(!fId) return;
+      if(!flavorSeason[fId]) flavorSeason[fId]={name:'',months:Array(12).fill(0)};
+      flavorSeason[fId].months[m]+=(parseFloat(i.qty)||0);
+    });
+  });
+  Object.values(flavorSeason).forEach(fs=>{
+    const f=flavors.find(x=>x.id===Object.keys(flavorSeason).find(k=>flavorSeason[k]===fs));
+    fs.name=f?f.name:'?';
+  });
+
+  // ── 9. Projeção de receita ──
+  const thisMonthOrds=orders.filter(o=>o.date&&o.date.slice(0,7)===thisMonthKey);
+  const thisMonthRev=thisMonthOrds.reduce((s,o)=>s+orderRevenue(o),0);
+  const dayOfMonth=now.getDate();
+  const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const projectedRev=dayOfMonth>0?(thisMonthRev/dayOfMonth)*daysInMonth:0;
+  const lastMonthOrds=orders.filter(o=>o.date&&o.date.slice(0,7)===lastMonthKey);
+  const lastMonthRev=lastMonthOrds.reduce((s,o)=>s+orderRevenue(o),0);
+  const revGrowth=lastMonthRev>0?((thisMonthRev-lastMonthRev)/lastMonthRev*100):0;
+
+  // ── 10. Tempo de preparação ──
+  const deliveredOrds=allOrders.filter(o=>o.status==='entregue'&&o.date&&o.createdAt);
+  const prepTimes=deliveredOrds.map(o=>{
+    const created=new Date(o.createdAt);
+    // Find when status changed to entregue — approximate with date field
+    const delivered=new Date(o.date);
+    return Math.max(0,Math.round((delivered-created)/86400000));
+  }).filter(t=>t>=0&&t<365);
+  const avgPrepTime=prepTimes.length?(prepTimes.reduce((s,t)=>s+t,0)/prepTimes.length):0;
+
+  // ── 11. Feedback analytics ──
+  const avgRating=fb.length?(fb.reduce((s,f)=>s+(f.rating||0),0)/fb.length):0;
+  const ratingDist=[1,2,3,4,5].map(r=>fb.filter(f=>f.rating===r).length);
+  const complaints=fb.filter(f=>f.complaintType).length;
+  const favProducts={};
+  fb.forEach(f=>{if(f.favProduct){favProducts[f.favProduct]=(favProducts[f.favProduct]||0)+1;}});
+  const topFavs=Object.entries(favProducts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // ── RENDER ──
+  el.innerHTML=`
+    <div class="section-header">
+      <div><h1>Analytics</h1><div class="sub">Métricas e análise do negócio</div></div>
+    </div>
+
+    <div class="pills" style="margin-bottom:20px">
+      <button class="pill ${analyticsPeriod==='all'?'active':''}" onclick="analyticsPeriod='all';render()">Todo o período</button>
+      <button class="pill ${analyticsPeriod==='month'?'active':''}" onclick="analyticsPeriod='month';render()">Este mês</button>
+      <button class="pill ${analyticsPeriod==='last'?'active':''}" onclick="analyticsPeriod='last';render()">Mês passado</button>
+      <button class="pill ${analyticsPeriod==='quarter'?'active':''}" onclick="analyticsPeriod='quarter';render()">Último trimestre</button>
+    </div>
+
+    <!-- KPIs PRINCIPAIS -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+      <div class="kpi-card"><div class="kpi-label">Receita</div><div class="kpi-value" style="color:var(--green)">${fmt(totalRev)}</div><div class="kpi-sub">${filtered.length} encomendas</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lucro</div><div class="kpi-value" style="color:${totalProfit>=0?'var(--green)':'var(--red)'}">${fmt(totalProfit)}</div><div class="kpi-sub">Margem ${avgMargin.toFixed(1)}%</div></div>
+      <div class="kpi-card"><div class="kpi-label">Ticket Médio</div><div class="kpi-value">${fmt(avgTicket)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Unidades</div><div class="kpi-value">${Math.round(totalUnits)}</div><div class="kpi-sub">tâmaras vendidas</div></div>
+      <div class="kpi-card"><div class="kpi-label">Custo Total</div><div class="kpi-value" style="color:var(--red)">${fmt(totalCost)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Feedback</div><div class="kpi-value">${avgRating.toFixed(1)}★</div><div class="kpi-sub">${fb.length} avaliações</div></div>
+    </div>
+
+    <!-- PROJEÇÃO DO MÊS -->
+    <div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Projeção do Mês Atual</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+        <div><div class="kpi-label">Receita até agora</div><div style="font-size:18px;font-family:var(--font-display);color:var(--text)">${fmt(thisMonthRev)}</div></div>
+        <div><div class="kpi-label">Projeção fim do mês</div><div style="font-size:18px;font-family:var(--font-display);color:var(--gold)">${fmt(projectedRev)}</div></div>
+        <div><div class="kpi-label">Mês passado</div><div style="font-size:18px;font-family:var(--font-display);color:var(--muted)">${fmt(lastMonthRev)}</div></div>
+        <div><div class="kpi-label">Crescimento</div><div style="font-size:18px;font-family:var(--font-display);color:${revGrowth>=0?'var(--green)':'var(--red)'}">${revGrowth>=0?'+':''}${revGrowth.toFixed(1)}%</div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:4px"><span>Dia ${dayOfMonth}/${daysInMonth}</span><span>${Math.round(dayOfMonth/daysInMonth*100)}% do mês</span></div>
+        <div style="height:6px;background:var(--border);border-radius:3px"><div style="height:100%;width:${Math.round(dayOfMonth/daysInMonth*100)}%;background:linear-gradient(90deg,var(--gold),var(--gold-dark));border-radius:3px"></div></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px">
+
+    <!-- COMPARATIVO MENSAL -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Evolução Mensal</div>
+      ${monthKeys.length?`
+      <div style="overflow-x:auto"><table class="data-table" style="font-size:11px">
+        <thead><tr><th>Mês</th><th>Receita</th><th>Lucro</th><th>Margem</th><th>Enc.</th><th>Clientes</th></tr></thead>
+        <tbody>${monthKeys.map(mk=>{
+          const d=monthlyData[mk];
+          const profit=d.rev-d.cost;
+          const margin=d.rev>0?(profit/d.rev*100):0;
+          const label=mk.slice(5)+'/'+mk.slice(2,4);
+          return `<tr><td style="color:var(--gold)">${label}</td><td style="color:var(--green)">${fmt(d.rev)}</td><td style="color:${profit>=0?'var(--green)':'var(--red)'}">${fmt(profit)}</td><td>${margin.toFixed(0)}%</td><td>${d.orders}</td><td>${d.customers.size}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>`:'<div style="color:var(--dim);font-size:12px">Sem dados</div>'}
+    </div>
+
+    <!-- VENDAS POR CANAL -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Vendas por Canal</div>
+      ${channels.length?channels.map(([ch,d])=>{
+        const pct=totalRev>0?Math.round(d.rev/totalRev*100):0;
+        const margin=d.rev>0?(d.profit/d.rev*100):0;
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="color:var(--text)">${esc(ch)}</span><span style="color:var(--muted)">${fmt(d.rev)} · ${d.orders} enc. · ${margin.toFixed(0)}% margem</span></div>
+          <div style="height:4px;background:var(--border);border-radius:2px"><div style="height:100%;width:${pct}%;background:var(--gold);border-radius:2px"></div></div>
+        </div>`;
+      }).join(''):'<div style="color:var(--dim);font-size:12px">Sem dados</div>'}
+    </div>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px">
+
+    <!-- TOP SABORES -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Ranking de Sabores</div>
+      ${topFlavors.length?`<table class="data-table" style="font-size:11px">
+        <thead><tr><th>#</th><th>Sabor</th><th>Unidades</th><th>Receita</th><th>Lucro</th><th>Margem</th></tr></thead>
+        <tbody>${topFlavors.map((f,i)=>{
+          const margin=f.rev>0?(f.profit/f.rev*100):0;
+          return `<tr><td style="color:var(--gold)">${i+1}</td><td style="font-weight:500">${esc(f.name)}</td><td>${Math.round(f.qty)}</td><td>${fmt(f.rev)}</td><td style="color:${f.profit>=0?'var(--green)':'var(--red)'}">${fmt(f.profit)}</td><td>${margin.toFixed(0)}%</td></tr>`;
+        }).join('')}</tbody>
+      </table>`:'<div style="color:var(--dim);font-size:12px">Sem dados</div>'}
+    </div>
+
+    <!-- MARGENS POR PACK -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Análise por Pack</div>
+      ${packAnalysis.length?`<table class="data-table" style="font-size:11px">
+        <thead><tr><th>Pack</th><th>Preço</th><th>Vendidos</th><th>Receita</th><th>Lucro</th><th>Margem</th></tr></thead>
+        <tbody>${packAnalysis.map(p=>`<tr>
+          <td style="color:var(--gold);font-weight:600">Pack ${p.size}</td><td>${fmt(p.price)}</td><td>${p.sold}</td><td>${fmt(p.rev)}</td>
+          <td style="color:${p.profit>=0?'var(--green)':'var(--red)'}">${fmt(p.profit)}</td><td>${p.margin.toFixed(0)}%</td>
+        </tr>`).join('')}</tbody>
+      </table>`:'<div style="color:var(--dim);font-size:12px">Sem packs</div>'}
+    </div>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px">
+
+    <!-- SEGMENTAÇÃO DE CLIENTES -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Segmentação de Clientes</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px"><div style="font-size:20px;font-family:var(--font-display);color:var(--green)">${segCounts['Recorrente']}</div><div style="font-size:10px;color:var(--muted);letter-spacing:0.5px">Recorrentes</div></div>
+        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px"><div style="font-size:20px;font-family:var(--font-display);color:var(--gold)">${segCounts['Novo']}</div><div style="font-size:10px;color:var(--muted);letter-spacing:0.5px">Novos</div></div>
+        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px"><div style="font-size:20px;font-family:var(--font-display);color:var(--red)">${segCounts['Inativo']}</div><div style="font-size:10px;color:var(--muted);letter-spacing:0.5px">Inativos (60d+)</div></div>
+        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:8px"><div style="font-size:20px;font-family:var(--font-display);color:var(--dim)">${segCounts['Sem compras']}</div><div style="font-size:10px;color:var(--muted);letter-spacing:0.5px">Sem compras</div></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:0.5px;margin-bottom:4px">Taxa de recompra: <b style="color:var(--gold)">${custs.length?Math.round(segCounts['Recorrente']/custs.length*100):0}%</b></div>
+    </div>
+
+    <!-- TOP CLIENTES (LTV) -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Top Clientes (Lifetime Value)</div>
+      ${custLTV.filter(c=>c.orders>0).length?`<table class="data-table" style="font-size:11px">
+        <thead><tr><th>Cliente</th><th>Enc.</th><th>Total</th><th>Ticket</th><th>Segmento</th><th>Última</th></tr></thead>
+        <tbody>${custLTV.filter(c=>c.orders>0).slice(0,10).map(c=>{
+          const segColor=c.segment==='Recorrente'?'ok':c.segment==='Inativo'?'low':'pending';
+          return `<tr><td style="font-weight:500">${esc(c.name)}</td><td>${c.orders}</td><td style="color:var(--green)">${fmt(c.total)}</td><td>${fmt(c.avgTicket)}</td><td><span class="badge badge-${segColor}">${c.segment}</span></td><td style="color:var(--dim);font-size:10px">${c.lastDate?c.daysSince+'d':'—'}</td></tr>`;
+        }).join('')}</tbody>
+      </table>`:'<div style="color:var(--dim);font-size:12px">Sem clientes</div>'}
+    </div>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px">
+
+    <!-- PREVISÃO DE STOCK -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Previsão de Stock</div>
+      ${stockForecast.length?`<table class="data-table" style="font-size:11px">
+        <thead><tr><th>Material</th><th>Stock</th><th>Uso/sem</th><th>Dura</th><th>Desperdício</th><th>Estado</th></tr></thead>
+        <tbody>${stockForecast.map(s=>{
+          const dura=s.weeksLeft>=999?'∞':s.weeksLeft.toFixed(1)+' sem';
+          const urgent=s.weeksLeft<2;
+          const warn=s.weeksLeft<4;
+          return `<tr><td style="font-weight:500">${esc(s.name)}</td><td>${s.stock.toFixed(1)} ${esc(s.unit)}</td><td style="color:var(--muted)">${s.weeklyUsage.toFixed(1)}</td><td style="color:${urgent?'var(--red)':warn?'var(--gold)':'var(--text)'};font-weight:${urgent?'600':'400'}">${dura}</td><td style="color:${s.wastePct>10?'var(--red)':s.wastePct>0?'var(--gold)':'var(--dim)'}">${s.wastePct.toFixed(1)}%</td><td>${s.isLow?'<span class="badge badge-low">Baixo</span>':urgent?'<span class="badge badge-low">Urgente</span>':'<span class="badge badge-ok">OK</span>'}</td></tr>`;
+        }).join('')}</tbody>
+      </table>`:'<div style="color:var(--dim);font-size:12px">Sem inventário</div>'}
+    </div>
+
+    <!-- SAZONALIDADE -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Sazonalidade (Receita por Mês)</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:100px;margin-bottom:8px">
+        ${seasonality.map(s=>{
+          const h=maxSeasonRev>0?Math.max(Math.round(s.rev/maxSeasonRev*100),2):2;
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="font-size:9px;color:var(--muted)">${s.orders>0?fmt(s.rev):''}</div>
+            <div style="width:100%;background:${s.rev>0?'var(--gold)':'var(--border)'};border-radius:3px 3px 0 0;height:${h}%;opacity:${s.rev>0?'0.8':'0.3'}"></div>
+            <div style="font-size:9px;color:var(--dim)">${s.month}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${Object.keys(flavorSeason).length?`
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1px;margin-top:16px;margin-bottom:8px;font-weight:600">Sabores por Época</div>
+      ${Object.values(flavorSeason).slice(0,5).map(fs=>{
+        const maxM=Math.max(...fs.months,1);
+        const peakMonth=monthNames[fs.months.indexOf(Math.max(...fs.months))];
+        return `<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--text);margin-bottom:3px">${esc(fs.name)} <span style="color:var(--dim);font-size:10px">pico: ${peakMonth}</span></div>
+        <div style="display:flex;gap:1px;height:16px">${fs.months.map(m=>`<div style="flex:1;background:var(--gold);opacity:${m>0?(m/maxM*0.8+0.2).toFixed(2):'0.05'};border-radius:2px"></div>`).join('')}</div></div>`;
+      }).join('')}`:''}
+    </div>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:16px">
+
+    <!-- TEMPO DE PREPARAÇÃO -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Eficiência Operacional</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="text-align:center;padding:14px;background:var(--bg);border-radius:8px">
+          <div style="font-size:24px;font-family:var(--font-display);color:var(--gold)">${avgPrepTime.toFixed(1)}</div>
+          <div style="font-size:10px;color:var(--muted)">Dias médio preparação</div>
+        </div>
+        <div style="text-align:center;padding:14px;background:var(--bg);border-radius:8px">
+          <div style="font-size:24px;font-family:var(--font-display);color:var(--text)">${deliveredOrds.length}</div>
+          <div style="font-size:10px;color:var(--muted)">Encomendas entregues</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.5px">Taxa de cancelamento: <b style="color:${allOrders.filter(o=>o.status==='cancelado').length>0?'var(--red)':'var(--green)'}">${allOrders.length?((allOrders.filter(o=>o.status==='cancelado').length/allOrders.length)*100).toFixed(1):0}%</b></div>
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.5px;margin-top:4px">Taxa de conversão (pago/total): <b style="color:var(--gold)">${allOrders.length?((allOrders.filter(o=>o.paymentStatus==='pago').length/allOrders.length)*100).toFixed(1):0}%</b></div>
+      </div>
+    </div>
+
+    <!-- FEEDBACK ANALYTICS -->
+    <div class="card" style="padding:18px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Análise de Feedback</div>
+      <div style="display:flex;gap:4px;align-items:flex-end;height:60px;margin-bottom:8px">
+        ${[1,2,3,4,5].map(r=>{
+          const count=ratingDist[r-1];
+          const h=fb.length?Math.max(Math.round(count/fb.length*100),4):4;
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="font-size:9px;color:var(--muted)">${count}</div>
+            <div style="width:100%;background:${r>=4?'var(--green)':r===3?'var(--gold)':'var(--red)'};height:${h}%;border-radius:3px;opacity:0.8;min-height:4px"></div>
+            <div style="font-size:10px">${r}★</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px">Reclamações: <b style="color:${complaints>0?'var(--red)':'var(--green)'}">${complaints}</b> de ${fb.length}</div>
+      ${topFavs.length?`<div style="margin-top:8px;font-size:10px;color:var(--muted)">Favoritos: ${topFavs.map(([p,c])=>'<b style="color:var(--text)">'+esc(p)+'</b> ('+c+'×)').join(', ')}</div>`:''}
+    </div>
+
+    </div>
+  `;
 }
 
 // ===== 6. OBJETIVOS =====
@@ -1395,6 +2226,115 @@ function addEvent() {
 
 function delEvent(id) { state.calendar=state.calendar.filter(e=>e.id!==id); save(); render(); }
 
+// ===== 9. NOTAS =====
+const NOTE_SECTIONS = ['Geral','Marketing','Claude','Inspiração','Brand'];
+let activeNoteSection = 'Geral';
+
+function renderNoteCard(n) {
+  const d=n.updatedAt?new Date(n.updatedAt):null;
+  const dateStr=d?d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'):'';
+  return `<div class="card" style="padding:16px;margin-bottom:12px;cursor:pointer" onclick="openNoteModal('${n.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+      <div style="flex:1;min-width:0">
+        ${n.title?`<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">${esc(n.title)}</div>`:''}
+        <div style="font-size:12px;color:var(--muted);white-space:pre-wrap">${esc(n.body||'')}</div>
+        ${dateStr?`<div style="font-size:10px;color:var(--dim);margin-top:6px">${dateStr} · ${esc(n.author||'')}</div>`:''}
+      </div>
+      <button class="del-btn" onclick="event.stopPropagation();delNote('${n.id}')">✕</button>
+    </div>
+  </div>`;
+}
+
+function renderNotes(el) {
+  const notes=state.notes||[];
+  const filtered=notes.filter(n=>(n.section||'Geral')===activeNoteSection);
+
+  // Section-specific content
+  let sectionContent='';
+  if(activeNoteSection==='Inspiração') {
+    sectionContent=renderInspirationSection();
+  } else if(activeNoteSection==='Brand') {
+    sectionContent=renderBrandSection();
+  }
+
+  // Section-specific add button
+  let addBtn='';
+  if(activeNoteSection==='Inspiração') addBtn=`<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="openInspirationModal()">+ Nova Ideia</button><button class="btn btn-ghost" onclick="openNoteModal()">+ Nota</button></div>`;
+  else if(activeNoteSection==='Brand') addBtn=`<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="openBrandModal()">+ Novo Asset</button><button class="btn btn-ghost" onclick="openLogoGuide()">📐 Requisitos</button><button class="btn btn-ghost" onclick="openNoteModal()">+ Nota</button></div>`;
+  else addBtn=`<button class="btn btn-primary" onclick="openNoteModal()">+ Nova Nota</button>`;
+
+  el.innerHTML=`
+    <div class="section-header" style="margin-bottom:16px">
+      <div><h1>Notas</h1><div class="sub">Notas, inspiração e brand</div></div>
+      ${addBtn}
+    </div>
+    <div class="chip-group" style="margin-bottom:16px">${NOTE_SECTIONS.map(s=>`<button class="chip ${s===activeNoteSection?'active':''}" onclick="activeNoteSection='${s}';render()">${s}</button>`).join('')}</div>
+    ${sectionContent}
+    ${filtered.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin:${sectionContent?'20':'0'}px 0 10px;font-weight:600">${sectionContent?'Notas':''}${!sectionContent?'':''}</div>`:''}
+    ${filtered.length?filtered.slice().reverse().map(n=>renderNoteCard(n)).join(''):(sectionContent?'':'<div class="empty"><div class="icon">📝</div><p>Sem notas em ${esc(activeNoteSection)}. Cria a primeira!</p></div>')}`;
+}
+
+function renderInspirationSection() {
+  const items=state.inspiration||[];
+  if(!items.length) return '';
+  return `<div class="pills" style="margin-bottom:12px">${CATS.map(c=>`<span class="pill">${c} (${items.filter(i=>i.category===c).length})</span>`).join('')}</div>
+    <div class="grid grid-cards" style="margin-bottom:8px">${items.map(i=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <span class="tag tag-gold">${esc(i.category)}</span>
+          <button class="close-btn" onclick="delInspiration('${i.id}')">✕</button>
+        </div>
+        <h3 style="font-size:15px;font-weight:600;margin:8px 0 6px">${esc(i.title)}</h3>
+        ${i.notes?`<p style="font-size:12px;color:var(--muted);margin:0 0 8px;line-height:1.5">${esc(i.notes)}</p>`:''}
+        ${i.url?`<a href="${esc(i.url)}" target="_blank" style="font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all">↗ ${esc(i.url.substring(0,40))}…</a>`:''}
+        <div style="font-size:10px;color:var(--faint);margin-top:10px">${i.date}</div>
+      </div>
+    `).join('')}</div>`;
+}
+
+function renderBrandSection() {
+  const items=state.brandAssets||[];
+  if(!items.length) return '';
+  return `<div class="grid grid-cards" style="margin-bottom:8px">${items.map(i=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><span class="tag tag-gold">${esc(i.type)}</span><button class="close-btn" onclick="delBrand('${i.id}')">✕</button></div>
+      ${i.url?`<div style="width:100%;height:120px;border-radius:6px;overflow:hidden;margin-bottom:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center"><img src="${esc(i.url)}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.style.display='none'"></div>`:''}
+      <h3 style="font-size:14px;font-weight:600;margin:0 0 4px">${esc(i.name)}</h3>
+      ${i.notes?`<p style="font-size:11px;color:var(--dim);margin:0">${esc(i.notes)}</p>`:''}
+    </div>
+  `).join('')}</div>`;
+}
+
+function openNoteModal(editId) {
+  const existing=editId?(state.notes||[]).find(n=>n.id===editId):null;
+  const title=existing?'Editar Nota':'Nova Nota';
+  const curSection=existing?(existing.section||'Geral'):activeNoteSection;
+  openModal(title, `
+    <div class="form-group"><label class="label">Secção</label><div class="chip-group" id="note-section-chips">${NOTE_SECTIONS.map(s=>`<button class="chip ${s===curSection?'active':''}" onclick="pickChip(this)" data-val="${s}">${s}</button>`).join('')}</div></div>
+    <div class="form-group"><label class="label">Título</label><input class="input" id="f-note-title" placeholder="Título da nota..." value="${esc(existing?existing.title:'')}"></div>
+    <div class="form-group"><label class="label">Conteúdo</label><textarea class="input" id="f-note-body" rows="8" style="min-height:160px;resize:vertical" placeholder="Escreve aqui...">${esc(existing?existing.body:'')}</textarea></div>
+    <button class="btn btn-primary btn-full" onclick="saveNote('${editId||''}')">${existing?'Guardar':'Criar Nota'}</button>
+  `);
+  setTimeout(()=>$('#f-note-title')?.focus(),100);
+}
+
+function saveNote(editId) {
+  const title=$('#f-note-title').value.trim();
+  const body=$('#f-note-body').value.trim();
+  if(!title&&!body) return;
+  const section=$('#note-section-chips .chip.active')?.dataset.val||'Geral';
+  if(!state.notes) state.notes=[];
+  if(editId) {
+    const n=state.notes.find(n=>n.id===editId);
+    if(n){ n.title=title; n.body=body; n.section=section; n.updatedAt=Date.now(); n.author=chatUser; }
+  } else {
+    state.notes.push({ id:uid(), title, body, section, author:chatUser, updatedAt:Date.now() });
+  }
+  save(); closeModal(); render();
+}
+
+function delNote(id) { state.notes=(state.notes||[]).filter(n=>n.id!==id); save(); render(); }
+
 // Event notification checker
 function checkEventNotifications() {
   if(!state.calendar||!state.calendar.length) return;
@@ -1445,10 +2385,13 @@ function sundayReminder() {
   const slotKey = key + '-' + slot;
   if(localStorage.getItem(slotKey)) return;
   localStorage.setItem(slotKey, '1');
-  // Check if there are pending goals
-  const total = state.objectives.member1.goals.length + state.objectives.member2.goals.length;
-  const done = state.objectives.member1.goals.filter(g=>g.done).length + state.objectives.member2.goals.filter(g=>g.done).length;
+  // Check pending goals for current user only
+  const myKey = ['member1','member2'].find(mk => state.objectives[mk].name === chatUser);
+  if(!myKey) return;
+  const myGoals = state.objectives[myKey].goals;
+  const total = myGoals.length;
   if(total === 0) return;
+  const done = myGoals.filter(g=>g.done).length;
   const pending = total - done;
   const msg = pending > 0
     ? 'Ainda tens ' + pending + ' objetivo(s) por concluir! Faz o balanço da semana.'
