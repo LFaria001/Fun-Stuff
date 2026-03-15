@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='t1773582218';
+var APP_V='t1773582439';
 var APP_UPDATE_STATUS='checking';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim();
@@ -2380,10 +2380,14 @@ function pickChip(btn) {
 
 function esc(s) { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// ===== CLEANUP: remove all service workers and caches =====
+// ===== CLEANUP: remove old caches (keep FCM service worker) =====
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
+    regs.forEach(r => {
+      // Keep firebase-messaging SW, remove any others (old PWA SW etc.)
+      if(r.active && r.active.scriptURL && r.active.scriptURL.includes('firebase-messaging-sw')) return;
+      r.unregister();
+    });
   });
   caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
 }
