@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='t1773582439';
+var APP_V='t1773582725';
 var APP_UPDATE_STATUS='checking';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim();
@@ -2330,7 +2330,10 @@ function openNoteModal(editId) {
     <div class="form-group"><label class="label">Secção</label><div class="chip-group" id="note-section-chips">${NOTE_SECTIONS.map(s=>`<button class="chip ${s===curSection?'active':''}" onclick="pickChip(this)" data-val="${s}">${s}</button>`).join('')}</div></div>
     <div class="form-group"><label class="label">Título</label><input class="input" id="f-note-title" placeholder="Título da nota..." value="${esc(existing?existing.title:'')}"></div>
     <div class="form-group"><label class="label">Conteúdo</label><textarea class="input" id="f-note-body" rows="8" style="min-height:160px;resize:vertical" placeholder="Escreve aqui...">${esc(existing?existing.body:'')}</textarea></div>
-    <button class="btn btn-primary btn-full" onclick="saveNote('${editId||''}')">${existing?'Guardar':'Criar Nota'}</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="saveNote('${editId||''}')">${existing?'Guardar':'Criar Nota'}</button>
+      ${existing?`<button class="btn btn-ghost" onclick="delNote('${existing.id}');closeModal()" style="color:var(--red)">Eliminar</button>`:''}
+    </div>
   `);
   setTimeout(()=>$('#f-note-title')?.focus(),100);
 }
