@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='t1773526670';
+var APP_V='t1773582218';
+var APP_UPDATE_STATUS='checking';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
-  v=v.trim(); if(v!==APP_V&&!location.search.includes('_v='+v)) location.replace(location.pathname+'?_v='+v);
-}).catch(function(){});
+  v=v.trim();
+  if(v!==APP_V&&!location.search.includes('_v='+v)) { APP_UPDATE_STATUS='updating'; location.replace(location.pathname+'?_v='+v); }
+  else APP_UPDATE_STATUS='updated';
+}).catch(function(){ APP_UPDATE_STATUS='offline'; });
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -296,17 +299,20 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 <script>
 // ===== DATA =====
 const TABS = [
+  // Operacional
   { id:'dashboard', label:'Dashboard', icon:'📊' },
   { id:'orders', label:'Encomendas', icon:'📦' },
   { id:'products', label:'Produtos', icon:'🍫' },
-  { id:'customers', label:'Clientes', icon:'👥' },
   { id:'inventory', label:'Inventário', icon:'📋' },
-  { id:'feedback', label:'Feedback', icon:'⭐' },
+  { id:'customers', label:'Clientes', icon:'👥' },
+  // Análise
+  { id:'analytics', label:'Analytics', icon:'📈' },
   { id:'finances', label:'Finanças', icon:'💰' },
-  { id:'chat', label:'Chat', icon:'💬' },
+  { id:'feedback', label:'Feedback', icon:'⭐' },
+  // Equipa
   { id:'objectives', label:'Objetivos', icon:'🎯' },
   { id:'calendar', label:'Calendário', icon:'📅' },
-  { id:'analytics', label:'Analytics', icon:'📈' },
+  { id:'chat', label:'Chat', icon:'💬' },
   { id:'notes', label:'Notas', icon:'📝' },
 ];
 
@@ -646,7 +652,10 @@ function renderDashboard(el) {
     <div class="dash-header">
       <div class="dash-greeting">${greet}, ${esc(name.split(' ')[0])}</div>
       <div class="dash-date">${dateStr}</div>
-      <div id="fcm-status" style="font-size:10px;color:var(--dim);margin-top:4px;letter-spacing:0.5px">⏳ A verificar notificações...</div>
+      <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap">
+        <div id="app-status" style="font-size:10px;color:var(--dim);letter-spacing:0.5px">⏳ A verificar versão...</div>
+        <div id="fcm-status" style="font-size:10px;color:var(--dim);letter-spacing:0.5px">⏳ A verificar notificações...</div>
+      </div>
     </div>
 
     <div class="kpi-grid">
@@ -695,7 +704,15 @@ function renderDashboard(el) {
       </div>
     </div>
   `;
-  setTimeout(()=>checkFCMStatus(),500);
+  setTimeout(()=>{checkFCMStatus();checkAppStatus();},500);
+}
+
+function checkAppStatus() {
+  const el=$('#app-status'); if(!el) return;
+  if(APP_UPDATE_STATUS==='updated') { el.textContent='✅ App atualizada'; el.style.color='var(--green)'; }
+  else if(APP_UPDATE_STATUS==='updating') { el.textContent='🔄 A atualizar...'; el.style.color='var(--gold)'; }
+  else if(APP_UPDATE_STATUS==='offline') { el.textContent='⚡ Offline'; el.style.color='var(--muted)'; }
+  else { el.textContent='⏳ A verificar...'; setTimeout(checkAppStatus,500); }
 }
 
 async function checkFCMStatus() {
