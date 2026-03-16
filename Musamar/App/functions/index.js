@@ -1,6 +1,9 @@
 const functions = require('firebase-functions');
+const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 admin.initializeApp();
+
+const geminiKey = defineSecret('GEMINI_API_KEY');
 
 exports.onChatMessage = functions.firestore
   .document('hub/state')
@@ -128,3 +131,55 @@ async function sendSundayReminders() {
 
   return null;
 }
+
+// ===== RECEIPT SCANNER (Gemini Flash) =====
+exports.scanReceipt = functions
+  .runWith({ secrets: [geminiKey], timeoutSeconds: 60, memory: '256MB' })
+  .https.onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+    const { image, mimeType } = req.body;
+    if (!image) { res.status(400).json({ error: 'Missing image' }); return; }
+
+    const prompt = `Analisa esta imagem de um recibo/fatura de compras de supermercado ou fornecedor.
+Extrai todos os itens comprados e retorna APENAS um JSON array (sem markdown, sem texto extra, sem backticks) com objetos no seguinte formato:
+[{"name":"nome do item","qtyReceived":numero,"unit":"kg ou un ou L","costPerUnit":numero_em_euros,"totalCost":custo_total_da_linha,"supplier":"nome da loja/fornecedor","category":"uma de: Tâmaras, Recheios, Embalagem, Rótulos, Outro"}]
+
+Regras:
+- O supplier é o nome da loja/fornecedor visível no topo do recibo (mesmo para todos os itens)
+- costPerUnit é o preço por unidade. Se o recibo mostra preço total e quantidade, calcula o preço unitário
+- totalCost é o valor total da linha no recibo
+- qtyReceived é a quantidade comprada (padrão 1 se não visível)
+- unit: usa "un" para unidades, "kg" para quilos, "L" para litros, "g" para gramas
+- category: escolhe a melhor correspondência entre Tâmaras, Recheios, Embalagem, Rótulos, Outro
+- Se não conseguires identificar um campo, usa "" para texto e 0 para números
+- Retorna APENAS o JSON array, nada mais`;
+
+    try {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey.value()}`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mimeType || 'image/jpeg', data: image } }
+            ]
+          }]
+        })
+      });
+      const result = await response.json();
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) { res.status(422).json({ error: 'Não foi possível extrair itens do recibo', raw: text }); return; }
+      const items = JSON.parse(jsonMatch[0]);
+      res.json({ items });
+    } catch (err) {
+      res.status(500).json({ error: 'Falha ao analisar recibo', message: err.message });
+    }
+  });

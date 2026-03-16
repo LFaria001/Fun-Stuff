@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>
 // Auto-update: fetch version file (cache-busted), redirect if outdated
-var APP_V='t1773582840';
+var APP_V='t1773647041';
 var APP_UPDATE_STATUS='checking';
 fetch('version.txt?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(v){
   v=v.trim();
@@ -223,6 +223,13 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 .pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; font-family: var(--font-body); transition: all 0.15s; }
 .pill.active { border-color: var(--gold); background: rgba(212,169,106,0.12); color: var(--gold); }
 
+/* ===== RECEIPT SCAN ===== */
+.receipt-row { display:grid; grid-template-columns:auto 1fr auto auto auto; gap:6px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.receipt-row input, .receipt-row select { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:4px 6px; color:var(--text); font-size:11px; width:100%; }
+.receipt-row select { appearance:none; padding-right:4px; }
+.scan-spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
 /* ===== DESKTOP ===== */
 @media (min-width: 769px) {
   .header { display: none; }
@@ -307,7 +314,7 @@ const TABS = [
   { id:'customers', label:'Clientes', icon:'👥' },
   // Análise
   { id:'analytics', label:'Analytics', icon:'📈' },
-  { id:'finances', label:'Finanças', icon:'💰' },
+  { id:'finances', label:'Despesas', icon:'💸' },
   { id:'feedback', label:'Feedback', icon:'⭐' },
   // Equipa
   { id:'objectives', label:'Objetivos', icon:'🎯' },
@@ -335,6 +342,7 @@ const CHANNELS = ['Instagram','TikTok','WhatsApp','Website','Referência','Outro
 const ORDER_STATUSES = ['pendente','pago','em produção','enviado','entregue','cancelado'];
 const PAY_STATUSES = ['pendente','pago','parcial','reembolsado'];
 const INV_CATS = ['Tâmaras','Recheios','Embalagem','Rótulos','Outro'];
+const INV_UNITS = ['un','kg','g','L','ml'];
 
 const PACK_SIZES = [3, 6, 10];
 
@@ -342,6 +350,8 @@ const DEFAULT = { inspiration:[], recipes:[], finances:[], brandAssets:[], chat:
 
 let state = JSON.parse(JSON.stringify(DEFAULT));
 let activeTab = 'dashboard';
+
+const SCAN_RECEIPT_URL = 'https://us-central1-musamar-hub.cloudfunctions.net/scanReceipt';
 
 // ===== FIREBASE =====
 firebase.initializeApp({
@@ -606,12 +616,12 @@ function render() {
 function flavorUnitCost(f) { return (parseFloat(f.dateCost)||0)+(parseFloat(f.fillingCost)||0); }
 function packTotalCost(pack, flavor) {
   const unitCost=flavorUnitCost(flavor);
-  return unitCost*(parseFloat(pack.size)||0)+(parseFloat(pack.packagingCost)||0)+(parseFloat(pack.deliveryCost)||0);
+  return unitCost*(parseFloat(pack.size)||0)+(parseFloat(pack.packagingCost)||0);
 }
 function packProfit(pack, flavor) { return (parseFloat(pack.salePrice)||0)-packTotalCost(pack,flavor); }
 function packMargin(pack, flavor) { const sp=parseFloat(pack.salePrice)||0; return sp>0?(packProfit(pack,flavor)/sp*100):0; }
 function orderRevenue(o) { return (o.items||[]).reduce((s,i)=>(s+(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0)),0); }
-function orderCost(o) { return (o.items||[]).reduce((s,i)=>(s+(parseFloat(i.qty)||0)*(parseFloat(i.unitCost)||0)),0); }
+function orderCost(o) { return (o.items||[]).reduce((s,i)=>(s+(parseFloat(i.qty)||0)*(parseFloat(i.unitCost)||0)),0)+(parseFloat(o.deliveryCost)||0); }
 function orderProfit(o) { return orderRevenue(o)-orderCost(o); }
 function getCustomerStats(cId) {
   const ords=(state.orders||[]).filter(o=>o.customerId===cId&&o.status!=='cancelado');
@@ -620,7 +630,16 @@ function getCustomerStats(cId) {
   return { count:ords.length, total, first:dates[0]||'', last:dates[dates.length-1]||'' };
 }
 function invCurrentStock(item) { return (parseFloat(item.qtyReceived)||0)-(parseFloat(item.qtyUsed)||0)-(parseFloat(item.qtyWasted)||0); }
-function isLowStock(item) { return invCurrentStock(item)<(parseFloat(item.minStock)||0); }
+function invAutoMinStock(item) {
+  const used=parseFloat(item.qtyUsed)||0;
+  if(!used) return parseFloat(item.minStock)||0;
+  const orders=state.orders||[];
+  const firstOrd=orders.map(o=>o.date).filter(Boolean).sort()[0];
+  const weeks=firstOrd?Math.max(1,(Date.now()-new Date(firstOrd).getTime())/604800000):1;
+  const weeklyUsage=used/weeks;
+  return Math.ceil(weeklyUsage*2); // 2 weeks buffer
+}
+function isLowStock(item) { return invCurrentStock(item)<invAutoMinStock(item); }
 function statusBadge(status) {
   const map={'pendente':'pending','pago':'paid','em produção':'production','enviado':'shipped','entregue':'delivered','cancelado':'cancelled','parcial':'pending','reembolsado':'cancelled'};
   return '<span class="badge badge-'+(map[status]||'pending')+'">'+esc(status)+'</span>';
@@ -755,45 +774,40 @@ function renderProducts(el) {
     </div>
 
     ${packs.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Packs</div>
-    <div class="card" style="padding:0;overflow-x:auto;margin-bottom:24px"><table class="data-table">
-      <thead><tr><th>Pack</th><th>Preço</th><th>Embalagem</th><th>Entrega</th></tr></thead>
-      <tbody>${packs.map(p=>`<tr onclick="openPackModal('${p.id}')" style="cursor:pointer">
-        <td style="font-weight:600;color:var(--gold)">Pack ${p.size}</td>
-        <td>${fmt(p.salePrice)}</td>
-        <td style="color:var(--muted)">${fmt(p.packagingCost)}</td>
-        <td style="color:var(--muted)">${fmt(p.deliveryCost)}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`:''}
+    <div style="display:grid;gap:8px;margin-bottom:24px">${packs.map(p=>`<div class="card" onclick="openPackModal('${p.id}')" style="cursor:pointer;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:600;color:var(--gold)">Pack ${p.size}</div>
+        <div style="font-weight:600">${fmt(p.salePrice)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Embalagem ${fmt(p.packagingCost)}</div>
+    </div>`).join('')}</div>`:''}
 
     ${flavors.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Sabores</div>
-    <div class="card" style="padding:0;overflow-x:auto;margin-bottom:24px"><table class="data-table">
-      <thead><tr><th>Sabor</th><th>Custo tâmara</th><th>Custo recheio</th><th>Custo unitário</th><th>Receita</th></tr></thead>
-      <tbody>${flavors.map(f=>{
+    <div style="display:grid;gap:8px;margin-bottom:24px">${flavors.map(f=>{
         const uc=flavorUnitCost(f);
         const inv=state.inventory||[];
         const recipeStr=(f.recipe||[]).map(r=>{const it=inv.find(i=>i.id===r.inventoryId);return it?(r.qty+' '+(r.unit||it.unit||'un')+' '+it.name):'?';}).join(', ');
-        return `<tr onclick="openFlavorModal('${f.id}')" style="cursor:pointer">
-          <td style="font-weight:500">${esc(f.name)}</td>
-          <td style="color:var(--muted)">${fmt(f.dateCost)}</td>
-          <td style="color:var(--muted)">${fmt(f.fillingCost)}</td>
-          <td>${fmt(uc)}</td>
-          <td style="font-size:10px;color:var(--dim)">${recipeStr||'Sem receita'}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div>`:''}
+        return `<div class="card" onclick="openFlavorModal('${f.id}')" style="cursor:pointer;padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:500">${esc(f.name)}</div>
+            <div style="font-weight:600">${fmt(uc)}<span style="font-size:10px;color:var(--muted)">/un</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Tâmara ${fmt(f.dateCost)} · Recheio ${fmt(f.fillingCost)}</div>
+          ${recipeStr?`<div style="font-size:10px;color:var(--dim);margin-top:3px;word-break:break-word">${recipeStr}</div>`:''}
+        </div>`;
+      }).join('')}</div>`:''}
 
     ${flavors.length&&packs.length?`<div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Matriz Lucro (Sabor × Pack)</div>
-    <div class="card" style="padding:0;overflow-x:auto"><table class="data-table">
-      <thead><tr><th>Sabor</th>${packs.map(p=>`<th colspan="2">Pack ${p.size} (${fmt(p.salePrice)})</th>`).join('')}</tr>
-      <tr><th></th>${packs.map(()=>'<th style="font-size:9px">Custo</th><th style="font-size:9px">Lucro</th>').join('')}</tr></thead>
-      <tbody>${flavors.map(f=>`<tr>
-        <td style="font-weight:500">${esc(f.name)}</td>
-        ${packs.map(p=>{
+    <div style="display:grid;gap:8px">${flavors.map(f=>`<div class="card" style="padding:12px">
+      <div style="font-weight:500;margin-bottom:8px">${esc(f.name)}</div>
+      ${packs.map(p=>{
           const cost=packTotalCost(p,f), profit=packProfit(p,f), margin=packMargin(p,f);
-          return `<td style="color:var(--muted)">${fmt(cost)}</td><td style="color:${profit>=0?'var(--green)':'var(--red)'}"><div>${fmt(profit)}</div><div style="font-size:9px;opacity:0.7">${margin.toFixed(0)}%</div></td>`;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+            <div><div style="font-size:12px">Pack ${p.size}</div><div style="font-size:10px;color:var(--muted)">custo ${fmt(cost)}</div></div>
+            <div style="text-align:right"><div style="color:${profit>=0?'var(--green)':'var(--red)'};font-weight:600">${fmt(profit)}</div><div style="font-size:10px;opacity:0.7">${margin.toFixed(0)}%</div></div>
+          </div>`;
         }).join('')}
-      </tr>`).join('')}</tbody>
-    </table></div>`:'<div class="empty"><div class="icon">🍫</div><p>Adiciona sabores e packs para ver a matriz de lucro.</p></div>'}`;
+    </div>`).join('')}</div>`:'<div class="empty"><div class="icon">🍫</div><p>Adiciona sabores e packs para ver a matriz de lucro.</p></div>'}`;
 }
 
 function openFlavorModal(editId) {
@@ -856,15 +870,31 @@ function delFlavor(id) { state.flavors=(state.flavors||[]).filter(x=>x.id!==id);
 
 // Auto-deduct inventory when order is delivered
 function deductInventoryForOrder(order) {
-  if(order._stockDeducted) return; // prevent double deduction
+  if(order._stockDeducted) return;
   (order.items||[]).forEach(item=>{
-    const flavor=(state.flavors||[]).find(f=>f.id===item.flavorId);
-    if(!flavor||!flavor.recipe) return;
-    const totalUnits=(parseFloat(item.qty)||0)*(parseFloat(item.packSize||((state.packs||[]).find(p=>p.id===item.packId)||{}).size)||0);
-    flavor.recipe.forEach(r=>{
-      const inv=(state.inventory||[]).find(i=>i.id===r.inventoryId);
-      if(inv) { inv.qtyUsed=(parseFloat(inv.qtyUsed)||0)+(r.qty*totalUnits); }
-    });
+    const packQty=parseFloat(item.qty)||0;
+    // New format: item.dates is array of {flavorId, qty}
+    const dates=item.dates||[];
+    if(dates.length) {
+      dates.forEach(d=>{
+        const flavor=(state.flavors||[]).find(f=>f.id===d.flavorId);
+        if(!flavor||!flavor.recipe) return;
+        const totalUnits=d.qty*packQty;
+        flavor.recipe.forEach(r=>{
+          const inv=(state.inventory||[]).find(i=>i.id===r.inventoryId);
+          if(inv) { inv.qtyUsed=(parseFloat(inv.qtyUsed)||0)+(r.qty*totalUnits); }
+        });
+      });
+    } else if(item.flavorId) {
+      // backward compat: old single-flavor items
+      const flavor=(state.flavors||[]).find(f=>f.id===item.flavorId);
+      if(!flavor||!flavor.recipe) return;
+      const totalUnits=packQty*(parseFloat(item.packSize)||0);
+      flavor.recipe.forEach(r=>{
+        const inv=(state.inventory||[]).find(i=>i.id===r.inventoryId);
+        if(inv) { inv.qtyUsed=(parseFloat(inv.qtyUsed)||0)+(r.qty*totalUnits); }
+      });
+    }
   });
   order._stockDeducted=true;
 }
@@ -873,10 +903,9 @@ function openPackModal(editId) {
   const p=editId?(state.packs||[]).find(x=>x.id===editId):null;
   openModal(p?'Editar Pack':'Novo Pack', `
     <div class="form-group"><label class="label">Tamanho (nº tâmaras)</label><input class="input" type="number" id="f-pack-size" value="${p?p.size:''}" placeholder="3, 6 ou 10"></div>
-    <div class="form-group"><label class="label">Preço de venda (€)</label><input class="input" type="number" step="0.01" id="f-pack-price" value="${p?p.salePrice:''}" placeholder="Preço fixo do pack"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Preço de venda (€)</label><input class="input" type="number" step="0.01" id="f-pack-price" value="${p?p.salePrice:''}" placeholder="Preço fixo do pack"></div>
       <div class="form-group"><label class="label">Embalagem (€)</label><input class="input" type="number" step="0.01" id="f-pack-pkg" value="${p?p.packagingCost:''}"></div>
-      <div class="form-group"><label class="label">Entrega (€)</label><input class="input" type="number" step="0.01" id="f-pack-del" value="${p?p.deliveryCost:''}"></div>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary btn-full" onclick="savePack('${editId||''}')">${p?'Guardar':'Criar Pack'}</button>
@@ -887,7 +916,7 @@ function openPackModal(editId) {
 
 function savePack(editId) {
   const size=parseInt($('#f-pack-size').value); if(!size) return;
-  const data={ size, salePrice:parseFloat($('#f-pack-price').value)||0, packagingCost:parseFloat($('#f-pack-pkg').value)||0, deliveryCost:parseFloat($('#f-pack-del').value)||0 };
+  const data={ size, salePrice:parseFloat($('#f-pack-price').value)||0, packagingCost:parseFloat($('#f-pack-pkg').value)||0 };
   if(!state.packs) state.packs=[];
   if(editId) { const p=state.packs.find(x=>x.id===editId); if(p) Object.assign(p,data); }
   else { data.id=uid(); state.packs.push(data); }
@@ -955,7 +984,8 @@ function openOrderModal(editId) {
     </div>
     <div style="font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px;font-weight:600">Itens</div>
     <div id="f-ord-items">${(o?o.items:[]).map((it,i)=>orderItemRow(i,it)).join('')}</div>
-    <button class="btn btn-ghost btn-full" onclick="addOrderItemRow()" style="margin-bottom:12px">+ Adicionar Item</button>
+    <button class="btn btn-ghost btn-full" onclick="addOrderItemRow()" style="margin-bottom:12px">+ Adicionar Pack</button>
+    <div class="form-group"><label class="label">Custo de entrega (€)</label><input class="input" type="number" step="0.01" id="f-ord-delivery" value="${o&&o.deliveryCost?o.deliveryCost:'0'}" placeholder="0.00"></div>
     <div class="form-group"><label class="label">Notas</label><textarea class="input" id="f-ord-notes">${esc(o?o.notes:'')}</textarea></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary btn-full" onclick="saveOrder('${editId||''}')">${o?'Guardar':'Criar Encomenda'}</button>
@@ -963,6 +993,7 @@ function openOrderModal(editId) {
     </div>
   `);
   if(!o) addOrderItemRow();
+  else document.querySelectorAll('#f-ord-items .ord-item-row').forEach(r=>updatePackDateCount(r));
   document.getElementById('f-ord-cust').onchange=function(){
     document.getElementById('f-ord-new-cust').style.display=this.value==='__new'?'block':'none';
   };
@@ -972,44 +1003,104 @@ function orderItemRow(idx,item) {
   item=item||{};
   const flavors=state.flavors||[];
   const packs=state.packs||[];
-  return `<div class="ord-item-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-    <div class="form-group" style="margin:0"><label class="label">Sabor</label><select class="input f-oi-flavor" onchange="orderItemCalc(this.closest('.ord-item-row'))">
-      <option value="">—</option>
-      ${flavors.map(f=>`<option value="${f.id}" ${item.flavorId===f.id?'selected':''}>${esc(f.name)}</option>`).join('')}
-    </select></div>
-    <div class="form-group" style="margin:0"><label class="label">Pack</label><select class="input f-oi-pack" onchange="orderItemCalc(this.closest('.ord-item-row'))">
-      <option value="">—</option>
-      ${packs.map(p=>`<option value="${p.id}" ${item.packId===p.id?'selected':''}>${'Pack '+p.size+' — '+fmt(p.salePrice)}</option>`).join('')}
-    </select></div>
-    <div class="form-group" style="margin:0"><label class="label">Qtd packs</label><input class="input f-oi-qty" type="number" min="1" value="${item.qty||1}"></div>
-    <button class="del-btn" onclick="this.closest('.ord-item-row').remove()" style="margin-bottom:4px">✕</button>
+  const dates=item.dates||[];
+  // backward compat: old items had flavorId instead of dates
+  const legacyDates=(!dates.length&&item.flavorId)?[{flavorId:item.flavorId,qty:item.packSize||1}]:dates;
+  return `<div class="ord-item-row" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:8px;margin-bottom:8px">
+      <div class="form-group" style="margin:0;flex:1"><label class="label">Pack</label><select class="input f-oi-pack" onchange="updatePackDateCount(this.closest('.ord-item-row'))">
+        <option value="">—</option>
+        ${packs.map(p=>`<option value="${p.id}" ${item.packId===p.id?'selected':''}>${'Pack '+p.size+' — '+fmt(p.salePrice)}</option>`).join('')}
+      </select></div>
+      <div class="form-group" style="margin:0;width:70px"><label class="label">Qtd</label><input class="input f-oi-qty" type="number" min="1" value="${item.qty||1}"></div>
+      <button class="del-btn" onclick="this.closest('.ord-item-row').remove()" style="margin-bottom:4px">✕</button>
+    </div>
+    <div class="f-oi-dates" style="padding-left:4px">
+      ${legacyDates.map(d=>orderDateRow(d)).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+      <button class="btn btn-ghost" onclick="addOrderDateRow(this.closest('.ord-item-row'))" style="font-size:11px;padding:4px 10px">+ Tâmara</button>
+      <div class="f-oi-count" style="font-size:10px;color:var(--muted)"></div>
+    </div>
   </div>`;
+}
+
+function orderDateRow(d) {
+  d=d||{};
+  const flavors=state.flavors||[];
+  return `<div class="ord-date-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:end">
+    <div class="form-group" style="margin:0;flex:1"><label class="label" style="font-size:9px">Sabor</label><select class="input f-od-flavor">
+      <option value="">—</option>
+      ${flavors.map(f=>`<option value="${f.id}" ${d.flavorId===f.id?'selected':''}>${esc(f.name)}</option>`).join('')}
+    </select></div>
+    <div class="form-group" style="margin:0;width:60px"><label class="label" style="font-size:9px">Qtd</label><input class="input f-od-qty" type="number" min="1" value="${d.qty||1}" oninput="updatePackDateCount(this.closest('.ord-item-row'))"></div>
+    <button class="del-btn" onclick="var ir=this.closest('.ord-item-row');this.closest('.ord-date-row').remove();updatePackDateCount(ir)" style="margin-bottom:4px;font-size:10px">✕</button>
+  </div>`;
+}
+
+function addOrderDateRow(itemRow) {
+  const container=itemRow.querySelector('.f-oi-dates');
+  const div=document.createElement('div');
+  div.innerHTML=orderDateRow({});
+  container.appendChild(div.firstElementChild);
+  updatePackDateCount(itemRow);
 }
 
 function addOrderItemRow() {
   const div=document.createElement('div');
   div.innerHTML=orderItemRow(0,{});
-  document.getElementById('f-ord-items').appendChild(div.firstElementChild);
+  const row=div.firstElementChild;
+  document.getElementById('f-ord-items').appendChild(row);
+  addOrderDateRow(row);
 }
 
-function orderItemCalc(row) { /* auto-fill handled at save time via flavor+pack lookup */ }
+function updatePackDateCount(itemRow) {
+  if(!itemRow) return;
+  const packSel=itemRow.querySelector('.f-oi-pack');
+  const pack=(state.packs||[]).find(p=>p.id===packSel.value);
+  const dateRows=itemRow.querySelectorAll('.ord-date-row');
+  let total=0;
+  dateRows.forEach(r=>{ total+=parseFloat(r.querySelector('.f-od-qty').value)||0; });
+  const countEl=itemRow.querySelector('.f-oi-count');
+  if(pack) {
+    const size=parseFloat(pack.size)||0;
+    countEl.textContent=total+'/'+size+' tâmaras';
+    countEl.style.color=total===size?'var(--green)':total>size?'var(--red)':'var(--muted)';
+  } else {
+    countEl.textContent=total+' tâmaras';
+    countEl.style.color='var(--muted)';
+  }
+}
 
 function saveOrder(editId) {
   const rows=document.querySelectorAll('#f-ord-items .ord-item-row');
   const items=[];
   rows.forEach(r=>{
-    const flavorId=r.querySelector('.f-oi-flavor').value;
     const packId=r.querySelector('.f-oi-pack').value;
-    const flavor=(state.flavors||[]).find(f=>f.id===flavorId);
     const pack=(state.packs||[]).find(p=>p.id===packId);
-    if(!flavor||!pack) return;
-    const cost=packTotalCost(pack,flavor);
+    if(!pack) return;
+    const dateRows=r.querySelectorAll('.ord-date-row');
+    const dates=[];
+    let totalDateCost=0;
+    dateRows.forEach(dr=>{
+      const flavorId=dr.querySelector('.f-od-flavor').value;
+      const qty=parseFloat(dr.querySelector('.f-od-qty').value)||0;
+      const flavor=(state.flavors||[]).find(f=>f.id===flavorId);
+      if(!flavor||!qty) return;
+      dates.push({flavorId,flavorName:flavor.name,qty});
+      totalDateCost+=flavorUnitCost(flavor)*qty;
+    });
+    if(!dates.length) return;
+    const packSize=parseFloat(pack.size)||0;
+    const totalDates=dates.reduce((s,d)=>s+d.qty,0);
+    const unitCost=totalDateCost+(parseFloat(pack.packagingCost)||0);
+    const productName=dates.map(d=>d.qty+'× '+d.flavorName).join(', ')+' — Pack '+packSize;
     items.push({
-      flavorId, packId, packSize:pack.size,
-      productName:flavor.name+' — Pack '+pack.size,
+      packId, packSize, dates,
+      productName,
       qty:parseFloat(r.querySelector('.f-oi-qty').value)||1,
       unitPrice:parseFloat(pack.salePrice)||0,
-      unitCost:cost
+      unitCost
     });
   });
   // Handle new customer inline
@@ -1024,6 +1115,7 @@ function saveOrder(editId) {
   const data={
     date:$('#f-ord-date').value, channel:$('#f-ord-channel').value,
     customerId, status:newStatus, paymentStatus:$('#f-ord-pay').value,
+    deliveryCost:parseFloat($('#f-ord-delivery').value)||0,
     notes:$('#f-ord-notes').value.trim(), items
   };
   if(!state.orders) state.orders=[];
@@ -1040,15 +1132,6 @@ function saveOrder(editId) {
     if(newStatus==='entregue') { data._stockDeducted=false; state.orders.push(data); deductInventoryForOrder(data); }
     else state.orders.push(data);
   }
-  // Auto-create finance entry when marked as paid
-  if(newStatus==='pago'||data.paymentStatus==='pago') {
-    const ordId=editId||data.id;
-    const alreadyLogged=(state.finances||[]).some(f=>f.orderId===ordId);
-    if(!alreadyLogged) {
-      const rev=orderRevenue(data);
-      state.finances.unshift({id:uid(),description:'Encomenda #'+(data.orderNum||''),amount:rev,type:'entrada',date:data.date,orderId:ordId});
-    }
-  }
   save(); closeModal(); render();
 }
 
@@ -1064,16 +1147,27 @@ function viewOrder(id) {
       <div><div class="label">Cliente</div><div style="font-size:13px">${esc(cust?cust.name:'—')}</div></div>
     </div>
     <div class="label" style="margin-bottom:8px">Itens</div>
-    ${(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span>${esc(i.productName||'—')} × ${i.qty}</span>
-      <span style="color:var(--muted)">${fmt(i.qty*i.unitPrice)}</span>
-    </div>`).join('')}
+    ${(o.items||[]).map(i=>{
+      const dates=i.dates||[];
+      const datesStr=dates.length?dates.map(d=>d.qty+'× '+(d.flavorName||'?')).join(', '):(i.productName||'—');
+      const packLabel=i.packSize?'Pack '+i.packSize:'';
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:500">${packLabel}${i.qty>1?' × '+i.qty:''}</span>
+          <span style="color:var(--muted)">${fmt(i.qty*i.unitPrice)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">${esc(datesStr)}</div>
+      </div>`;
+    }).join('')}
     <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;font-weight:600">
       <span>Total</span><span>${fmt(rev)}</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--muted)">
-      <span>Custo</span><span>${fmt(cost)}</span>
+      <span>Custo produção</span><span>${fmt(cost-(parseFloat(o.deliveryCost)||0))}</span>
     </div>
+    ${o.deliveryCost?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--muted)">
+      <span>Entrega</span><span>${fmt(o.deliveryCost)}</span>
+    </div>`:''}
     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;font-weight:600;color:${prof>=0?'var(--green)':'var(--red)'}">
       <span>Lucro</span><span>${fmt(prof)}</span>
     </div>
@@ -1144,7 +1238,7 @@ function renderInventory(el) {
   el.innerHTML=`
     <div class="section-header">
       <div><h1>Inventário</h1><div class="sub">${items.length} itens${low.length?' · <span style="color:var(--red)">'+low.length+' stock baixo</span>':''}</div></div>
-      <button class="btn btn-primary" onclick="openInvModal()">+ Novo Item</button>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost" onclick="startReceiptScan()">📷 Scan Recibo</button><button class="btn btn-primary" onclick="openInvModal()">+ Novo Item</button></div>
     </div>
     ${items.length?`<div class="card" style="padding:0;overflow-x:auto"><table class="data-table">
       <thead><tr><th>Material</th><th>Categoria</th><th>Stock</th><th>Mín.</th><th>Estado</th><th>Desperdício</th><th>Custo/un</th></tr></thead>
@@ -1166,49 +1260,198 @@ function renderInventory(el) {
     </table></div>`:'<div class="empty"><div class="icon">📋</div><p>Sem itens no inventário.</p></div>'}`;
 }
 
+function getInvSuppliers() {
+  const s=new Set();
+  (state.inventory||[]).forEach(i=>{ if(i.supplier) s.add(i.supplier); });
+  return [...s].sort();
+}
+
 function openInvModal(editId) {
   const i=editId?(state.inventory||[]).find(x=>x.id===editId):null;
+  const suppliers=getInvSuppliers();
   openModal(i?'Editar Item':'Novo Item de Inventário', `
     <div class="form-group"><label class="label">Nome do material</label><input class="input" id="f-inv-name" value="${esc(i?i.name:'')}"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="label">Categoria</label><select class="input" id="f-inv-cat">${INV_CATS.map(c=>`<option ${i&&i.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
-      <div class="form-group"><label class="label">Unidade</label><input class="input" id="f-inv-unit" value="${esc(i?i.unit:'un')}" placeholder="kg, un, L..."></div>
+      <div class="form-group"><label class="label">Unidade</label><select class="input" id="f-inv-unit">${INV_UNITS.map(u=>`<option ${i&&i.unit===u?'selected':(!i&&u==='un'?'selected':'') }>${u}</option>`).join('')}</select></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group"><label class="label">Fornecedor</label><input class="input" id="f-inv-supplier" value="${esc(i?i.supplier:'')}"></div>
-      <div class="form-group"><label class="label">Custo por un. (€)</label><input class="input" type="number" step="0.01" id="f-inv-cost" value="${i?i.costPerUnit:''}"></div>
+      <div class="form-group"><label class="label">Fornecedor</label><select class="input" id="f-inv-supplier">
+        ${suppliers.map(s=>`<option ${i&&i.supplier===s?'selected':''}>${esc(s)}</option>`).join('')}
+        <option value="__new">+ Novo fornecedor...</option>
+      </select></div>
+      <div class="form-group"><label class="label">Preço pago (€/un)</label><input class="input" type="number" step="0.01" id="f-inv-cost" value="${i?i.costPerUnit:''}" placeholder="Ex: 0.30"></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div class="form-group"><label class="label">Recebido</label><input class="input" type="number" id="f-inv-received" value="${i?i.qtyReceived:'0'}"></div>
-      <div class="form-group"><label class="label">Usado</label><input class="input" type="number" id="f-inv-used" value="${i?i.qtyUsed:'0'}"></div>
-      <div class="form-group"><label class="label">Desperdiçado</label><input class="input" type="number" id="f-inv-wasted" value="${i?i.qtyWasted:'0'}"></div>
+    <div id="f-inv-new-supplier" style="display:none">
+      <div class="form-group"><label class="label">Nome do fornecedor</label><input class="input" id="f-inv-supplier-name" placeholder="Ex: Continente, Makro..."></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group"><label class="label">Stock mínimo</label><input class="input" type="number" id="f-inv-min" value="${i?i.minStock:''}"></div>
-      <div class="form-group"><label class="label">Validade</label><input class="input" type="date" id="f-inv-exp" value="${i?i.expirationDate||'':''}"></div>
+    ${i?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="form-group"><label class="label">Recebido</label><input class="input" type="number" step="0.01" id="f-inv-received" value="${i.qtyReceived||0}"></div>
+      <div class="form-group"><label class="label">Usado</label><input class="input" type="number" step="0.01" id="f-inv-used" value="${i.qtyUsed||0}"></div>
+      <div class="form-group"><label class="label">Desperdiçado</label><input class="input" type="number" step="0.01" id="f-inv-wasted" value="${i.qtyWasted||0}"></div>
     </div>
+    <div class="form-group"><label class="label">Validade</label><input class="input" type="date" id="f-inv-exp" value="${i.expirationDate||''}"></div>`
+    :`<div class="form-group"><label class="label">Quantidade recebida</label><input class="input" type="number" step="0.01" id="f-inv-received" value="" placeholder="Quantas unidades/kg recebes agora?"></div>
+    <div class="form-group"><label class="label">Validade</label><input class="input" type="date" id="f-inv-exp" value=""></div>`}
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary btn-full" onclick="saveInv('${editId||''}')">${i?'Guardar':'Criar Item'}</button>
       ${i?`<button class="btn btn-ghost" onclick="delInv('${i.id}')" style="color:var(--red)">Eliminar</button>`:''}
     </div>
   `);
+  document.getElementById('f-inv-supplier').onchange=function(){
+    document.getElementById('f-inv-new-supplier').style.display=this.value==='__new'?'block':'none';
+  };
+  if(!i&&!suppliers.length) {
+    document.getElementById('f-inv-supplier').value='__new';
+    document.getElementById('f-inv-new-supplier').style.display='block';
+  }
 }
 
 function saveInv(editId) {
   const name=$('#f-inv-name').value.trim(); if(!name) return;
+  let supplier=$('#f-inv-supplier').value;
+  if(supplier==='__new') {
+    supplier=$('#f-inv-supplier-name').value.trim();
+  }
   const data={
-    name, category:$('#f-inv-cat').value, unit:$('#f-inv-unit').value.trim(),
-    supplier:$('#f-inv-supplier').value.trim(), costPerUnit:parseFloat($('#f-inv-cost').value)||0,
-    qtyReceived:parseFloat($('#f-inv-received').value)||0, qtyUsed:parseFloat($('#f-inv-used').value)||0,
-    qtyWasted:parseFloat($('#f-inv-wasted').value)||0, minStock:parseFloat($('#f-inv-min').value)||0,
+    name, category:$('#f-inv-cat').value, unit:$('#f-inv-unit').value,
+    supplier, costPerUnit:parseFloat($('#f-inv-cost').value)||0,
+    qtyReceived:parseFloat($('#f-inv-received').value)||0,
+    qtyUsed:editId?parseFloat($('#f-inv-used').value)||0:0,
+    qtyWasted:editId?parseFloat($('#f-inv-wasted').value)||0:0,
     expirationDate:$('#f-inv-exp').value||''
   };
   if(!state.inventory) state.inventory=[];
-  if(editId) { const i=state.inventory.find(x=>x.id===editId); if(i) Object.assign(i,data); }
-  else { data.id=uid(); data.createdAt=Date.now(); state.inventory.push(data); }
+  if(editId) {
+    const i=state.inventory.find(x=>x.id===editId);
+    if(i) { data.minStock=i.minStock||0; Object.assign(i,data); }
+  } else {
+    data.id=uid(); data.createdAt=Date.now(); data.minStock=0; state.inventory.push(data);
+  }
   save(); closeModal(); render();
 }
 function delInv(id) { state.inventory=(state.inventory||[]).filter(x=>x.id!==id); save(); closeModal(); render(); }
+
+// ===== RECEIPT SCANNER =====
+function startReceiptScan() {
+  const input=document.createElement('input');
+  input.type='file'; input.accept='image/*'; input.capture='environment';
+  input.onchange=async function() {
+    const file=input.files[0]; if(!file) return;
+    openModal('Scan Recibo', `<div style="text-align:center;padding:40px"><div class="scan-spinner"></div><div style="margin-top:12px;font-size:13px;color:var(--muted)">A analisar recibo...</div><div style="font-size:10px;color:var(--dim);margin-top:4px">Pode demorar alguns segundos</div></div>`);
+    try {
+      // Resize image to max 1600px to reduce upload size
+      const base64=await resizeImageFile(file, 1600);
+      const mimeType=file.type||'image/jpeg';
+      const resp=await fetch(SCAN_RECEIPT_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({image:base64,mimeType})
+      });
+      const data=await resp.json();
+      if(!resp.ok||!data.items) {
+        closeModal();
+        openModal('Erro', `<div style="text-align:center;padding:20px"><div style="font-size:14px;color:var(--red);margin-bottom:8px">Não foi possível ler o recibo</div><div style="font-size:12px;color:var(--muted)">${esc(data.error||data.message||'Tenta com uma foto mais nítida')}</div><button class="btn btn-ghost btn-full" style="margin-top:16px" onclick="closeModal()">Fechar</button></div>`);
+        return;
+      }
+      previewReceiptItems(data.items);
+    } catch(e) {
+      closeModal();
+      openModal('Erro', `<div style="text-align:center;padding:20px"><div style="font-size:14px;color:var(--red);margin-bottom:8px">Erro de ligação</div><div style="font-size:12px;color:var(--muted)">${esc(e.message)}</div><button class="btn btn-ghost btn-full" style="margin-top:16px" onclick="closeModal()">Fechar</button></div>`);
+    }
+  };
+  input.click();
+}
+
+function resizeImageFile(file, maxSize) {
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const img=new Image();
+      img.onload=function(){
+        const scale=Math.min(1, maxSize/Math.max(img.width,img.height));
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.round(img.width*scale);
+        canvas.height=Math.round(img.height*scale);
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+        resolve(dataUrl.split(',')[1]); // return base64 without prefix
+      };
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let scannedItems=[];
+function previewReceiptItems(items) {
+  scannedItems=items.map((it,i)=>({
+    ...it, _idx:i, _checked:true,
+    _existing:(state.inventory||[]).find(inv=>inv.name.toLowerCase().trim()===it.name.toLowerCase().trim())
+  }));
+  const supplier=items[0]?.supplier||'';
+  closeModal();
+  openModal('Itens do Recibo'+(supplier?' — '+esc(supplier):''), `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${items.length} itens encontrados. Revê e ajusta antes de adicionar.</div>
+    <div style="overflow-x:auto">
+      ${scannedItems.map((it,i)=>{
+        const exists=it._existing;
+        return `<div class="receipt-row" id="scan-row-${i}">
+          <input type="checkbox" checked onchange="scannedItems[${i}]._checked=this.checked" style="width:16px;height:16px;accent-color:var(--gold)">
+          <div>
+            <input value="${esc(it.name)}" onchange="scannedItems[${i}].name=this.value" style="font-weight:500;margin-bottom:2px">
+            ${exists?'<div style="font-size:9px;color:var(--gold)">Existente — será atualizado</div>':''}
+          </div>
+          <div style="width:60px"><input type="number" value="${it.qtyReceived||0}" onchange="scannedItems[${i}].qtyReceived=parseFloat(this.value)||0" style="text-align:center" placeholder="Qtd">
+            <input value="${esc(it.unit||'un')}" onchange="scannedItems[${i}].unit=this.value" style="text-align:center;margin-top:2px;font-size:10px" placeholder="un">
+          </div>
+          <div style="width:70px"><input type="number" step="0.01" value="${it.costPerUnit||0}" onchange="scannedItems[${i}].costPerUnit=parseFloat(this.value)||0" placeholder="€/un">
+            <div style="font-size:9px;color:var(--dim);text-align:center;margin-top:2px">${it.totalCost?fmt(it.totalCost)+' total':''}</div>
+          </div>
+          <select onchange="scannedItems[${i}].category=this.value" style="width:85px">
+            ${INV_CATS.map(c=>`<option ${it.category===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary btn-full" onclick="confirmReceiptItems()">Adicionar ao Inventário</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+
+function confirmReceiptItems() {
+  if(!state.inventory) state.inventory=[];
+  let added=0, updated=0;
+  scannedItems.forEach(it=>{
+    if(!it._checked||!it.name) return;
+    const existing=(state.inventory||[]).find(inv=>inv.name.toLowerCase().trim()===it.name.toLowerCase().trim());
+    if(existing) {
+      existing.qtyReceived=(parseFloat(existing.qtyReceived)||0)+(parseFloat(it.qtyReceived)||0);
+      if(it.costPerUnit) existing.costPerUnit=parseFloat(it.costPerUnit)||existing.costPerUnit;
+      if(it.supplier) existing.supplier=it.supplier;
+      if(it.category&&it.category!=='Outro') existing.category=it.category;
+      updated++;
+    } else {
+      state.inventory.push({
+        id:uid(), name:it.name, category:it.category||'Outro', unit:it.unit||'un',
+        supplier:it.supplier||'', costPerUnit:parseFloat(it.costPerUnit)||0,
+        qtyReceived:parseFloat(it.qtyReceived)||0, qtyUsed:0, qtyWasted:0,
+        minStock:0, expirationDate:'', createdAt:Date.now()
+      });
+      added++;
+    }
+  });
+  save(); closeModal(); render();
+  // Brief feedback
+  setTimeout(()=>{
+    openModal('Inventário Atualizado', `<div style="text-align:center;padding:20px"><div style="font-size:32px;margin-bottom:12px">✅</div><div style="font-size:14px;color:var(--text);margin-bottom:4px">${added?added+' novo(s) item(ns) adicionado(s)':''}${added&&updated?' · ':''}${updated?updated+' item(ns) atualizado(s)':''}</div><button class="btn btn-primary" onclick="closeModal()" style="margin-top:16px">OK</button></div>`);
+  },100);
+}
 
 // ===== FEEDBACK =====
 function renderFeedback(el) {
@@ -1297,76 +1540,51 @@ function addInspiration() {
 }
 function delInspiration(id) { state.inspiration=state.inspiration.filter(i=>i.id!==id); save(); render(); }
 
-// ===== 3. FINANÇAS =====
+// ===== 3. DESPESAS OPERACIONAIS =====
 function renderFinances(el) {
-  const items=state.finances;
-  const ent=items.filter(i=>i.type==='entrada').reduce((s,i)=>s+i.amount,0);
-  const sai=items.filter(i=>i.type==='saida').reduce((s,i)=>s+i.amount,0);
-  const bal=ent-sai;
+  const items=(state.finances||[]).filter(i=>i.type==='saida');
+  const totalDesp=items.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+
+  // Group by month
+  const months={};
+  items.forEach(i=>{
+    const m=i.date?i.date.slice(0,7):'sem data';
+    months[m]=(months[m]||0)+(parseFloat(i.amount)||0);
+  });
+  const sortedMonths=Object.entries(months).sort((a,b)=>b[0].localeCompare(a[0]));
 
   el.innerHTML = `
     <div class="section-header">
-      <div><h1>Finanças</h1><div class="sub">Controlo de entradas e saídas</div></div>
-      <button class="btn btn-primary" onclick="openFinanceModal()">+ Novo Registo</button>
+      <div><h1>Despesas</h1><div class="sub">Custos operacionais</div></div>
+      <button class="btn btn-primary" onclick="openFinanceModal()">+ Nova Despesa</button>
     </div>
     <div class="fin-cards">
-      <div class="card fin-card" style="border-left-color:var(--green)"><div class="fin-label" style="color:var(--green)">Entradas</div><div class="fin-value" style="color:var(--green)">${fmt(ent)}</div></div>
-      <div class="card fin-card" style="border-left-color:var(--red)"><div class="fin-label" style="color:var(--red)">Saídas</div><div class="fin-value" style="color:var(--red)">${fmt(sai)}</div></div>
-      <div class="card fin-card" style="border-left-color:${bal>=0?'var(--gold)':'var(--red)'}"><div class="fin-label" style="color:var(--gold)">Balanço</div><div class="fin-value" style="color:${bal>=0?'var(--gold)':'var(--red)'}">${bal>=0?'+':''}${fmt(bal)}</div></div>
+      <div class="card fin-card" style="border-left-color:var(--red)"><div class="fin-label" style="color:var(--red)">Total Despesas</div><div class="fin-value" style="color:var(--red)">${fmt(totalDesp)}</div></div>
     </div>
-    ${items.length?renderFinChart(items):''}
+    ${items.length?`<div class="card" style="padding:18px;margin-bottom:16px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Por Mês</div>
+      ${sortedMonths.map(([m,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--muted)">${m}</span><span style="color:var(--red)">${fmt(v)}</span>
+      </div>`).join('')}
+    </div>`:''}
     <div>${items.map(i=>`
       <div class="tx-row">
         <div style="display:flex;align-items:center;gap:14px">
-          <span class="tx-dot" style="background:${i.type==='entrada'?'var(--green)':'var(--red)'}"></span>
+          <span class="tx-dot" style="background:var(--red)"></span>
           <div><div style="font-size:13px;font-weight:500">${esc(i.description)}</div><div style="font-size:11px;color:var(--dim)">${i.date}</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px">
-          <span style="font-size:15px;font-weight:600;color:${i.type==='entrada'?'var(--green)':'var(--red)'}">${i.type==='entrada'?'+':'-'}${fmt(i.amount)}</span>
+          <span style="font-size:15px;font-weight:600;color:var(--red)">-${fmt(i.amount)}</span>
           <button class="del-btn" onclick="delFinance('${i.id}')">✕</button>
         </div>
       </div>
     `).join('')}</div>
-    ${items.length===0?'<div class="empty"><div class="icon">◇</div><p>Sem registos financeiros ainda.</p></div>':''}`;
-}
-
-function renderFinChart(items) {
-  const months={};
-  items.forEach(i=>{
-    const m=i.date?i.date.slice(0,7):'unknown';
-    if(!months[m]) months[m]={ent:0,sai:0};
-    if(i.type==='entrada') months[m].ent+=i.amount; else months[m].sai+=i.amount;
-  });
-  const sorted=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6);
-  if(!sorted.length) return '';
-  const max=Math.max(...sorted.map(([,v])=>Math.max(v.ent,v.sai)),1);
-  return `<div class="card" style="margin-bottom:20px;padding:18px">
-    <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;font-weight:600">Últimos Meses</div>
-    <div style="display:flex;align-items:flex-end;gap:8px;height:120px">
-      ${sorted.map(([month,v])=>{
-        const label=month.slice(5)+'/'+month.slice(2,4);
-        const hE=Math.round(v.ent/max*100);
-        const hS=Math.round(v.sai/max*100);
-        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
-            <div style="flex:1;background:var(--green);border-radius:3px 3px 0 0;height:${Math.max(hE,2)}%;min-height:2px;opacity:0.8"></div>
-            <div style="flex:1;background:var(--red);border-radius:3px 3px 0 0;height:${Math.max(hS,2)}%;min-height:2px;opacity:0.8"></div>
-          </div>
-          <span style="font-size:9px;color:var(--dim)">${label}</span>
-        </div>`;
-      }).join('')}
-    </div>
-    <div style="display:flex;gap:14px;justify-content:center;margin-top:10px">
-      <span style="font-size:10px;color:var(--green)">● Entradas</span>
-      <span style="font-size:10px;color:var(--red)">● Saídas</span>
-    </div>
-  </div>`;
+    ${items.length===0?'<div class="empty"><div class="icon">💸</div><p>Sem despesas registadas.</p></div>':''}`;
 }
 
 function openFinanceModal() {
-  openModal('Novo Registo', `
-    <div class="form-group"><label class="label">Tipo</label><div class="chip-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="chip" onclick="pickChip(this)" data-val="entrada" style="text-align:center;padding:10px">💰 Entrada</button><button class="chip active" onclick="pickChip(this)" data-val="saida" style="text-align:center;padding:10px">💸 Saída</button></div></div>
-    <div class="form-group"><label class="label">Descrição</label><input class="input" id="f-fin-desc" placeholder="Ex: Compra de tâmaras Medjool"></div>
+  openModal('Nova Despesa', `
+    <div class="form-group"><label class="label">Descrição</label><input class="input" id="f-fin-desc" placeholder="Ex: Gasolina entregas, renda, marketing..."></div>
     <div class="form-group"><label class="label">Valor (€)</label><input class="input" id="f-fin-amount" type="number" step="0.01" placeholder="0.00"></div>
     <div class="form-group"><label class="label">Data</label><input class="input" id="f-fin-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
     <button class="btn btn-primary btn-full" onclick="addFinance()">Guardar</button>
@@ -1374,8 +1592,7 @@ function openFinanceModal() {
 }
 function addFinance() {
   const d=$('#f-fin-desc').value.trim(), a=parseFloat($('#f-fin-amount').value); if(!d||isNaN(a)) return;
-  const type=$('#modal-content').querySelector('.chip.active')?.dataset.val||'saida';
-  state.finances.unshift({ id:uid(), description:d, amount:a, type, date:$('#f-fin-date').value });
+  state.finances.unshift({ id:uid(), description:d, amount:a, type:'saida', date:$('#f-fin-date').value });
   save(); closeModal(); render();
 }
 function delFinance(id) { state.finances=state.finances.filter(i=>i.id!==id); save(); render(); }
@@ -1618,6 +1835,17 @@ function renderAnalytics(el) {
   const avgTicket=filtered.length?totalRev/filtered.length:0;
   const avgMargin=totalRev>0?(totalProfit/totalRev*100):0;
   const totalUnits=filtered.reduce((s,o)=>s+(o.items||[]).reduce((ss,i)=>ss+(parseFloat(i.qty)||0)*(parseFloat(i.packSize)||0),0),0);
+  // Despesas operacionais (filtradas pelo mesmo período)
+  const allExpenses=(state.finances||[]).filter(i=>i.type==='saida');
+  let filteredExpenses=allExpenses;
+  if(analyticsPeriod==='month') filteredExpenses=allExpenses.filter(i=>i.date&&i.date.slice(0,7)===thisMonthKey);
+  else if(analyticsPeriod==='last') filteredExpenses=allExpenses.filter(i=>i.date&&i.date.slice(0,7)===lastMonthKey);
+  else if(analyticsPeriod==='quarter') {
+    const q=new Date(now.getFullYear(),now.getMonth()-2,1).toISOString().slice(0,10);
+    filteredExpenses=allExpenses.filter(i=>i.date&&i.date>=q);
+  }
+  const totalExpenses=filteredExpenses.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  const netProfit=totalProfit-totalExpenses;
 
   // ── 2. Comparativo mensal (últimos 12 meses) ──
   const monthlyData={};
@@ -1654,13 +1882,31 @@ function renderAnalytics(el) {
   // ── 4. Top sabores ──
   const flavorSales={};
   filtered.forEach(o=>(o.items||[]).forEach(i=>{
-    const fId=i.flavorId||'';
-    if(!fId) return;
-    if(!flavorSales[fId]) flavorSales[fId]={id:fId,name:'',qty:0,rev:0,profit:0,packs:0};
-    flavorSales[fId].qty+=(parseFloat(i.qty)||0)*(parseFloat(i.packSize)||0);
-    flavorSales[fId].packs+=(parseFloat(i.qty)||0);
-    flavorSales[fId].rev+=(parseFloat(i.qty)||0)*(parseFloat(i.unitPrice)||0);
-    flavorSales[fId].profit+=(parseFloat(i.qty)||0)*((parseFloat(i.unitPrice)||0)-(parseFloat(i.unitCost)||0));
+    const packQty=parseFloat(i.qty)||0;
+    const dates=i.dates||[];
+    if(dates.length) {
+      dates.forEach(d=>{
+        const fId=d.flavorId; if(!fId) return;
+        if(!flavorSales[fId]) flavorSales[fId]={id:fId,name:'',qty:0,rev:0,profit:0,packs:0};
+        flavorSales[fId].qty+=d.qty*packQty;
+      });
+    } else if(i.flavorId) {
+      const fId=i.flavorId;
+      if(!flavorSales[fId]) flavorSales[fId]={id:fId,name:'',qty:0,rev:0,profit:0,packs:0};
+      flavorSales[fId].qty+=packQty*(parseFloat(i.packSize)||0);
+    }
+    // revenue/profit per pack item (shared across flavors)
+    const fIds=dates.length?dates.map(d=>d.flavorId).filter(Boolean):(i.flavorId?[i.flavorId]:[]);
+    if(fIds.length) {
+      const revShare=packQty*(parseFloat(i.unitPrice)||0)/fIds.length;
+      const profitShare=packQty*((parseFloat(i.unitPrice)||0)-(parseFloat(i.unitCost)||0))/fIds.length;
+      fIds.forEach(fId=>{
+        if(!flavorSales[fId]) flavorSales[fId]={id:fId,name:'',qty:0,rev:0,profit:0,packs:0};
+        flavorSales[fId].rev+=revShare;
+        flavorSales[fId].profit+=profitShare;
+        flavorSales[fId].packs+=packQty/fIds.length;
+      });
+    }
   }));
   Object.values(flavorSales).forEach(fs=>{
     const f=flavors.find(x=>x.id===fs.id);
@@ -1700,7 +1946,8 @@ function renderAnalytics(el) {
     const weeklyUsage=(used+wasted)/weeks;
     const weeksLeft=weeklyUsage>0?stock/weeklyUsage:999;
     const wastePct=received>0?(wasted/received*100):0;
-    return {name:item.name,stock,unit:item.unit||'un',minStock:item.minStock||0,weeklyUsage:weeklyUsage,weeksLeft:weeksLeft,isLow:stock<(parseFloat(item.minStock)||0),wastePct,expiry:item.expirationDate||''};
+    const autoMin=invAutoMinStock(item);
+    return {name:item.name,stock,unit:item.unit||'un',minStock:autoMin,weeklyUsage:weeklyUsage,weeksLeft:weeksLeft,isLow:stock<autoMin,wastePct,expiry:item.expirationDate||''};
   }).sort((a,b)=>a.weeksLeft-b.weeksLeft);
 
   // ── 8. Sazonalidade ──
@@ -1721,9 +1968,19 @@ function renderAnalytics(el) {
     if(!o.date) return;
     const m=parseInt(o.date.slice(5,7))-1;
     (o.items||[]).forEach(i=>{
-      const fId=i.flavorId; if(!fId) return;
-      if(!flavorSeason[fId]) flavorSeason[fId]={name:'',months:Array(12).fill(0)};
-      flavorSeason[fId].months[m]+=(parseFloat(i.qty)||0);
+      const packQty=parseFloat(i.qty)||0;
+      const dates=i.dates||[];
+      if(dates.length) {
+        dates.forEach(d=>{
+          const fId=d.flavorId; if(!fId) return;
+          if(!flavorSeason[fId]) flavorSeason[fId]={name:'',months:Array(12).fill(0)};
+          flavorSeason[fId].months[m]+=d.qty*packQty;
+        });
+      } else if(i.flavorId) {
+        const fId=i.flavorId;
+        if(!flavorSeason[fId]) flavorSeason[fId]={name:'',months:Array(12).fill(0)};
+        flavorSeason[fId].months[m]+=packQty*(parseFloat(i.packSize)||0);
+      }
     });
   });
   Object.values(flavorSeason).forEach(fs=>{
@@ -1775,11 +2032,11 @@ function renderAnalytics(el) {
     <!-- KPIs PRINCIPAIS -->
     <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
       <div class="kpi-card"><div class="kpi-label">Receita</div><div class="kpi-value" style="color:var(--green)">${fmt(totalRev)}</div><div class="kpi-sub">${filtered.length} encomendas</div></div>
-      <div class="kpi-card"><div class="kpi-label">Lucro</div><div class="kpi-value" style="color:${totalProfit>=0?'var(--green)':'var(--red)'}">${fmt(totalProfit)}</div><div class="kpi-sub">Margem ${avgMargin.toFixed(1)}%</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lucro Bruto</div><div class="kpi-value" style="color:${totalProfit>=0?'var(--green)':'var(--red)'}">${fmt(totalProfit)}</div><div class="kpi-sub">Margem ${avgMargin.toFixed(1)}%</div></div>
+      <div class="kpi-card"><div class="kpi-label">Despesas Op.</div><div class="kpi-value" style="color:var(--red)">${fmt(totalExpenses)}</div><div class="kpi-sub">${filteredExpenses.length} registos</div></div>
+      <div class="kpi-card"><div class="kpi-label">Lucro Líquido</div><div class="kpi-value" style="color:${netProfit>=0?'var(--gold)':'var(--red)'}">${fmt(netProfit)}</div><div class="kpi-sub">${totalRev>0?(netProfit/totalRev*100).toFixed(1)+'%':'-'} margem líq.</div></div>
       <div class="kpi-card"><div class="kpi-label">Ticket Médio</div><div class="kpi-value">${fmt(avgTicket)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Unidades</div><div class="kpi-value">${Math.round(totalUnits)}</div><div class="kpi-sub">tâmaras vendidas</div></div>
-      <div class="kpi-card"><div class="kpi-label">Custo Total</div><div class="kpi-value" style="color:var(--red)">${fmt(totalCost)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Feedback</div><div class="kpi-value">${avgRating.toFixed(1)}★</div><div class="kpi-sub">${fb.length} avaliações</div></div>
     </div>
 
     <!-- PROJEÇÃO DO MÊS -->
@@ -2011,37 +2268,47 @@ function getOrCreateFutureWeek(weekInfo) {
 }
 function checkWeekChange() {
   const cur = getWeekInfo();
-  if(state.weekEnd && state.weekEnd < cur.monISO && state.objectives.member1.goals.length + state.objectives.member2.goals.length > 0) {
-    // Week changed — auto-archive
+  let changed = false;
+  if(state.weekEnd && state.weekEnd < cur.monISO) {
     if(!state.accountability) state.accountability=[];
+    // Archive ALL goals (done and undone) to history
     ['member1','member2'].forEach(mk=>{
       const m=state.objectives[mk];
-      const done=m.goals.filter(g=>g.done).length;
-      state.accountability.unshift({
-        member:m.name, week:state.weekLabel||'Sem nome',
-        done, total:m.goals.length, date:now(),
-        goals:m.goals.map(g=>({text:g.text,done:g.done,assignee:g.assignee||''}))
-      });
-    });
-    state.objectives.member1.goals=[];
-    state.objectives.member2.goals=[];
-  }
-  // Promote future week if it matches the new current week
-  if(!state.futureWeeks) state.futureWeeks=[];
-  const fw=state.futureWeeks.find(f=>f.monISO===cur.monISO);
-  if(fw) {
-    // Merge future goals into current (append, don't replace if current already has goals)
-    ['member1','member2'].forEach(mk=>{
-      if(fw[mk]&&fw[mk].goals&&fw[mk].goals.length) {
-        fw[mk].goals.forEach(g=>state.objectives[mk].goals.push(g));
+      if(m.goals.length) {
+        const done=m.goals.filter(g=>g.done).length;
+        state.accountability.unshift({
+          member:m.name, week:state.weekLabel||'Sem nome',
+          done, total:m.goals.length, date:now(),
+          goals:m.goals.map(g=>({text:g.text,done:g.done,assignee:g.assignee||''}))
+        });
       }
     });
-    state.futureWeeks=state.futureWeeks.filter(f=>f.monISO!==cur.monISO);
+    // Carry over undone goals to current week
+    const carryOver1 = state.objectives.member1.goals.filter(g=>!g.done);
+    const carryOver2 = state.objectives.member2.goals.filter(g=>!g.done);
+    state.objectives.member1.goals = carryOver1;
+    state.objectives.member2.goals = carryOver2;
+    // Promote future week if it matches the new current week
+    if(!state.futureWeeks) state.futureWeeks=[];
+    const fw=state.futureWeeks.find(f=>f.monISO===cur.monISO);
+    if(fw) {
+      ['member1','member2'].forEach(mk=>{
+        if(fw[mk]&&fw[mk].goals&&fw[mk].goals.length) {
+          fw[mk].goals.forEach(g=>state.objectives[mk].goals.push(g));
+        }
+      });
+      state.futureWeeks=state.futureWeeks.filter(f=>f.monISO!==cur.monISO);
+    }
+    // Clean up past future weeks
+    state.futureWeeks=state.futureWeeks.filter(f=>f.monISO>=cur.monISO);
+    changed = true;
   }
-  // Clean up past future weeks
-  state.futureWeeks=state.futureWeeks.filter(f=>f.monISO>=cur.monISO);
-  state.weekLabel = cur.label;
-  state.weekEnd = cur.sunISO;
+  if(state.weekLabel !== cur.label || state.weekEnd !== cur.sunISO) {
+    state.weekLabel = cur.label;
+    state.weekEnd = cur.sunISO;
+    changed = true;
+  }
+  if(changed) save();
 }
 function renderAccGoals(goals) {
   if(!goals||!goals.length) return '';
@@ -2096,15 +2363,6 @@ function renderObjectives(el) {
         ${futureCount?`<button class="btn btn-ghost" style="position:relative" onclick="viewWeekOffset=1;render()">📅 Planeadas <span style="background:var(--gold);color:var(--bg);font-size:9px;padding:2px 5px;border-radius:8px;margin-left:4px">${futureCount}</span></button>`:''}
       </div>
     </div>
-    ${hasAccountability?`<div class="card" style="margin-bottom:20px;padding:18px">
-      <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600">Accountability</div>
-      ${state.accountability.map(a=>`<div style="margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--gold);font-weight:600">${esc(a.member)}</span><span style="font-size:10px;color:var(--dim)">${esc(a.week)}</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${a.done}/${a.total} objetivos concluídos</div>
-        ${renderAccGoals(a.goals)}
-        ${a.reflection?`<p style="font-size:12px;color:var(--text);line-height:1.5;margin:6px 0 0">${esc(a.reflection)}</p>`:''}
-      </div>`).join('')}
-    </div>`:''}
     <div class="obj-grid">
       ${['member1','member2'].map(mk=>{
         const m=obj[mk]; const goals=m.goals||[]; const done=goals.filter(g=>g.done).length; const total=goals.length; const pct=total?Math.round(done/total*100):0;
@@ -2125,7 +2383,19 @@ function renderObjectives(el) {
           <button class="btn btn-ghost btn-full" onclick="${isCurrent?`openGoalModal('${mk}')`:`openFutureGoalModal('${mk}',${viewWeekOffset})`}">+ Adicionar Objetivo</button>
         </div>`;
       }).join('')}
-    </div>`;
+    </div>
+    ${hasAccountability?`
+    <details style="margin-top:24px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-weight:600;padding:12px 0;user-select:none">Histórico de semanas (${state.accountability.length})</summary>
+      <div style="margin-top:8px">
+        ${state.accountability.map(a=>`<div style="margin-bottom:8px;padding:10px;background:var(--card);border-radius:8px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--gold);font-weight:600">${esc(a.member)}</span><span style="font-size:10px;color:var(--dim)">${esc(a.week)}</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${a.done}/${a.total} objetivos concluídos</div>
+          ${renderAccGoals(a.goals)}
+          ${a.reflection?`<p style="font-size:12px;color:var(--text);line-height:1.5;margin:6px 0 0">${esc(a.reflection)}</p>`:''}
+        </div>`).join('')}
+      </div>
+    </details>`:''}`;
 }
 
 function openGoalModal(member) {
